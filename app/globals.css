@@ -1,0 +1,254 @@
+@import 'react-datepicker/dist/react-datepicker.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Mode - The Dorset Transfer Company */
+    --background: 38 42% 97%;             /* Cream #FBF7F0 */
+    --foreground: 201 29% 24%;            /* Navy #2b444c */
+    --card: 0 0% 100%;                    /* White */
+    --card-foreground: 201 29% 24%;       /* Navy #2b444c */
+    --primary: 201 29% 24%;               /* Navy #2b444c */
+    --primary-foreground: 0 0% 100%;      /* White */
+    --muted: 40 25% 96%;                  /* Cream #f5f1e8 */
+    --muted-foreground: 201 25% 31%;      /* Navy Light #3d5a64 */
+    --border: 120 23% 90%;                /* Sage Light #d4e7d6 */
+
+    /* The Dorset Transfer Company Brand Colors */
+    --navy: 201 29% 24%;                  /* #2b444c */
+    --navy-dark: 200 25% 13%;             /* #1a2428 */
+    --navy-light: 201 25% 31%;            /* #3d5a64 */
+    --sage: 128 23% 74%;                  /* #b7d5b9 */
+    --sage-dark: 135 19% 57%;             /* #8fb894 */
+    --sage-light: 120 23% 90%;            /* #d4e7d6 */
+    --cream: 40 25% 96%;                  /* #f5f1e8 */
+
+    /* Legacy colors (for gradual migration) */
+    --ocean-light: 177 50% 45%;
+    --sand-golden: 38 85% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Text Gradients - New Brand */
+  .text-gradient-navy-sage {
+    @apply bg-gradient-navy-sage bg-clip-text text-transparent;
+  }
+
+  .text-gradient-navy {
+    @apply bg-gradient-to-r from-navy to-navy-light bg-clip-text text-transparent;
+  }
+
+  .text-gradient-sage {
+    @apply bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent;
+  }
+
+  /* Legacy Gradients - Deprecated, use navy-sage instead */
+  .text-gradient-ocean {
+    @apply bg-gradient-to-r from-sage to-sage-dark bg-clip-text text-transparent;
+  }
+
+  .text-gradient-sand {
+    @apply bg-gradient-to-r from-navy to-navy-light bg-clip-text text-transparent;
+  }
+}
+
+/* React DatePicker Custom Styling */
+.react-datepicker-wrapper {
+  @apply w-full;
+}
+
+.react-datepicker-popper {
+  @apply z-50;
+}
+
+.react-datepicker {
+  @apply bg-card border-2 border-sage-light rounded-2xl shadow-xl font-sans;
+}
+
+.react-datepicker__header {
+  @apply bg-sage-light border-b-2 border-sage rounded-t-2xl pt-4 pb-3;
+}
+
+.react-datepicker__current-month {
+  @apply text-navy-dark font-semibold text-base mb-2;
+}
+
+.react-datepicker__day-name {
+  @apply text-navy font-medium text-sm w-10 leading-10;
+}
+
+.react-datepicker__day {
+  @apply text-foreground hover:bg-sage-light rounded-lg w-10 leading-10 transition-colors;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  @apply bg-sage-dark text-white hover:bg-sage-dark font-semibold;
+}
+
+.react-datepicker__day--today {
+  @apply font-bold text-navy-dark;
+}
+
+.react-datepicker__day--disabled {
+  @apply text-muted-foreground opacity-40 hover:bg-transparent cursor-not-allowed;
+}
+
+.react-datepicker__day--outside-month {
+  @apply text-muted-foreground opacity-50;
+}
+
+.react-datepicker__navigation {
+  @apply top-5;
+}
+
+.react-datepicker__navigation-icon::before {
+  @apply border-navy;
+}
+
+.react-datepicker__time-container {
+  @apply border-l-2 border-sage-light;
+}
+
+.react-datepicker__time-container .react-datepicker__time {
+  @apply bg-background;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
+  @apply w-full;
+}
+
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list {
+  @apply w-full;
+}
+
+.react-datepicker__time-list-item {
+  @apply hover:bg-sage-light transition-colors text-foreground;
+}
+
+.react-datepicker__time-list-item--selected {
+  @apply bg-sage-dark text-white hover:bg-sage-dark font-semibold;
+}
+
+.react-datepicker__time-list-item--disabled {
+  @apply text-muted-foreground opacity-40 hover:bg-transparent cursor-not-allowed;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .react-datepicker {
+    @apply text-base;
+  }
+
+  .react-datepicker__day-name,
+  .react-datepicker__day {
+    @apply w-12 h-12 leading-[3rem] text-base;
+  }
+
+  .react-datepicker__time-list-item {
+    @apply py-3 text-base;
+  }
+
+  /* PWA Install Prompt Animation */
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+  }
+}
+
+/* Mobile Menu Toggle Animation - Hamburger to X */
+.menutoggle {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-left,
+.icon-right {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 3px;
+  background-color: hsl(var(--navy-dark));
+  transition: all 0.5s ease;
+}
+
+.icon-left::before,
+.icon-left::after {
+  content: "";
+  position: absolute;
+  width: 30px;
+  height: 3px;
+  background-color: hsl(var(--navy-dark));
+  transition: all 0.5s ease;
+  left: 0;
+}
+
+/* Create the 3-line burger */
+.icon-left::before {
+  top: -8px;
+}
+
+.icon-left::after {
+  top: 8px;
+}
+
+/* Hide the right icon initially */
+.icon-right {
+  opacity: 0;
+}
+
+/* Transform to X when open */
+.icon-left.open {
+  background-color: transparent;
+}
+
+.icon-left.open::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+
+.icon-left.open::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+.icon-right.open {
+  opacity: 0;
+}
