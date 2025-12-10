@@ -1,6 +1,6 @@
 'use client';
 
-import { Plane, Clock, Briefcase, Globe, ArrowRight, Users, Luggage, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Plane, Clock, Briefcase, Globe, ArrowRight, KeyRound, Users, Luggage, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
@@ -216,7 +216,15 @@ export default function Home() {
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-3">
               <FeedbackButton />
-              
+              <a
+                href="https://durdle.flowency.build/admin"
+                className="p-2 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110"
+                title="Admin Login"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <KeyRound className="w-5 h-5" />
+              </a>
               <a href="/quote" className={buttonVariants({ variant: "hero-golden", size: "default" })}>
                 Get a Quote
               </a>
@@ -287,7 +295,15 @@ export default function Home() {
                   <a href="/quote" className={buttonVariants({ variant: "hero-golden", size: "xl", className: "w-full" })}>
                     Get a Quote
                   </a>
-                  
+                  <a
+                    href="https://durdle.flowency.build/admin"
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-lg transition-all"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <KeyRound className="w-5 h-5" />
+                    <span className="font-medium">Admin Login</span>
+                  </a>
                 </div>
               </nav>
             </div>
