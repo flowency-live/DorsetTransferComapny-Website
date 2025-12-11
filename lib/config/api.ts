@@ -38,6 +38,21 @@ export const API_ENDPOINTS = {
   adminQuotesExport: '/admin/quotes/export',
   // Admin Bookings endpoints (uses public bookings endpoint for now)
   adminBookings: '/bookings',
+
+  // Corporate Portal Authentication
+  corporateMagicLink: '/corporate/auth/magic-link',
+  corporateVerify: '/corporate/auth/verify',
+  corporateSession: '/corporate/auth/session',
+  corporateLogin: '/corporate/auth/login',
+  corporateSetPassword: '/corporate/auth/set-password',
+  corporateForgotPassword: '/corporate/auth/forgot-password',
+
+  // Corporate Portal API
+  corporateMe: '/corporate/me',
+  corporateNotifications: '/corporate/me/notifications',
+  corporateDashboard: '/corporate/dashboard',
+  corporateCompany: '/corporate/company',
+  corporateUsers: '/corporate/users',
 } as const;
 
 /**
