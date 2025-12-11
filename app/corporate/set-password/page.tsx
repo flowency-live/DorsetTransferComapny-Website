@@ -5,12 +5,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
-import { setPassword } from '@/lib/services/corporateApi';
+import { setPassword, verifyToken } from '@/lib/services/corporateApi';
 
 interface PasswordRequirement {
   label: string;
   regex: RegExp;
   met: boolean;
+}
+
+interface PendingUser {
+  userId: string;
+  email: string;
+  name: string;
+  role: string;
+  companyName: string;
+  corpAccountId: string;
 }
 
 function SetPasswordContent() {
@@ -19,8 +28,10 @@ function SetPasswordContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingUser, setIsFetchingUser] = useState(true);
   const [error, setError] = useState('');
   const [token, setToken] = useState<string | null>(null);
+  const [pendingUser, setPendingUser] = useState<PendingUser | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -28,9 +39,35 @@ function SetPasswordContent() {
     const tokenParam = searchParams.get('token');
     if (!tokenParam) {
       setError('No token provided. Please use the link from your email.');
-    } else {
-      setToken(tokenParam);
+      setIsFetchingUser(false);
+      return;
     }
+
+    setToken(tokenParam);
+
+    // Fetch user info directly from the verify API (more reliable than sessionStorage)
+    const fetchUserInfo = async () => {
+      try {
+        const result = await verifyToken(tokenParam);
+        if (result.success && result.user) {
+          setPendingUser(result.user);
+        }
+      } catch {
+        // If verify fails, try sessionStorage as fallback
+        const storedUser = sessionStorage.getItem('dtc_pending_user');
+        if (storedUser) {
+          try {
+            setPendingUser(JSON.parse(storedUser));
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      } finally {
+        setIsFetchingUser(false);
+      }
+    };
+
+    fetchUserInfo();
   }, [searchParams]);
 
   const requirements: PasswordRequirement[] = [
@@ -69,6 +106,8 @@ function SetPasswordContent() {
       const result = await setPassword(token, password, confirmPassword);
 
       if (result.success) {
+        // Clear pending user from sessionStorage
+        sessionStorage.removeItem('dtc_pending_user');
         router.push('/corporate/dashboard');
       } else {
         setError(result.error || result.message || 'Failed to set password');
@@ -149,9 +188,24 @@ function SetPasswordContent() {
               <h2 className="text-center text-xl font-semibold text-gray-900 mb-2">
                 Set Your Password
               </h2>
-              <p className="text-center text-sm text-gray-600 mb-6">
-                Create a secure password for your corporate account.
-              </p>
+              {pendingUser ? (
+                <div className="text-center mb-6">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Create a secure password for your corporate account.
+                  </p>
+                  <div className="bg-sage/5 border border-sage/20 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 mb-1">Account</p>
+                    <p className="font-medium text-gray-900">{pendingUser.email}</p>
+                    {pendingUser.companyName && (
+                      <p className="text-sm text-gray-600 mt-1">{pendingUser.companyName}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-sm text-gray-600 mb-6">
+                  Create a secure password for your corporate account.
+                </p>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
@@ -281,7 +335,12 @@ function SetPasswordContent() {
               </form>
             </div>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-2">
+              {pendingUser && (
+                <p className="text-xs text-gray-500">
+                  Remember: Use <strong>{pendingUser.email}</strong> to sign in next time
+                </p>
+              )}
               <Link href="/corporate/login" className="text-sm text-gray-600 hover:text-gray-900">
                 Already have a password? Sign in
               </Link>

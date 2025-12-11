@@ -29,6 +29,10 @@ function VerifyContent() {
         if (result.success) {
           // Check if user needs to set password (first time login)
           if (result.needsPassword) {
+            // Store user info in sessionStorage so set-password page can display it
+            if (result.user) {
+              sessionStorage.setItem('dtc_pending_user', JSON.stringify(result.user));
+            }
             // Redirect to set-password page with the token
             router.push(`/corporate/set-password?token=${token}`);
             return;
