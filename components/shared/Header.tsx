@@ -48,7 +48,13 @@ export default function Header() {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/corporate/login"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Partner Login
+            </Link>
             <Link
               href="/quote"
               className={buttonVariants({ variant: "hero-golden", size: "default" })}
@@ -87,6 +93,13 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href="/corporate/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+              >
+                Partner Login
+              </Link>
               <Link
                 href="/quote"
                 onClick={() => setMobileMenuOpen(false)}
