@@ -114,7 +114,7 @@ export default function CorporateDashboardPage() {
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <Link
-                href="/quote"
+                href="/corporate/quote"
                 className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
               >
                 <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-lg flex items-center justify-center">
@@ -227,7 +227,7 @@ export default function CorporateDashboardPage() {
                   </svg>
                   <p className="mt-2 text-sm text-navy-light/70">No bookings yet</p>
                   <Link
-                    href="/quote"
+                    href="/corporate/quote"
                     className="mt-4 inline-block text-sm font-medium text-sage hover:text-sage-dark"
                   >
                     Book your first transfer &rarr;
