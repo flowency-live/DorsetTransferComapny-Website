@@ -112,7 +112,7 @@ export default function Header() {
         </div>
       )}
       {/* Full-width sage bar */}
-      <div className="h-1 bg-sage" />
+      <div className="h-1 bg-sage-light" />
     </header>
   );
 }

@@ -26,10 +26,10 @@ const config: Config = {
           light: '#3d5a64',
         },
         sage: {
-          DEFAULT: '#b7d5b9',
-          dark: '#8fb894',
-          light: '#d4e7d6',
-          accessible: '#4a7a50', // WCAG AA compliant (4.7:1 on white)
+          DEFAULT: '#5a8a60',  // WCAG AA compliant for white text (4.5:1)
+          dark: '#4a7a50',     // Darker for hover states
+          light: '#b7d5b9',    // Original pale sage for backgrounds/accents
+          lighter: '#d4e7d6',  // Very light for subtle backgrounds
         },
         gray: {
           DEFAULT: '#a6a6a6',

@@ -258,7 +258,7 @@ export default function CorporateTeamPage() {
                       required
                       value={newMember.name}
                       onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-                      className="mt-1 block w-full border-sage/30 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
                     />
                   </div>
                   <div>
@@ -271,7 +271,7 @@ export default function CorporateTeamPage() {
                       required
                       value={newMember.email}
                       onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
-                      className="mt-1 block w-full border-sage/30 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
                     />
                   </div>
                   <div>
@@ -284,7 +284,7 @@ export default function CorporateTeamPage() {
                       onChange={(e) =>
                         setNewMember({ ...newMember, role: e.target.value as 'admin' | 'booker' })
                       }
-                      className="mt-1 block w-full border-sage/30 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
                     >
                       <option value="booker">Booker - Can book transfers</option>
                       <option value="admin">Admin - Full access including team management</option>

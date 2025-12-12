@@ -310,7 +310,7 @@ export default function Home() {
           </div>
         )}
         {/* Full-width sage bar */}
-        <div className="h-1 bg-sage" />
+        <div className="h-1 bg-sage-light" />
       </header>
 
       <main>
@@ -682,7 +682,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-[#FBF7F0]">
         {/* Top sage bar */}
-        <div className="h-1 bg-sage" />
+        <div className="h-1 bg-sage-light" />
         <div className="container px-4 md:px-6 mx-auto">
           {/* Main Footer Content */}
           <div className="py-16 grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -742,7 +742,7 @@ export default function Home() {
           </div>
 
           {/* Bottom Bar */}
-          <div className="h-1 bg-sage" />
+          <div className="h-1 bg-sage-light" />
           <div className="py-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-navy-light/70">
               &copy; 2025 The Dorset Transfer Company. All rights reserved.
