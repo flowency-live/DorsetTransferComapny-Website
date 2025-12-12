@@ -602,6 +602,18 @@ function CorporateQuotePageContent() {
                 specialRequests={specialRequests}
                 onSpecialRequestsChange={setSpecialRequests}
               />
+
+              {/* Get Prices Button */}
+              <div className="mt-6">
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={!canProceedFromStep1() || loadingQuotes}
+                  className="w-full bg-sage hover:bg-sage-dark text-white py-3 text-lg font-medium"
+                >
+                  {loadingQuotes ? 'Getting Quotes...' : 'Get Prices'}
+                </Button>
+              </div>
             </div>
           )}
         </div>
