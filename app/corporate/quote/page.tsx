@@ -26,7 +26,6 @@ type BookingStage = 'quote' | 'contact' | 'payment' | 'confirmation';
 
 interface CompanyData {
   companyName: string;
-  discountPercentage: number;
   paymentTerms: 'immediate' | 'net7' | 'net14' | 'net30';
   status: string;
 }
@@ -35,7 +34,7 @@ function CorporateQuotePageContent() {
   // Auth
   const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
 
-  // Company data (for discount and payment terms)
+  // Company data (for payment terms)
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [companyLoading, setCompanyLoading] = useState(true);
 
@@ -469,18 +468,6 @@ function CorporateQuotePageContent() {
         />
         <main className="flex-1 pt-28 pb-16">
           <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            {/* Corporate Discount Badge */}
-            {company && company.discountPercentage > 0 && (
-              <div className="mb-4 p-3 bg-sage/10 border border-sage/30 rounded-lg flex items-center gap-2">
-                <svg className="w-5 h-5 text-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm font-medium text-navy">
-                  Corporate Rate Applied: {company.discountPercentage}% discount
-                </span>
-              </div>
-            )}
-
             {/* Passenger Name Field (booking for someone else) */}
             <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
               <label className="block text-sm font-medium text-navy mb-2">
@@ -529,24 +516,6 @@ function CorporateQuotePageContent() {
 
       <main className="flex-1 pt-28 pb-16">
         <div className="container mx-auto px-4 md:px-6">
-          {/* Corporate Discount Banner */}
-          {company && company.discountPercentage > 0 && (
-            <div className="mb-6 p-4 bg-sage/10 border border-sage/30 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-sage/20 rounded-full">
-                  <svg className="w-5 h-5 text-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-navy">Corporate Rate Active</p>
-                  <p className="text-xs text-navy-light/70">{company.discountPercentage}% discount applied to all bookings</p>
-                </div>
-              </div>
-              <span className="text-lg font-bold text-sage">-{company.discountPercentage}%</span>
-            </div>
-          )}
-
           {/* Step indicator */}
           <div className="flex items-center justify-center mb-8">
             <div className="flex items-center">
