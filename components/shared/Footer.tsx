@@ -22,10 +22,7 @@ export default function Footer() {
             />
             <div className="text-sm text-navy-light/70 space-y-1">
               <p>Company No: 16884513</p>
-              <p className="pt-2">
-                383 Verity Crescent, Poole<br />
-                England, BH17 8TS
-              </p>
+              <p className="pt-2">Poole, Dorset, England</p>
             </div>
           </div>
 

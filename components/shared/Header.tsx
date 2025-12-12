@@ -53,7 +53,7 @@ export default function Header() {
               href="/corporate/login"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Partner Login
+              Login
             </Link>
             <Link
               href="/quote"
@@ -98,7 +98,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
               >
-                Partner Login
+                Login
               </Link>
               <Link
                 href="/quote"
