@@ -13,9 +13,10 @@ interface BookingConfirmationProps {
   quote: QuoteResponse;
   contactDetails: ContactDetails;
   bookingId: string;
+  returnUrl?: string;
 }
 
-export default function BookingConfirmation({ quote, contactDetails, bookingId }: BookingConfirmationProps) {
+export default function BookingConfirmation({ quote, contactDetails, bookingId, returnUrl = '/' }: BookingConfirmationProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', {
@@ -293,14 +294,14 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId }
               <Download className="w-5 h-5 mr-2" />
               Download Confirmation
             </Button>
-            <Link href="/" className="flex-1">
+            <Link href={returnUrl} className="flex-1">
               <Button
                 type="button"
                 variant="hero-golden"
                 size="xl"
                 className="w-full"
               >
-                Return to Home
+                {returnUrl === '/' ? 'Return to Home' : 'Return to Dashboard'}
               </Button>
             </Link>
           </div>

@@ -400,6 +400,7 @@ function CorporateQuotePageContent() {
               quote={quote}
               contactDetails={contactDetails}
               bookingId={bookingId}
+              returnUrl="/corporate/dashboard"
             />
             {isPayOnAccount && (
               <div className="mt-4 p-4 bg-sage/10 border border-sage/30 rounded-lg">
