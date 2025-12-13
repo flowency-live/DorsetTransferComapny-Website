@@ -1,12 +1,13 @@
 'use client';
 
-import { Car, Calendar, Check, Clock, MapPin } from 'lucide-react';
+import { Car, Calendar, Check, Clock, MapPin, AlertTriangle, Share2, Phone } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 
 import { JourneyType, MultiVehicleQuoteResponse } from '../lib/types';
+import ShareQuoteModal from './ShareQuoteModal';
 
 interface VehicleComparisonGridProps {
   multiQuote: MultiVehicleQuoteResponse;
@@ -24,6 +25,10 @@ export default function VehicleComparisonGrid({
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   // For round-trip, default to return pricing; for one-way/hourly, default to one-way
   const [selectedIsReturn, setSelectedIsReturn] = useState<boolean>(journeyType === 'round-trip');
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  // Check if journey is outside service area
+  const isOutOfServiceArea = multiQuote.outOfServiceArea === true;
 
   const vehicleTypes = ['standard', 'executive', 'minibus'] as const;
 
@@ -82,6 +87,21 @@ export default function VehicleComparisonGrid({
 
   return (
     <div className="space-y-4">
+      {/* Out of Service Area Banner */}
+      {isOutOfServiceArea && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 shadow-mobile">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-amber-800 mb-1">Outside Our Standard Service Area</h3>
+              <p className="text-sm text-amber-700">
+                {multiQuote.outOfServiceAreaMessage || "This journey is outside our standard service area. Send us this quote and we'll be in touch to discuss."}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Journey Summary */}
       <div className="bg-card rounded-2xl p-4 shadow-mobile border-2 border-sage-light">
         <h3 className="text-sm font-semibold text-foreground mb-3">Your Journey</h3>
@@ -277,14 +297,43 @@ export default function VehicleComparisonGrid({
               {getSelectedPricing()?.price}
             </p>
           </div>
-          <Button
-            onClick={handleConfirm}
-            className="w-full bg-sage-dark hover:bg-sage-dark/90 text-white h-12 text-lg font-semibold"
-          >
-            Confirm Selection
-          </Button>
+
+          {/* Show different actions based on service area */}
+          {isOutOfServiceArea ? (
+            <div className="space-y-2">
+              <Button
+                onClick={() => setShowShareModal(true)}
+                className="w-full bg-sage-dark hover:bg-sage-dark/90 text-white h-12 text-lg font-semibold"
+              >
+                <Share2 className="w-5 h-5 mr-2" />
+                Share This Quote
+              </Button>
+              <a
+                href="tel:+441234567890"
+                className="flex items-center justify-center gap-2 w-full h-12 text-lg font-semibold border-2 border-sage-dark text-sage-dark rounded-lg hover:bg-sage-dark/5 transition-colors"
+              >
+                <Phone className="w-5 h-5" />
+                Call Us to Discuss
+              </a>
+            </div>
+          ) : (
+            <Button
+              onClick={handleConfirm}
+              className="w-full bg-sage-dark hover:bg-sage-dark/90 text-white h-12 text-lg font-semibold"
+            >
+              Confirm Selection
+            </Button>
+          )}
         </div>
       )}
+
+      {/* Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        quoteData={multiQuote}
+        selectedVehicle={selectedVehicle || 'standard'}
+      />
     </div>
   );
 }

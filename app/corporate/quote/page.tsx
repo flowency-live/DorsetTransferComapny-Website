@@ -317,6 +317,12 @@ function CorporateQuotePageContent() {
         throw new Error('Missing quote');
       }
 
+      // CRITICAL: Ensure corporate account ID is available
+      if (!user?.corpAccountId) {
+        console.error('Corporate booking failed: corpAccountId is missing from user object', { user });
+        throw new Error('Session error: Please log out and log back in to complete your booking');
+      }
+
       const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
 
       const bookingData = {
@@ -325,7 +331,7 @@ function CorporateQuotePageContent() {
         customerEmail: contact.email,
         customerPhone: contact.phone,
         // Corporate-specific fields
-        corporateAccountId: user?.corpAccountId,
+        corporateAccountId: user.corpAccountId,
         passengerName: passengerName || contact.name,
         bookedBy: user?.email,
         // Journey details

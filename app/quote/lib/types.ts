@@ -252,4 +252,11 @@ export interface MultiVehicleQuoteResponse {
   status?: 'valid' | 'expired';
   expiresAt?: string;
   waypoints?: Waypoint[];
+  // Zone pricing info
+  isZonePricing?: boolean;
+  zoneName?: string;
+  destinationName?: string;
+  // Service area flags - when true, booking should be blocked
+  outOfServiceArea?: boolean;
+  outOfServiceAreaMessage?: string;
 }
