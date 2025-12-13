@@ -226,6 +226,34 @@ export interface VehiclePricing {
   };
 }
 
+// Debug info for zone pricing testing
+export interface ZonePricingDebugInfo {
+  pickup: {
+    address: string;
+    placeId: string;
+    extractedPostcode: string | null;
+  };
+  dropoff: {
+    address: string;
+    placeId: string;
+    extractedPostcode: string | null;
+  } | null;
+  zoneMatch: {
+    zoneId: string;
+    zoneName: string;
+    isReversed: boolean;
+  } | null;
+  destinationMatch: {
+    destinationId: string;
+    destinationName: string;
+  } | null;
+  pricingMethod: 'zone_pricing' | 'variable_pricing';
+  serviceArea: {
+    pickupInArea: boolean;
+    dropoffInArea: boolean;
+  };
+}
+
 // Multi-vehicle quote response (compareMode: true)
 export interface MultiVehicleQuoteResponse {
   compareMode: true;
@@ -259,4 +287,6 @@ export interface MultiVehicleQuoteResponse {
   // Service area flags - when true, booking should be blocked
   outOfServiceArea?: boolean;
   outOfServiceAreaMessage?: string;
+  // Debug info for zone pricing testing (development only)
+  _debug?: ZonePricingDebugInfo;
 }

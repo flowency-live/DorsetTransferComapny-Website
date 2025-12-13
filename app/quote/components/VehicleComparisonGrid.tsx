@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Calendar, Check, Clock, MapPin, AlertTriangle, Share2, Phone } from 'lucide-react';
+import { Car, Calendar, Check, Clock, MapPin, AlertTriangle, Share2, Phone, Bug, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -26,9 +26,14 @@ export default function VehicleComparisonGrid({
   // For round-trip, default to return pricing; for one-way/hourly, default to one-way
   const [selectedIsReturn, setSelectedIsReturn] = useState<boolean>(journeyType === 'round-trip');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Check if journey is outside service area
   const isOutOfServiceArea = multiQuote.outOfServiceArea === true;
+
+  // Check if using zone/fixed pricing
+  const isFixedPrice = multiQuote.isZonePricing === true;
+  const debugInfo = multiQuote._debug;
 
   const vehicleTypes = ['standard', 'executive', 'minibus'] as const;
 
@@ -87,6 +92,21 @@ export default function VehicleComparisonGrid({
 
   return (
     <div className="space-y-4">
+      {/* Fixed Price Indicator */}
+      {isFixedPrice && (
+        <div className="bg-green-50 border-2 border-green-300 rounded-2xl p-3 shadow-mobile">
+          <div className="flex items-center gap-2">
+            <Tag className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <span className="font-semibold text-green-800">Fixed Price Trip</span>
+            {multiQuote.zoneName && (
+              <span className="text-sm text-green-700">
+                ({multiQuote.zoneName} to {multiQuote.destinationName})
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Out of Service Area Banner */}
       {isOutOfServiceArea && (
         <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 shadow-mobile">
@@ -99,6 +119,115 @@ export default function VehicleComparisonGrid({
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Debug Panel for Zone Pricing Testing */}
+      {debugInfo && (
+        <div className="bg-slate-800 rounded-2xl overflow-hidden text-white text-xs font-mono">
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="w-full px-4 py-2 flex items-center justify-between bg-slate-700 hover:bg-slate-600"
+          >
+            <div className="flex items-center gap-2">
+              <Bug className="w-4 h-4" />
+              <span>Zone Pricing Debug</span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                debugInfo.pricingMethod === 'zone_pricing' ? 'bg-green-500' : 'bg-blue-500'
+              }`}>
+                {debugInfo.pricingMethod === 'zone_pricing' ? 'ZONE PRICING' : 'VARIABLE PRICING'}
+              </span>
+            </div>
+            {showDebug ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+
+          {showDebug && (
+            <div className="p-4 space-y-3">
+              {/* Pickup Info */}
+              <div>
+                <div className="text-slate-400 mb-1">Pickup</div>
+                <div className="bg-slate-900 p-2 rounded">
+                  <div>Address: {debugInfo.pickup.address}</div>
+                  <div>PlaceId: {debugInfo.pickup.placeId}</div>
+                  <div className="flex items-center gap-2">
+                    Postcode: <span className={debugInfo.pickup.extractedPostcode ? 'text-green-400' : 'text-red-400'}>
+                      {debugInfo.pickup.extractedPostcode || 'NOT FOUND'}
+                    </span>
+                    {debugInfo.serviceArea.pickupInArea ? (
+                      <span className="text-green-400">(in service area)</span>
+                    ) : (
+                      <span className="text-red-400">(OUT OF SERVICE AREA)</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Dropoff Info */}
+              {debugInfo.dropoff && (
+                <div>
+                  <div className="text-slate-400 mb-1">Dropoff</div>
+                  <div className="bg-slate-900 p-2 rounded">
+                    <div>Address: {debugInfo.dropoff.address}</div>
+                    <div>PlaceId: {debugInfo.dropoff.placeId}</div>
+                    <div className="flex items-center gap-2">
+                      Postcode: <span className={debugInfo.dropoff.extractedPostcode ? 'text-green-400' : 'text-yellow-400'}>
+                        {debugInfo.dropoff.extractedPostcode || 'N/A (airport/station)'}
+                      </span>
+                      {debugInfo.serviceArea.dropoffInArea ? (
+                        <span className="text-green-400">(in service area)</span>
+                      ) : (
+                        <span className="text-yellow-400">(outside service area)</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Zone Match */}
+              <div>
+                <div className="text-slate-400 mb-1">Zone Match</div>
+                <div className="bg-slate-900 p-2 rounded">
+                  {debugInfo.zoneMatch ? (
+                    <div className="text-green-400">
+                      <div>Zone: {debugInfo.zoneMatch.zoneName} ({debugInfo.zoneMatch.zoneId})</div>
+                      {debugInfo.zoneMatch.isReversed && (
+                        <div className="text-yellow-400">REVERSED (dropoff is zone, pickup is destination)</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-red-400">No zone match found</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Destination Match */}
+              <div>
+                <div className="text-slate-400 mb-1">Destination Match</div>
+                <div className="bg-slate-900 p-2 rounded">
+                  {debugInfo.destinationMatch ? (
+                    <div className="text-green-400">
+                      {debugInfo.destinationMatch.destinationName} ({debugInfo.destinationMatch.destinationId})
+                    </div>
+                  ) : (
+                    <div className="text-red-400">No destination match found</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div className="pt-2 border-t border-slate-600">
+                <div className="text-slate-400 mb-1">Result</div>
+                <div className={`p-2 rounded ${
+                  debugInfo.pricingMethod === 'zone_pricing' ? 'bg-green-900/50 text-green-300' : 'bg-blue-900/50 text-blue-300'
+                }`}>
+                  {debugInfo.pricingMethod === 'zone_pricing'
+                    ? 'Using ZONE PRICING (fixed prices)'
+                    : 'Using VARIABLE PRICING (distance-based)'
+                  }
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
