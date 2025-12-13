@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Heart, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
-import { getDashboard } from '@/lib/services/corporateApi';
+import { useState, useEffect } from 'react';
+
+import FavouriteTripCard from '@/components/corporate/FavouriteTripCard';
 import CorporateHeader from '@/components/corporate/CorporateHeader';
 import Footer from '@/components/shared/Footer';
+import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
+import { getDashboard, getFavouriteTrips, FavouriteTrip } from '@/lib/services/corporateApi';
 
 interface DashboardData {
   company: {
@@ -31,14 +34,23 @@ interface DashboardData {
 export default function CorporateDashboardPage() {
   const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [favouriteTrips, setFavouriteTrips] = useState<FavouriteTrip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [tripsLoading, setTripsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
+      // Fetch dashboard data
       getDashboard()
         .then(setDashboard)
         .catch(console.error)
         .finally(() => setIsLoading(false));
+
+      // Fetch favourite trips
+      getFavouriteTrips()
+        .then((data) => setFavouriteTrips(data.trips || []))
+        .catch(console.error)
+        .finally(() => setTripsLoading(false));
     }
   }, [user]);
 
@@ -156,6 +168,62 @@ export default function CorporateDashboardPage() {
                   <p className="text-sm text-navy-light/70">Coming soon</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Favourite Trips */}
+          <div className="bg-white rounded-lg shadow-sm border border-sage/20 mb-8">
+            <div className="p-6 border-b border-sage/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-sage" />
+                <h2 className="text-lg font-semibold text-navy">Favourite Trips</h2>
+              </div>
+              <Link
+                href="/corporate/quote"
+                className="inline-flex items-center gap-1 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                New Trip
+              </Link>
+            </div>
+            <div className="p-6">
+              {tripsLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage mx-auto" />
+                </div>
+              ) : favouriteTrips.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {favouriteTrips.slice(0, 6).map((trip) => (
+                      <FavouriteTripCard key={trip.tripId} trip={trip} compact />
+                    ))}
+                  </div>
+                  {favouriteTrips.length > 6 && (
+                    <div className="mt-4 text-center">
+                      <Link
+                        href="/corporate/trips"
+                        className="text-sm font-medium text-sage hover:text-sage-dark"
+                      >
+                        View all {favouriteTrips.length} trips &rarr;
+                      </Link>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Heart className="mx-auto h-12 w-12 text-sage/30" />
+                  <p className="mt-2 text-sm text-navy-light/70">No favourite trips saved yet</p>
+                  <p className="mt-1 text-xs text-navy-light/50">
+                    Save trips after getting a quote for quick rebooking
+                  </p>
+                  <Link
+                    href="/corporate/quote"
+                    className="mt-4 inline-block text-sm font-medium text-sage hover:text-sage-dark"
+                  >
+                    Book a transfer &rarr;
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 

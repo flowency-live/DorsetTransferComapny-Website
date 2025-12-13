@@ -86,6 +86,57 @@ interface TeamResponse {
   total: number;
 }
 
+// Favourite Trip Types
+export interface TripLocation {
+  address: string;
+  placeId?: string;
+  lat: number;
+  lng: number;
+}
+
+export interface TripWaypoint extends TripLocation {
+  waitTime?: number;
+}
+
+export interface FavouriteTrip {
+  tripId: string;
+  label: string;
+  pickupLocation: TripLocation;
+  dropoffLocation: TripLocation;
+  waypoints?: TripWaypoint[];
+  vehicleType?: 'standard' | 'executive' | 'minibus';
+  passengers?: number;
+  luggage?: number;
+  createdAt: string;
+  lastUsedAt?: string;
+  usageCount?: number;
+}
+
+interface TripsResponse {
+  trips: FavouriteTrip[];
+  total: number;
+}
+
+interface SaveTripData {
+  label: string;
+  pickupLocation: TripLocation;
+  dropoffLocation: TripLocation;
+  waypoints?: TripWaypoint[];
+  vehicleType?: 'standard' | 'executive' | 'minibus';
+  passengers?: number;
+  luggage?: number;
+}
+
+interface UpdateTripData {
+  label?: string;
+  pickupLocation?: TripLocation;
+  dropoffLocation?: TripLocation;
+  waypoints?: TripWaypoint[];
+  vehicleType?: 'standard' | 'executive' | 'minibus';
+  passengers?: number;
+  luggage?: number;
+}
+
 /**
  * Get stored auth token
  */
@@ -331,5 +382,64 @@ export async function removeTeamMember(
 ): Promise<{ success: boolean; message: string }> {
   return authenticatedFetch(`${API_ENDPOINTS.corporateUsers}/${userId}`, {
     method: 'DELETE',
+  });
+}
+
+// ============================================================================
+// FAVOURITE TRIPS
+// ============================================================================
+
+/**
+ * Get user's favourite trips
+ */
+export async function getFavouriteTrips(): Promise<TripsResponse> {
+  return authenticatedFetch(API_ENDPOINTS.corporateTrips);
+}
+
+/**
+ * Save a new favourite trip
+ */
+export async function saveFavouriteTrip(
+  data: SaveTripData
+): Promise<{ success: boolean; message: string; trip?: FavouriteTrip }> {
+  return authenticatedFetch(API_ENDPOINTS.corporateTrips, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a favourite trip
+ */
+export async function updateFavouriteTrip(
+  tripId: string,
+  data: UpdateTripData
+): Promise<{ success: boolean; message: string; trip?: FavouriteTrip }> {
+  return authenticatedFetch(`${API_ENDPOINTS.corporateTrips}/${tripId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a favourite trip
+ */
+export async function deleteFavouriteTrip(
+  tripId: string
+): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch(`${API_ENDPOINTS.corporateTrips}/${tripId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Mark a trip as used (updates lastUsedAt and usageCount)
+ * Call this after successfully booking with a favourite trip
+ */
+export async function markTripUsed(
+  tripId: string
+): Promise<{ success: boolean; message: string; trip?: FavouriteTrip }> {
+  return authenticatedFetch(`${API_ENDPOINTS.corporateTrips}/${tripId}/used`, {
+    method: 'PUT',
   });
 }

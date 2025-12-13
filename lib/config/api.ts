@@ -50,6 +50,7 @@ export const API_ENDPOINTS = {
   // Corporate Portal API
   corporateMe: '/corporate/me',
   corporateNotifications: '/corporate/me/notifications',
+  corporateTrips: '/corporate/me/trips',
   corporateDashboard: '/corporate/dashboard',
   corporateCompany: '/corporate/company',
   corporateUsers: '/corporate/users',

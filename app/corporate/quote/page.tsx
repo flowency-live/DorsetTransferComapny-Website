@@ -1,14 +1,16 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
-import { useState, useEffect, Suspense } from 'react';
+import { ArrowLeft, Heart } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 
 import CorporateHeader from '@/components/corporate/CorporateHeader';
+import SaveTripModal from '@/components/corporate/SaveTripModal';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
-import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
-import { getCompany } from '@/lib/services/corporateApi';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
+import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
+import { getCompany, getFavouriteTrips, markTripUsed, FavouriteTrip } from '@/lib/services/corporateApi';
 
 // Reuse components from public quote flow
 import AllInputsStep from '../../quote/components/AllInputsStep';
@@ -33,10 +35,17 @@ interface CompanyData {
 function CorporateQuotePageContent() {
   // Auth
   const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
+  const searchParams = useSearchParams();
+  const tripIdParam = searchParams.get('tripId');
 
   // Company data (for payment terms)
   const [company, setCompany] = useState<CompanyData | null>(null);
   const [companyLoading, setCompanyLoading] = useState(true);
+
+  // Favourite trip state
+  const [loadedTrip, setLoadedTrip] = useState<FavouriteTrip | null>(null);
+  const [tripLoading, setTripLoading] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Form state (same as public quote)
   const [currentStep, setCurrentStep] = useState<Step>(1);
@@ -97,6 +106,56 @@ function CorporateQuotePageContent() {
         .finally(() => setCompanyLoading(false));
     }
   }, [user]);
+
+  // Load favourite trip if tripId param is present
+  const loadTrip = useCallback(async () => {
+    if (!tripIdParam || !user) return;
+
+    setTripLoading(true);
+    try {
+      const { trips } = await getFavouriteTrips();
+      const trip = trips.find(t => t.tripId === tripIdParam);
+
+      if (trip) {
+        setLoadedTrip(trip);
+
+        // Pre-fill form with trip data
+        setPickupLocation({
+          address: trip.pickupLocation.address,
+          placeId: trip.pickupLocation.placeId,
+          lat: trip.pickupLocation.lat,
+          lng: trip.pickupLocation.lng,
+        });
+        setDropoffLocation({
+          address: trip.dropoffLocation.address,
+          placeId: trip.dropoffLocation.placeId,
+          lat: trip.dropoffLocation.lat,
+          lng: trip.dropoffLocation.lng,
+        });
+
+        if (trip.waypoints && trip.waypoints.length > 0) {
+          setWaypoints(trip.waypoints.map(w => ({
+            address: w.address,
+            placeId: w.placeId,
+            lat: w.lat,
+            lng: w.lng,
+            waitTime: w.waitTime,
+          })));
+        }
+
+        if (trip.passengers) setPassengers(trip.passengers);
+        if (trip.luggage) setLuggage(trip.luggage);
+      }
+    } catch (err) {
+      console.error('Failed to load favourite trip:', err);
+    } finally {
+      setTripLoading(false);
+    }
+  }, [tripIdParam, user]);
+
+  useEffect(() => {
+    loadTrip();
+  }, [loadTrip]);
 
   // Pre-fill contact details from user profile
   useEffect(() => {
@@ -546,7 +605,7 @@ function CorporateQuotePageContent() {
             </div>
           )}
 
-          {loadingQuotes ? (
+          {loadingQuotes || tripLoading ? (
             <LoadingState />
           ) : quote ? (
             <div className="max-w-2xl mx-auto">
@@ -555,6 +614,19 @@ function CorporateQuotePageContent() {
                 onNewQuote={handleNewQuote}
                 onConfirmBooking={handleConfirmBooking}
               />
+
+              {/* Save as Favourite button - only show if not already loaded from a favourite */}
+              {!loadedTrip && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => setShowSaveModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
+                  >
+                    <Heart className="h-4 w-4" />
+                    Save as Favourite Trip
+                  </button>
+                </div>
+              )}
             </div>
           ) : currentStep === 2 && multiQuote ? (
             <div className="max-w-4xl mx-auto">
@@ -627,6 +699,42 @@ function CorporateQuotePageContent() {
       </main>
 
       <Footer />
+
+      {/* Save Trip Modal */}
+      {quote && pickupLocation && dropoffLocation && (
+        <SaveTripModal
+          isOpen={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          onSaved={() => {
+            // Could show a toast notification here
+            console.log('Trip saved successfully');
+          }}
+          tripData={{
+            pickupLocation: {
+              address: pickupLocation.address,
+              placeId: pickupLocation.placeId,
+              lat: pickupLocation.lat || 0,
+              lng: pickupLocation.lng || 0,
+            },
+            dropoffLocation: {
+              address: dropoffLocation.address,
+              placeId: dropoffLocation.placeId,
+              lat: dropoffLocation.lat || 0,
+              lng: dropoffLocation.lng || 0,
+            },
+            waypoints: waypoints.length > 0 ? waypoints.map(w => ({
+              address: w.address,
+              placeId: w.placeId,
+              lat: w.lat || 0,
+              lng: w.lng || 0,
+              waitTime: w.waitTime,
+            })) : undefined,
+            vehicleType: quote.vehicleType as 'standard' | 'executive' | 'minibus',
+            passengers,
+            luggage,
+          }}
+        />
+      )}
     </div>
   );
 }
