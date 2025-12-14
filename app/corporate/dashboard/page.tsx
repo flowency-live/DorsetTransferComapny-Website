@@ -25,10 +25,27 @@ interface DashboardData {
   recentBookings: Array<{
     id: string;
     date: string;
+    passengerName: string;
     pickup: string;
     dropoff: string;
     status: string;
   }>;
+}
+
+function formatBookingDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateString;
+  }
 }
 
 export default function CorporateDashboardPage() {
@@ -246,6 +263,9 @@ export default function CorporateDashboardPage() {
                           Date
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-navy-light/70 uppercase tracking-wider">
+                          Passenger
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-navy-light/70 uppercase tracking-wider">
                           Pickup
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-navy-light/70 uppercase tracking-wider">
@@ -260,12 +280,15 @@ export default function CorporateDashboardPage() {
                       {dashboard.recentBookings.map((booking) => (
                         <tr key={booking.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-navy">
-                            {booking.date}
+                            {formatBookingDate(booking.date)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-light/70">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-navy font-medium">
+                            {booking.passengerName || '-'}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-navy-light/70 max-w-xs truncate">
                             {booking.pickup}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-light/70">
+                          <td className="px-6 py-4 text-sm text-navy-light/70 max-w-xs truncate">
                             {booking.dropoff}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">

@@ -65,6 +65,7 @@ interface DashboardResponse {
   recentBookings: Array<{
     id: string;
     date: string;
+    passengerName: string;
     pickup: string;
     dropoff: string;
     status: string;
