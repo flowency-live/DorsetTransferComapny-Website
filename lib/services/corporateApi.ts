@@ -77,6 +77,7 @@ interface TeamMember {
   email: string;
   name: string;
   role: 'admin' | 'booker';
+  requiresApproval?: boolean;
   status: string;
   lastLogin?: string;
   createdAt: string;
@@ -355,7 +356,8 @@ export async function addTeamMember(data: {
   email: string;
   name: string;
   role: 'admin' | 'booker';
-}): Promise<{ success: boolean; message: string; user?: TeamMember }> {
+  requiresApproval?: boolean;
+}): Promise<{ success: boolean; message: string; user?: TeamMember; magicLink?: string; instructions?: { note: string } }> {
   return authenticatedFetch(API_ENDPOINTS.corporateUsers, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -367,7 +369,7 @@ export async function addTeamMember(data: {
  */
 export async function updateTeamMember(
   userId: string,
-  data: { name?: string; role?: 'admin' | 'booker'; status?: 'active' | 'inactive' }
+  data: { name?: string; role?: 'admin' | 'booker'; status?: 'active' | 'inactive'; requiresApproval?: boolean }
 ): Promise<{ success: boolean; message: string }> {
   return authenticatedFetch(`${API_ENDPOINTS.corporateUsers}/${userId}`, {
     method: 'PUT',

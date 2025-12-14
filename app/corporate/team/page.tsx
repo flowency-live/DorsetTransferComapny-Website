@@ -18,9 +18,18 @@ interface TeamMember {
   email: string;
   name: string;
   role: 'admin' | 'booker';
+  requiresApproval?: boolean;
   status: string;
   lastLogin?: string;
   createdAt: string;
+}
+
+interface AddMemberResult {
+  success: boolean;
+  user?: TeamMember;
+  magicLink?: string;
+  instructions?: { note: string };
+  message?: string;
 }
 
 export default function CorporateTeamPage() {
@@ -30,9 +39,10 @@ export default function CorporateTeamPage() {
   const [companyName, setCompanyName] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newMember, setNewMember] = useState<{ email: string; name: string; role: 'admin' | 'booker' }>({ email: '', name: '', role: 'booker' });
+  const [newMember, setNewMember] = useState<{ email: string; name: string; role: 'admin' | 'booker'; requiresApproval: boolean }>({ email: '', name: '', role: 'booker', requiresApproval: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [successResult, setSuccessResult] = useState<AddMemberResult | null>(null);
 
   useEffect(() => {
     if (user && !isAdmin) {
@@ -61,13 +71,15 @@ export default function CorporateTeamPage() {
     setIsSubmitting(true);
 
     try {
-      const result = await addTeamMember(newMember);
+      const result = await addTeamMember(newMember) as AddMemberResult;
       if (result.success && result.user) {
         setMembers([...members, result.user]);
         setShowAddModal(false);
-        setNewMember({ email: '', name: '', role: 'booker' });
+        setNewMember({ email: '', name: '', role: 'booker', requiresApproval: false });
+        // Show success with magic link
+        setSuccessResult(result);
       } else {
-        setError('Failed to add team member');
+        setError(result.message || 'Failed to add team member');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add team member');
@@ -282,7 +294,7 @@ export default function CorporateTeamPage() {
                       id="role"
                       value={newMember.role}
                       onChange={(e) =>
-                        setNewMember({ ...newMember, role: e.target.value as 'admin' | 'booker' })
+                        setNewMember({ ...newMember, role: e.target.value as 'admin' | 'booker', requiresApproval: false })
                       }
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
                     >
@@ -290,6 +302,28 @@ export default function CorporateTeamPage() {
                       <option value="admin">Admin - Full access including team management</option>
                     </select>
                   </div>
+
+                  {newMember.role === 'booker' && (
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5">
+                        <input
+                          id="requiresApproval"
+                          type="checkbox"
+                          checked={newMember.requiresApproval}
+                          onChange={(e) => setNewMember({ ...newMember, requiresApproval: e.target.checked })}
+                          className="h-4 w-4 text-sage border-gray-300 rounded focus:ring-sage"
+                        />
+                      </div>
+                      <div className="ml-3 text-sm">
+                        <label htmlFor="requiresApproval" className="font-medium text-navy">
+                          Requires approval
+                        </label>
+                        <p className="text-navy-light/70">
+                          Bookings from this user will need admin approval before being confirmed.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {error && (
                     <div className="rounded-md bg-red-50 p-3">
@@ -315,6 +349,67 @@ export default function CorporateTeamPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal with Magic Link */}
+      {successResult && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-navy/50 transition-opacity"
+              onClick={() => setSuccessResult(null)}
+            />
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="text-center mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-sage/20 mb-4">
+                  <svg className="h-6 w-6 text-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-navy">Team Member Added!</h3>
+                <p className="text-sm text-navy-light/70 mt-2">
+                  An invitation email has been sent to <strong>{successResult.user?.email}</strong>.
+                </p>
+              </div>
+
+              {successResult.magicLink && (
+                <div className="bg-sage/5 rounded-lg p-4 mb-4">
+                  <p className="text-sm font-medium text-navy mb-2">Magic Link (backup)</p>
+                  <p className="text-xs text-navy-light/70 mb-2">
+                    If they don&apos;t receive the email, share this link directly:
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={successResult.magicLink}
+                      className="flex-1 text-xs bg-white border border-sage/30 rounded px-2 py-1.5 text-navy-light/70"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(successResult.magicLink!);
+                        alert('Link copied to clipboard!');
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium text-sage border border-sage rounded hover:bg-sage/10 transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <p className="text-xs text-navy-light/50 mt-2">
+                    This link expires in 5 days.
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={() => setSuccessResult(null)}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-sage border border-transparent rounded-full hover:bg-sage-dark transition-colors"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
