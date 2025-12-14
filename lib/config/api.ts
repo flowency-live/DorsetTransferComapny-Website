@@ -54,6 +54,18 @@ export const API_ENDPOINTS = {
   corporateDashboard: '/corporate/dashboard',
   corporateCompany: '/corporate/company',
   corporateUsers: '/corporate/users',
+
+  // Driver Portal Authentication
+  driverRegister: '/driver/auth/register',
+  driverLogin: '/driver/auth/login',
+  driverMagicLink: '/driver/auth/magic-link',
+  driverVerify: '/driver/auth/verify',
+  driverSession: '/driver/auth/session',
+  driverLogout: '/driver/auth/logout',
+
+  // Driver Portal API
+  driverProfile: '/driver/profile',
+  driverVehicles: '/driver/vehicles',
 } as const;
 
 /**
