@@ -14,16 +14,23 @@ import {
   updateProfile,
   addVehicle,
   removeVehicle,
+  submitLicenseCheckCode,
+  getDocuments,
+  requestDocumentUploadUrl,
+  confirmDocumentUpload,
+  deleteDocument,
   DriverProfile,
   DriverVehicle,
+  DriverDocument,
 } from '@/lib/services/driverApi';
 
-type TabType = 'overview' | 'profile' | 'vehicles';
+type TabType = 'overview' | 'profile' | 'license' | 'vehicles' | 'documents';
 
 export default function DriverDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [vehicles, setVehicles] = useState<DriverVehicle[]>([]);
+  const [documents, setDocuments] = useState<DriverDocument[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [error, setError] = useState('');
   const router = useRouter();
@@ -43,12 +50,14 @@ export default function DriverDashboardPage() {
       }
 
       try {
-        const [profileRes, vehiclesRes] = await Promise.all([
+        const [profileRes, vehiclesRes, documentsRes] = await Promise.all([
           getProfile(),
           getVehicles(),
+          getDocuments(),
         ]);
         setProfile(profileRes.profile);
         setVehicles(vehiclesRes.vehicles);
+        setDocuments(documentsRes.documents || []);
       } catch {
         setError('Failed to load data');
       } finally {
@@ -113,11 +122,17 @@ export default function DriverDashboardPage() {
                       <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <div className="ml-3">
+                  <div className="ml-3 flex-1">
                     <h3 className="text-sm font-medium text-amber-800">Account pending approval</h3>
                     <p className="mt-1 text-sm text-amber-700">
-                      Your account is being reviewed. Complete your profile and add your vehicle to speed up the process.
+                      Complete your onboarding to speed up the approval process.
                     </p>
+                    <Link
+                      href="/driver/onboarding"
+                      className="mt-2 inline-block text-sm font-medium text-amber-900 hover:text-amber-800 underline"
+                    >
+                      Continue Onboarding
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -131,12 +146,12 @@ export default function DriverDashboardPage() {
 
             {/* Tabs */}
             <div className="border-b border-gray-200 mb-6">
-              <nav className="-mb-px flex space-x-8">
-                {(['overview', 'profile', 'vehicles'] as TabType[]).map((tab) => (
+              <nav className="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto">
+                {(['overview', 'profile', 'license', 'vehicles', 'documents'] as TabType[]).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
+                    className={`py-4 px-1 border-b-2 font-medium text-sm capitalize whitespace-nowrap ${
                       activeTab === tab
                         ? 'border-sage text-sage'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -150,13 +165,19 @@ export default function DriverDashboardPage() {
 
             {/* Tab Content */}
             {activeTab === 'overview' && (
-              <OverviewTab profile={profile} vehicles={vehicles} />
+              <OverviewTab profile={profile} vehicles={vehicles} documents={documents} />
             )}
             {activeTab === 'profile' && (
               <ProfileTab profile={profile} setProfile={setProfile} setError={setError} />
             )}
+            {activeTab === 'license' && (
+              <LicenseTab profile={profile} setProfile={setProfile} setError={setError} />
+            )}
             {activeTab === 'vehicles' && (
               <VehiclesTab vehicles={vehicles} setVehicles={setVehicles} setError={setError} />
+            )}
+            {activeTab === 'documents' && (
+              <DocumentsTab documents={documents} setDocuments={setDocuments} setError={setError} />
             )}
 
             {/* Back to main site */}
@@ -175,7 +196,7 @@ export default function DriverDashboardPage() {
 }
 
 // Overview Tab Component
-function OverviewTab({ profile, vehicles }: { profile: DriverProfile | null; vehicles: DriverVehicle[] }) {
+function OverviewTab({ profile, vehicles, documents }: { profile: DriverProfile | null; vehicles: DriverVehicle[]; documents: DriverDocument[] }) {
   const getStatusBadge = (status: string) => {
     const statusClasses: Record<string, string> = {
       pending: 'bg-amber-100 text-amber-800',
@@ -242,43 +263,31 @@ function OverviewTab({ profile, vehicles }: { profile: DriverProfile | null; veh
       {/* Quick Actions Card */}
       <div className="bg-white rounded-lg shadow p-6 md:col-span-2">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Getting Started</h3>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className={`p-4 rounded-lg border ${profile?.firstName && profile?.lastName && profile?.phone ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-            <div className="flex items-center">
-              {profile?.firstName && profile?.lastName && profile?.phone ? (
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <span className="h-5 w-5 rounded-full border-2 border-gray-300 mr-2"></span>
-              )}
-              <span className="font-medium">Complete profile</span>
-            </div>
-          </div>
-          <div className={`p-4 rounded-lg border ${profile?.workingDays && profile.workingDays.length > 0 ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-            <div className="flex items-center">
-              {profile?.workingDays && profile.workingDays.length > 0 ? (
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <span className="h-5 w-5 rounded-full border-2 border-gray-300 mr-2"></span>
-              )}
-              <span className="font-medium">Set working hours</span>
-            </div>
-          </div>
-          <div className={`p-4 rounded-lg border ${vehicles.length > 0 ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
-            <div className="flex items-center">
-              {vehicles.length > 0 ? (
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                <span className="h-5 w-5 rounded-full border-2 border-gray-300 mr-2"></span>
-              )}
-              <span className="font-medium">Add a vehicle</span>
-            </div>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <ChecklistItem
+            completed={!!(profile?.firstName && profile?.lastName && profile?.phone)}
+            label="Complete profile"
+          />
+          <ChecklistItem
+            completed={!!(profile?.workingDays && profile.workingDays.length > 0)}
+            label="Set working hours"
+          />
+          <ChecklistItem
+            completed={!!profile?.licenseVerified}
+            label="Verify driving license"
+          />
+          <ChecklistItem
+            completed={vehicles.length > 0}
+            label="Add a vehicle"
+          />
+          <ChecklistItem
+            completed={documents.some(d => d.documentType === 'phv_driver_license' && d.status === 'verified')}
+            label="Upload PHV license"
+          />
+          <ChecklistItem
+            completed={documents.some(d => d.documentType === 'driver_insurance' && d.status === 'verified')}
+            label="Upload insurance"
+          />
         </div>
       </div>
     </div>
@@ -654,6 +663,400 @@ function VehiclesTab({
           </div>
         )
       )}
+    </div>
+  );
+}
+
+// Checklist Item Helper Component
+function ChecklistItem({ completed, label }: { completed: boolean; label: string }) {
+  return (
+    <div className={`p-4 rounded-lg border ${completed ? 'border-green-200 bg-green-50' : 'border-gray-200'}`}>
+      <div className="flex items-center">
+        {completed ? (
+          <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          <span className="h-5 w-5 rounded-full border-2 border-gray-300 mr-2 flex-shrink-0"></span>
+        )}
+        <span className="font-medium text-sm">{label}</span>
+      </div>
+    </div>
+  );
+}
+
+// License Tab Component
+function LicenseTab({
+  profile,
+  setProfile,
+  setError,
+}: {
+  profile: DriverProfile | null;
+  setProfile: (p: DriverProfile) => void;
+  setError: (e: string) => void;
+}) {
+  const [checkCode, setCheckCode] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      const result = await submitLicenseCheckCode({
+        checkCode: checkCode.toUpperCase(),
+        licenseNumber: licenseNumber.toUpperCase(),
+      });
+
+      if (result.success) {
+        setSuccessMessage('License verified successfully!');
+        setCheckCode('');
+        setLicenseNumber('');
+        // Refresh profile to get updated license info
+        const profileRes = await getProfile();
+        if (profileRes.profile) {
+          setProfile(profileRes.profile);
+        }
+      } else {
+        setError(result.message || 'Failed to verify license');
+      }
+    } catch {
+      setError('Failed to verify license. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Current License Status */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">License Status</h3>
+        {profile?.licenseVerified ? (
+          <div className="space-y-4">
+            <div className="flex items-center text-green-600">
+              <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">License Verified</span>
+            </div>
+            <div className="grid gap-3 text-sm">
+              {profile.licenseCategories && profile.licenseCategories.length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Categories</span>
+                  <span className="font-medium">{profile.licenseCategories.join(', ')}</span>
+                </div>
+              )}
+              {profile.licenseExpiryDate && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Expiry Date</span>
+                  <span className="font-medium">{new Date(profile.licenseExpiryDate).toLocaleDateString()}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-amber-600 flex items-center">
+            <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span>License not yet verified</span>
+          </div>
+        )}
+      </div>
+
+      {/* Verification Form */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Verify Your Driving License</h3>
+        <p className="text-sm text-gray-600 mb-6">
+          To verify your driving license, you need to generate a check code from the DVLA website.
+        </p>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <h4 className="font-medium text-blue-900 mb-2">How to get your check code:</h4>
+          <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+            <li>Visit <a href="https://www.gov.uk/view-driving-licence" target="_blank" rel="noopener noreferrer" className="underline">www.gov.uk/view-driving-licence</a></li>
+            <li>Sign in with Government Gateway or verify your identity</li>
+            <li>Click &quot;Get a check code&quot;</li>
+            <li>Enter the code below (valid for 21 days)</li>
+          </ol>
+        </div>
+
+        {successMessage && (
+          <div className="rounded-md bg-green-50 p-4 mb-4">
+            <p className="text-sm text-green-800">{successMessage}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Check Code
+            </label>
+            <input
+              type="text"
+              value={checkCode}
+              onChange={(e) => setCheckCode(e.target.value.toUpperCase())}
+              placeholder="e.g. ABC123XYZ"
+              maxLength={16}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm uppercase"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">The code from the DVLA website</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Last 8 Characters of License Number
+            </label>
+            <input
+              type="text"
+              value={licenseNumber}
+              onChange={(e) => setLicenseNumber(e.target.value.toUpperCase())}
+              placeholder="e.g. 12AB34CD"
+              maxLength={8}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm uppercase"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">Found on your physical driving license</p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting || !checkCode || !licenseNumber}
+            className="w-full py-2 px-4 bg-sage text-white rounded-md hover:bg-sage-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? 'Verifying...' : 'Verify License'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Documents Tab Component
+function DocumentsTab({
+  documents,
+  setDocuments,
+  setError,
+}: {
+  documents: DriverDocument[];
+  setDocuments: (d: DriverDocument[]) => void;
+  setError: (e: string) => void;
+}) {
+  const [uploading, setUploading] = useState<string | null>(null);
+
+  const documentTypes: { type: DriverDocument['documentType']; label: string; description: string }[] = [
+    {
+      type: 'phv_driver_license',
+      label: 'PHV Driver License',
+      description: 'Your Private Hire Vehicle driver license from your local council',
+    },
+    {
+      type: 'driver_insurance',
+      label: 'Driver Insurance',
+      description: 'Your personal hire and reward insurance certificate',
+    },
+  ];
+
+  const getDocumentByType = (type: DriverDocument['documentType']) => {
+    return documents.find(d => d.documentType === type);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusClasses: Record<string, string> = {
+      pending: 'bg-amber-100 text-amber-800',
+      verified: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800',
+    };
+    return statusClasses[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handleFileSelect = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    docType: DriverDocument['documentType']
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/heic', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please upload a JPG, PNG, HEIC, or PDF file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size must be less than 10MB');
+      return;
+    }
+
+    setUploading(docType);
+    setError('');
+
+    try {
+      // 1. Get presigned URL
+      const urlResult = await requestDocumentUploadUrl({
+        documentType: docType,
+        fileName: file.name,
+        contentType: file.type,
+      });
+
+      if (!urlResult.success) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      // 2. Upload file to S3
+      const uploadResponse = await fetch(urlResult.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      // 3. Confirm upload
+      const confirmResult = await confirmDocumentUpload(urlResult.documentId);
+
+      if (confirmResult.success && confirmResult.document) {
+        // Update documents list
+        const existingIndex = documents.findIndex(d => d.documentType === docType);
+        if (existingIndex >= 0) {
+          const newDocs = [...documents];
+          newDocs[existingIndex] = confirmResult.document;
+          setDocuments(newDocs);
+        } else {
+          setDocuments([...documents, confirmResult.document]);
+        }
+      } else {
+        throw new Error(confirmResult.message || 'Failed to confirm upload');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload document');
+    } finally {
+      setUploading(null);
+      // Reset the file input
+      e.target.value = '';
+    }
+  };
+
+  const handleDelete = async (documentId: string) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    try {
+      const result = await deleteDocument(documentId);
+      if (result.success) {
+        setDocuments(documents.filter(d => d.documentId !== documentId));
+      } else {
+        setError(result.message || 'Failed to delete document');
+      }
+    } catch {
+      setError('Failed to delete document');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-800">
+          Upload clear photos or scans of your documents. We&apos;ll extract the key information automatically
+          and our team will verify them within 24-48 hours.
+        </p>
+      </div>
+
+      {documentTypes.map(({ type, label, description }) => {
+        const doc = getDocumentByType(type);
+        const isUploading = uploading === type;
+
+        return (
+          <div key={type} className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">{label}</h3>
+                <p className="text-sm text-gray-600">{description}</p>
+              </div>
+              {doc && (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(doc.status)}`}>
+                  {doc.status}
+                </span>
+              )}
+            </div>
+
+            {doc ? (
+              <div className="space-y-3">
+                <div className="text-sm text-gray-600">
+                  <p>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</p>
+                  {doc.expiryDate && (
+                    <p>Expires: {new Date(doc.expiryDate).toLocaleDateString()}</p>
+                  )}
+                  {doc.verifiedAt && (
+                    <p>Verified: {new Date(doc.verifiedAt).toLocaleDateString()}</p>
+                  )}
+                </div>
+
+                {doc.status === 'rejected' && (
+                  <div className="bg-red-50 border border-red-200 rounded p-3">
+                    <p className="text-sm text-red-800">
+                      This document was rejected. Please upload a clearer copy.
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  <label className="cursor-pointer text-sm text-sage hover:text-sage-dark">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => handleFileSelect(e, type)}
+                      disabled={isUploading}
+                    />
+                    {isUploading ? 'Uploading...' : 'Replace document'}
+                  </label>
+                  <button
+                    onClick={() => handleDelete(doc.documentId)}
+                    className="text-sm text-red-600 hover:text-red-800"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <div className="mt-4">
+                  <label className="cursor-pointer">
+                    <span className="mt-2 block text-sm font-medium text-sage hover:text-sage-dark">
+                      {isUploading ? 'Uploading...' : 'Upload document'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => handleFileSelect(e, type)}
+                      disabled={isUploading}
+                    />
+                  </label>
+                  <p className="mt-1 text-xs text-gray-500">
+                    JPG, PNG, HEIC or PDF up to 10MB
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

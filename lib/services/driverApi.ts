@@ -287,3 +287,84 @@ export async function removeVehicle(vrn: string): Promise<{ success: boolean; me
     method: 'DELETE',
   });
 }
+
+/**
+ * Submit license check code for DVLA verification
+ */
+export async function submitLicenseCheckCode(data: {
+  checkCode: string;
+  licenseNumber: string; // Last 8 digits only
+}): Promise<{
+  success: boolean;
+  message: string;
+  license?: {
+    categories: string[];
+    expiryDate: string | null;
+    penaltyPoints: number;
+    endorsements: string[];
+  };
+}> {
+  return authenticatedFetch(API_ENDPOINTS.driverLicenseCheck, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export interface DriverDocument {
+  documentId: string;
+  documentType: 'phv_driver_license' | 'driver_insurance' | 'phv_vehicle_license' | 'vehicle_insurance';
+  status: 'pending' | 'verified' | 'rejected';
+  expiryDate: string | null;
+  extractedData: Record<string, string> | null;
+  uploadedAt: string;
+  verifiedAt: string | null;
+  vrn?: string; // For vehicle-specific documents
+}
+
+/**
+ * Get all documents for the driver
+ */
+export async function getDocuments(): Promise<{ success: boolean; documents: DriverDocument[] }> {
+  return authenticatedFetch(API_ENDPOINTS.driverDocuments);
+}
+
+/**
+ * Request presigned URL for document upload
+ */
+export async function requestDocumentUploadUrl(data: {
+  documentType: DriverDocument['documentType'];
+  fileName: string;
+  contentType: string;
+  vrn?: string; // For vehicle documents
+}): Promise<{
+  success: boolean;
+  uploadUrl: string;
+  documentId: string;
+}> {
+  return authenticatedFetch(`${API_ENDPOINTS.driverDocuments}/upload-url`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Confirm document upload completed
+ */
+export async function confirmDocumentUpload(documentId: string): Promise<{
+  success: boolean;
+  message: string;
+  document?: DriverDocument;
+}> {
+  return authenticatedFetch(`${API_ENDPOINTS.driverDocuments}/${documentId}/confirm`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Delete a document
+ */
+export async function deleteDocument(documentId: string): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch(`${API_ENDPOINTS.driverDocuments}/${documentId}`, {
+    method: 'DELETE',
+  });
+}

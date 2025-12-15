@@ -112,7 +112,7 @@ export default function DriverRegisterPage() {
       });
 
       if (result.success) {
-        router.push('/driver/dashboard');
+        router.push('/driver/onboarding');
       } else {
         if (result.error) {
           setError(result.error);

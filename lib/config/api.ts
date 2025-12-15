@@ -66,6 +66,8 @@ export const API_ENDPOINTS = {
   // Driver Portal API
   driverProfile: '/driver/profile',
   driverVehicles: '/driver/vehicles',
+  driverLicenseCheck: '/driver/license-check',
+  driverDocuments: '/driver/documents',
 } as const;
 
 /**
