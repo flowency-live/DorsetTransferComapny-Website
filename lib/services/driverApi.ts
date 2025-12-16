@@ -28,6 +28,8 @@ export interface DriverVehicle {
   vrn: string;
   make: string | null;
   colour: string | null;
+  fuelType: string | null;
+  yearOfManufacture: number | null;
   vehicleType: 'standard' | 'executive' | 'minibus';
   passengerCapacity: number | null;
   taxStatus: string;
@@ -35,8 +37,12 @@ export interface DriverVehicle {
   motStatus: string;
   motExpiryDate: string | null;
   complianceStatus: 'pending_verification' | 'compliant' | 'expiring_soon' | 'expired' | 'blocked';
+  complianceAlerts: string[];
+  canOperate: boolean;
   lastApiCheck: string | null;
+  photos: string[];
   createdAt: string;
+  updatedAt: string | null;
 }
 
 interface AuthResponse {
@@ -366,5 +372,103 @@ export async function confirmDocumentUpload(documentId: string): Promise<{
 export async function deleteDocument(documentId: string): Promise<{ success: boolean; message: string }> {
   return authenticatedFetch(`${API_ENDPOINTS.driverDocuments}/${documentId}`, {
     method: 'DELETE',
+  });
+}
+
+// ========== Availability API ==========
+
+export interface AvailabilityBlock {
+  blockId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  available: boolean;
+  note: string | null;
+  createdBy: 'driver' | 'admin';
+  createdAt?: string;
+}
+
+export interface AvailabilityResponse {
+  success: boolean;
+  driverId: string;
+  defaultPattern: {
+    workingDays: string[];
+    workingHoursStart: string | null;
+    workingHoursEnd: string | null;
+  };
+  blocks: AvailabilityBlock[];
+}
+
+/**
+ * Get availability for a date range
+ */
+export async function getAvailability(
+  startDate: string,
+  endDate: string
+): Promise<AvailabilityResponse> {
+  const params = new URLSearchParams({ startDate, endDate });
+  return authenticatedFetch(`${API_ENDPOINTS.driverAvailability}?${params.toString()}`);
+}
+
+/**
+ * Set availability block (block out time as unavailable)
+ */
+export async function setAvailability(data: {
+  date: string;
+  startTime: string;
+  endTime: string;
+  available?: boolean;
+  note?: string;
+  blockId?: string; // For updating existing blocks
+}): Promise<{ success: boolean; message: string; block?: AvailabilityBlock }> {
+  return authenticatedFetch(API_ENDPOINTS.driverAvailability, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete an availability block
+ */
+export async function deleteAvailability(blockId: string): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch(`${API_ENDPOINTS.driverAvailability}/${blockId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ========== Vehicle Photo API ==========
+
+/**
+ * Request presigned URL for vehicle photo upload
+ */
+export async function requestVehiclePhotoUploadUrl(data: {
+  vrn: string;
+  fileName: string;
+  fileType: string;
+}): Promise<{
+  success: boolean;
+  uploadUrl: string;
+  publicUrl: string;
+}> {
+  return authenticatedFetch('/uploads/presigned', {
+    method: 'POST',
+    body: JSON.stringify({
+      fileName: data.fileName,
+      fileType: data.fileType,
+      folder: `vehicles/${data.vrn}`,
+    }),
+  });
+}
+
+/**
+ * Update vehicle photos
+ */
+export async function updateVehiclePhotos(
+  vrn: string,
+  photos: string[]
+): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch(`${API_ENDPOINTS.driverVehicles}/${vrn}/photos`, {
+    method: 'PUT',
+    body: JSON.stringify({ photos }),
   });
 }

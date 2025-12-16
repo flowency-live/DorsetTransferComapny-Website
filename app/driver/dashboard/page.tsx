@@ -19,12 +19,17 @@ import {
   requestDocumentUploadUrl,
   confirmDocumentUpload,
   deleteDocument,
+  getAvailability,
+  setAvailability,
+  requestVehiclePhotoUploadUrl,
+  updateVehiclePhotos,
   DriverProfile,
   DriverVehicle,
   DriverDocument,
+  AvailabilityBlock,
 } from '@/lib/services/driverApi';
 
-type TabType = 'overview' | 'profile' | 'license' | 'vehicles' | 'documents';
+type TabType = 'overview' | 'profile' | 'license' | 'vehicles' | 'calendar' | 'documents';
 
 export default function DriverDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -147,7 +152,7 @@ export default function DriverDashboardPage() {
             {/* Tabs */}
             <div className="border-b border-gray-200 mb-6">
               <nav className="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto">
-                {(['overview', 'profile', 'license', 'vehicles', 'documents'] as TabType[]).map((tab) => (
+                {(['overview', 'profile', 'license', 'vehicles', 'calendar', 'documents'] as TabType[]).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -175,6 +180,9 @@ export default function DriverDashboardPage() {
             )}
             {activeTab === 'vehicles' && (
               <VehiclesTab vehicles={vehicles} setVehicles={setVehicles} setError={setError} />
+            )}
+            {activeTab === 'calendar' && (
+              <CalendarTab profile={profile} setError={setError} />
             )}
             {activeTab === 'documents' && (
               <DocumentsTab documents={documents} setDocuments={setDocuments} setError={setError} />
@@ -505,6 +513,7 @@ function VehiclesTab({
   const [newVrn, setNewVrn] = useState('');
   const [vehicleType, setVehicleType] = useState<'standard' | 'executive' | 'minibus'>('standard');
   const [isAdding, setIsAdding] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
 
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -542,6 +551,87 @@ function VehiclesTab({
     }
   };
 
+  const handlePhotoUpload = async (vrn: string, file: File) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please upload a JPG, PNG, or WebP image');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(vrn);
+      setError('');
+
+      // 1. Get presigned URL
+      const urlResult = await requestVehiclePhotoUploadUrl({
+        vrn,
+        fileName: file.name,
+        fileType: file.type,
+      });
+
+      if (!urlResult.success) {
+        throw new Error('Failed to get upload URL');
+      }
+
+      // 2. Upload to S3
+      const uploadResponse = await fetch(urlResult.uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      // 3. Update vehicle photos
+      const vehicle = vehicles.find(v => v.vrn === vrn);
+      const currentPhotos = vehicle?.photos || [];
+      const newPhotos = [...currentPhotos, urlResult.publicUrl];
+
+      const updateResult = await updateVehiclePhotos(vrn, newPhotos);
+      if (!updateResult.success) {
+        throw new Error('Failed to save photo');
+      }
+
+      // Update local state
+      setVehicles(vehicles.map(v =>
+        v.vrn === vrn ? { ...v, photos: newPhotos } : v
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(null);
+    }
+  };
+
+  const handleRemovePhoto = async (vrn: string, photoUrl: string) => {
+    if (!confirm('Remove this photo?')) return;
+
+    try {
+      setUploadingPhoto(vrn);
+      const vehicle = vehicles.find(v => v.vrn === vrn);
+      const newPhotos = (vehicle?.photos || []).filter(p => p !== photoUrl);
+
+      const result = await updateVehiclePhotos(vrn, newPhotos);
+      if (result.success) {
+        setVehicles(vehicles.map(v =>
+          v.vrn === vrn ? { ...v, photos: newPhotos } : v
+        ));
+      } else {
+        setError('Failed to remove photo');
+      }
+    } catch {
+      setError('Failed to remove photo');
+    } finally {
+      setUploadingPhoto(null);
+    }
+  };
+
   const getComplianceBadge = (status: string) => {
     const statusClasses: Record<string, string> = {
       compliant: 'bg-green-100 text-green-800',
@@ -572,6 +662,9 @@ function VehiclesTab({
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm uppercase"
                 required
               />
+              <p className="mt-1 text-xs text-gray-500">
+                Vehicle details will be fetched automatically from DVLA
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Vehicle Type</label>
@@ -591,7 +684,7 @@ function VehiclesTab({
                 disabled={isAdding}
                 className="px-4 py-2 bg-sage text-white rounded-md hover:bg-sage-dark disabled:opacity-50"
               >
-                {isAdding ? 'Adding...' : 'Add vehicle'}
+                {isAdding ? 'Checking DVLA...' : 'Add vehicle'}
               </button>
               <button
                 type="button"
@@ -616,32 +709,102 @@ function VehiclesTab({
       {vehicles.length > 0 ? (
         <div className="space-y-4">
           {vehicles.map((vehicle) => (
-            <div key={vehicle.vrn} className="bg-white rounded-lg shadow p-6">
+            <div
+              key={vehicle.vrn}
+              className={`bg-white rounded-lg shadow p-6 ${vehicle.canOperate === false ? 'border-2 border-red-300' : ''}`}
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900">{vehicle.vrn}</h4>
-                  <p className="text-sm text-gray-600 capitalize">{vehicle.vehicleType}</p>
+                  <p className="text-sm text-gray-600">
+                    {vehicle.make} {vehicle.colour && `- ${vehicle.colour}`}
+                    {vehicle.yearOfManufacture && ` (${vehicle.yearOfManufacture})`}
+                  </p>
+                  <p className="text-xs text-gray-500 capitalize mt-1">
+                    {vehicle.vehicleType} {vehicle.fuelType && `| ${vehicle.fuelType}`}
+                  </p>
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getComplianceBadge(vehicle.complianceStatus)}`}>
                   {vehicle.complianceStatus.replace('_', ' ')}
                 </span>
               </div>
+
+              {/* Compliance Alerts */}
+              {vehicle.complianceAlerts && vehicle.complianceAlerts.length > 0 && (
+                <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+                  {vehicle.complianceAlerts.map((alert, i) => (
+                    <p key={i}>{alert}</p>
+                  ))}
+                </div>
+              )}
+
               <div className="mt-4 grid gap-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">MOT Status</span>
-                  <span className={vehicle.motStatus === 'Valid' ? 'text-green-600' : 'text-gray-900'}>
+                  <span className={vehicle.motStatus === 'Valid' ? 'text-green-600' : 'text-red-600'}>
                     {vehicle.motStatus}
                     {vehicle.motExpiryDate && ` (expires ${new Date(vehicle.motExpiryDate).toLocaleDateString()})`}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax Status</span>
-                  <span className={vehicle.taxStatus === 'Taxed' ? 'text-green-600' : 'text-gray-900'}>
+                  <span className={vehicle.taxStatus === 'Taxed' ? 'text-green-600' : 'text-red-600'}>
                     {vehicle.taxStatus}
                     {vehicle.taxDueDate && ` (due ${new Date(vehicle.taxDueDate).toLocaleDateString()})`}
                   </span>
                 </div>
               </div>
+
+              {/* Vehicle Photos */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Photos</span>
+                  <label className={`text-xs text-sage hover:text-sage-dark cursor-pointer ${uploadingPhoto === vehicle.vrn ? 'opacity-50' : ''}`}>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      disabled={uploadingPhoto === vehicle.vrn}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePhotoUpload(vehicle.vrn, file);
+                        e.target.value = '';
+                      }}
+                    />
+                    {uploadingPhoto === vehicle.vrn ? 'Uploading...' : '+ Add photo'}
+                  </label>
+                </div>
+                {vehicle.photos && vehicle.photos.length > 0 ? (
+                  <div className="flex gap-2 flex-wrap">
+                    {vehicle.photos.map((photo, i) => (
+                      <div key={i} className="relative group">
+                        <img
+                          src={photo}
+                          alt={`Vehicle photo ${i + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          onClick={() => handleRemovePhoto(vehicle.vrn, photo)}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400">No photos - add photos of your vehicle</p>
+                )}
+              </div>
+
+              {/* Timestamps */}
+              <div className="mt-3 text-xs text-gray-400 space-y-1">
+                <p>Added: {new Date(vehicle.createdAt).toLocaleDateString()}</p>
+                {vehicle.lastApiCheck && (
+                  <p>Last DVLA check: {new Date(vehicle.lastApiCheck).toLocaleString()}</p>
+                )}
+              </div>
+
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
                 <button
                   onClick={() => handleRemoveVehicle(vehicle.vrn)}
@@ -663,6 +826,355 @@ function VehiclesTab({
           </div>
         )
       )}
+    </div>
+  );
+}
+
+// Calendar Tab Component
+function CalendarTab({
+  profile,
+  setError,
+}: {
+  profile: DriverProfile | null;
+  setError: (e: string) => void;
+}) {
+  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Monday start
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  });
+  const [blocks, setBlocks] = useState<AvailabilityBlock[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newBlock, setNewBlock] = useState({
+    date: '',
+    startTime: '09:00',
+    endTime: '17:00',
+    note: '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dayMap: Record<string, number> = {
+    monday: 0, tuesday: 1, wednesday: 2, thursday: 3,
+    friday: 4, saturday: 5, sunday: 6,
+  };
+
+  // Load availability for current week
+  useEffect(() => {
+    const loadAvailability = async () => {
+      setIsLoading(true);
+      try {
+        const endDate = new Date(currentWeekStart);
+        endDate.setDate(endDate.getDate() + 6);
+
+        const startDateStr = currentWeekStart.toISOString().split('T')[0];
+        const endDateStr = endDate.toISOString().split('T')[0];
+
+        const result = await getAvailability(startDateStr, endDateStr);
+        if (result.success) {
+          setBlocks(result.blocks);
+        }
+      } catch (err) {
+        console.error('Failed to load availability:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAvailability();
+  }, [currentWeekStart]);
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    const newStart = new Date(currentWeekStart);
+    newStart.setDate(newStart.getDate() + (direction === 'prev' ? -7 : 7));
+    setCurrentWeekStart(newStart);
+  };
+
+  const goToToday = () => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+    setCurrentWeekStart(monday);
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  };
+
+  const formatWeekRange = () => {
+    const end = new Date(currentWeekStart);
+    end.setDate(end.getDate() + 6);
+    return `${formatDate(currentWeekStart)} - ${formatDate(end)}, ${end.getFullYear()}`;
+  };
+
+  const getDayDate = (dayIndex: number) => {
+    const date = new Date(currentWeekStart);
+    date.setDate(date.getDate() + dayIndex);
+    return date;
+  };
+
+  const isWorkingDay = (dayIndex: number) => {
+    if (!profile?.workingDays) return false;
+    return profile.workingDays.some(wd => dayMap[wd.toLowerCase()] === dayIndex);
+  };
+
+  const getBlocksForDay = (dayIndex: number) => {
+    const dayDate = getDayDate(dayIndex);
+    const dateStr = dayDate.toISOString().split('T')[0];
+    return blocks.filter(b => b.date === dateStr && !b.available);
+  };
+
+  const handleAddBlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBlock.date) {
+      setError('Please select a date');
+      return;
+    }
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      const result = await setAvailability({
+        date: newBlock.date,
+        startTime: newBlock.startTime,
+        endTime: newBlock.endTime,
+        available: false,
+        note: newBlock.note || undefined,
+      });
+
+      if (result.success && result.block) {
+        setBlocks([...blocks, result.block]);
+        setShowAddForm(false);
+        setNewBlock({ date: '', startTime: '09:00', endTime: '17:00', note: '' });
+      } else {
+        setError(result.message || 'Failed to add block');
+      }
+    } catch {
+      setError('Failed to add block');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Working Pattern Summary */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Your Working Pattern</h3>
+        {profile?.workingDays && profile.workingDays.length > 0 ? (
+          <div className="text-sm text-gray-600">
+            <p className="capitalize">
+              <span className="font-medium">Days:</span>{' '}
+              {profile.workingDays.join(', ')}
+            </p>
+            {profile.workingHoursStart && profile.workingHoursEnd && (
+              <p>
+                <span className="font-medium">Hours:</span>{' '}
+                {profile.workingHoursStart} - {profile.workingHoursEnd}
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">
+            Set your working days in the Profile tab to see your availability.
+          </p>
+        )}
+      </div>
+
+      {/* Calendar Navigation */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => navigateWeek('prev')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goToToday}
+              className="px-3 py-1 text-sm bg-sage text-white rounded-lg hover:bg-sage-dark"
+            >
+              Today
+            </button>
+            <span className="text-sm font-medium text-gray-700">{formatWeekRange()}</span>
+          </div>
+          <button
+            onClick={() => navigateWeek('next')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center gap-4 mb-4 text-xs">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
+            <span className="text-gray-600">Available</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-red-100 border border-red-300"></div>
+            <span className="text-gray-600">Blocked</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-gray-100 border border-gray-300"></div>
+            <span className="text-gray-600">Not working</span>
+          </div>
+        </div>
+
+        {/* Week Grid */}
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 gap-2">
+            {DAYS.map((day, index) => {
+              const dayDate = getDayDate(index);
+              const isWorking = isWorkingDay(index);
+              const dayBlocks = getBlocksForDay(index);
+              const isToday = dayDate.toDateString() === new Date().toDateString();
+
+              return (
+                <div
+                  key={day}
+                  className={`rounded-lg p-3 min-h-[100px] ${
+                    isWorking
+                      ? dayBlocks.length > 0
+                        ? 'bg-red-50 border border-red-200'
+                        : 'bg-green-50 border border-green-200'
+                      : 'bg-gray-50 border border-gray-200'
+                  } ${isToday ? 'ring-2 ring-sage' : ''}`}
+                >
+                  <div className="text-center mb-2">
+                    <div className={`text-xs font-medium ${isToday ? 'text-sage' : 'text-gray-500'}`}>
+                      {day}
+                    </div>
+                    <div className={`text-sm font-semibold ${isToday ? 'text-sage' : 'text-gray-900'}`}>
+                      {dayDate.getDate()}
+                    </div>
+                  </div>
+                  {isWorking && dayBlocks.length === 0 && (
+                    <div className="text-xs text-green-600 text-center">
+                      {profile?.workingHoursStart && profile?.workingHoursEnd
+                        ? `${profile.workingHoursStart}-${profile.workingHoursEnd}`
+                        : 'Available'}
+                    </div>
+                  )}
+                  {dayBlocks.map(block => (
+                    <div
+                      key={block.blockId}
+                      className="text-xs bg-red-100 text-red-800 rounded px-1 py-0.5 mb-1"
+                    >
+                      {block.startTime}-{block.endTime}
+                      {block.note && <span className="block truncate">{block.note}</span>}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Add Block Form */}
+      {showAddForm ? (
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Block Out Time</h3>
+          <form onSubmit={handleAddBlock} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date</label>
+              <input
+                type="date"
+                value={newBlock.date}
+                onChange={(e) => setNewBlock({ ...newBlock, date: e.target.value })}
+                min={new Date().toISOString().split('T')[0]}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Start Time</label>
+                <input
+                  type="time"
+                  value={newBlock.startTime}
+                  onChange={(e) => setNewBlock({ ...newBlock, startTime: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">End Time</label>
+                <input
+                  type="time"
+                  value={newBlock.endTime}
+                  onChange={(e) => setNewBlock({ ...newBlock, endTime: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Reason (optional)</label>
+              <input
+                type="text"
+                value={newBlock.note}
+                onChange={(e) => setNewBlock({ ...newBlock, note: e.target.value })}
+                placeholder="e.g. Holiday, Appointment"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-sage focus:border-sage sm:text-sm"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="px-4 py-2 bg-sage text-white rounded-md hover:bg-sage-dark disabled:opacity-50"
+              >
+                {isSaving ? 'Saving...' : 'Block Time'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <button
+          onClick={() => setShowAddForm(true)}
+          className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-sage hover:text-sage transition-colors"
+        >
+          + Block out time (holiday, appointment, etc.)
+        </button>
+      )}
+
+      {/* Instructions */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-blue-800 mb-2">How availability works:</h4>
+        <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
+          <li>Green days show when you&apos;re available based on your working pattern</li>
+          <li>Block out times when you&apos;re not available (holidays, appointments)</li>
+          <li>Dispatchers will see your availability when assigning jobs</li>
+        </ul>
+      </div>
     </div>
   );
 }
