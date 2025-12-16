@@ -68,6 +68,7 @@ export const API_ENDPOINTS = {
   driverVehicles: '/driver/vehicles',
   driverLicenseCheck: '/driver/license-check',
   driverDocuments: '/driver/documents',
+  driverAvailability: '/driver/availability',
 } as const;
 
 /**
