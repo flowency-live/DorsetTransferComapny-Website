@@ -6,10 +6,8 @@ export function middleware(request: NextRequest) {
 
   // Redirect old flowency.build domain to new opstack.uk domain
   if (host.includes('dorsettransfercompany.flowency.build')) {
-    const url = request.nextUrl.clone();
-    url.host = 'dorsettransfercompany.opstack.uk';
-    url.protocol = 'https';
-    return NextResponse.redirect(url, 301);
+    const newUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, 'https://dorsettransfercompany.opstack.uk');
+    return NextResponse.redirect(newUrl, 301);
   }
 
   return NextResponse.next();
