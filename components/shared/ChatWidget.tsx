@@ -163,10 +163,13 @@ export default function ChatWidget() {
   }, [messages, scrollToBottom]);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen && !isInitializing && inputRef.current) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, isInitializing]);
 
   const initChat = useCallback(async () => {
     if (sessionId || isInitializing) return;
