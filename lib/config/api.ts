@@ -69,6 +69,10 @@ export const API_ENDPOINTS = {
   driverLicenseCheck: '/driver/license-check',
   driverDocuments: '/driver/documents',
   driverAvailability: '/driver/availability',
+
+  // Chat Widget (AI Booking Assistant)
+  chatSession: '/chat/session',
+  chatMessage: '/chat/message',
 } as const;
 
 /**

@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import ChatWidget from "@/components/shared/ChatWidget";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -89,6 +90,7 @@ export default function RootLayout({
       >
         {children}
         <PWAInstallPrompt />
+        <ChatWidget />
       </body>
     </html>
   );
