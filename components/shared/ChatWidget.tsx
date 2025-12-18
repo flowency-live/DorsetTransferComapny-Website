@@ -14,6 +14,9 @@ interface Message extends ChatMessage {
   vehicleOptions?: VehicleOption[];
   showContactForm?: boolean;
   showQuoteActions?: boolean;
+  showDatePicker?: boolean;
+  showTimePicker?: boolean;
+  showPassengerStepper?: boolean;
 }
 
 // Parse vehicle options from AI response text
@@ -61,6 +64,38 @@ function isAskingForContact(text: string): boolean {
   );
 }
 
+// Check if message is asking for date
+function isAskingForDate(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('what date') ||
+    lower.includes('which date') ||
+    lower.includes('when would you like') ||
+    lower.includes('date would you like')
+  );
+}
+
+// Check if message is asking for time
+function isAskingForTime(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('what time') ||
+    lower.includes('which time') ||
+    lower.includes('time would you like') ||
+    lower.includes('time for pickup')
+  );
+}
+
+// Check if message is asking for passengers
+function isAskingForPassengers(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('how many passengers') ||
+    lower.includes('number of passengers') ||
+    lower.includes('many people')
+  );
+}
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -75,8 +110,49 @@ export default function ChatWidget() {
     email: '',
   });
   const [showContactForm, setShowContactForm] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [passengerCount, setPassengerCount] = useState(1);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showPassengerStepper, setShowPassengerStepper] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Generate date options for next 90 days
+  const getDateOptions = () => {
+    const options: { value: string; label: string }[] = [];
+    const today = new Date();
+    for (let i = 0; i < 90; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      const value = date.toISOString().split('T')[0];
+      const dayName = date.toLocaleDateString('en-GB', { weekday: 'short' });
+      const dateStr = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      let label = `${dayName} ${dateStr}`;
+      if (i === 0) label = `Today (${dateStr})`;
+      if (i === 1) label = `Tomorrow (${dateStr})`;
+      options.push({ value, label });
+    }
+    return options;
+  };
+
+  // Generate time options in 15-min increments
+  const getTimeOptions = () => {
+    const options: { value: string; label: string }[] = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const hourStr = hour.toString().padStart(2, '0');
+        const minStr = min.toString().padStart(2, '0');
+        const value = `${hourStr}:${minStr}`;
+        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const ampm = hour < 12 ? 'am' : 'pm';
+        const label = `${hour12}:${minStr}${ampm}`;
+        options.push({ value, label });
+      }
+    }
+    return options;
+  };
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -161,7 +237,10 @@ export default function ChatWidget() {
       if (response.success && response.response) {
         // Parse vehicle options from response text
         const vehicleOptions = parseVehicleOptions(response.response);
-        const showContactForm = isAskingForContact(response.response);
+        const askingForContact = isAskingForContact(response.response);
+        const askingForDate = isAskingForDate(response.response);
+        const askingForTime = isAskingForTime(response.response);
+        const askingForPassengers = isAskingForPassengers(response.response);
 
         const assistantMessage: Message = {
           id: `assistant-${Date.now()}`,
@@ -169,13 +248,18 @@ export default function ChatWidget() {
           content: response.response,
           timestamp: new Date().toISOString(),
           vehicleOptions: vehicleOptions || undefined,
-          showContactForm,
+          showContactForm: askingForContact,
+          showDatePicker: askingForDate,
+          showTimePicker: askingForTime,
+          showPassengerStepper: askingForPassengers,
         };
         setMessages((prev) => [...prev, assistantMessage]);
-        // Show contact form if AI is asking for contact details
-        if (showContactForm) {
-          setShowContactForm(true);
-        }
+
+        // Show appropriate interactive controls
+        if (askingForContact) setShowContactForm(true);
+        if (askingForDate) setShowDatePicker(true);
+        if (askingForTime) setShowTimePicker(true);
+        if (askingForPassengers) setShowPassengerStepper(true);
       } else {
         setError(response.error || 'Failed to get response. Please try again.');
       }
@@ -300,6 +384,176 @@ export default function ChatWidget() {
     setTimeout(() => {
       handleSend();
     }, 50);
+  };
+
+  // Handle date selection
+  const handleDateSelect = async (dateValue: string) => {
+    if (!sessionId) return;
+    setShowDatePicker(false);
+    setSelectedDate(dateValue);
+
+    // Format date for human-readable message
+    const date = new Date(dateValue);
+    const formatted = date.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: formatted,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await sendMessage(sessionId, formatted);
+      if (res.success && res.response) {
+        const vehicleOptions = parseVehicleOptions(res.response);
+        const askingForContact = isAskingForContact(res.response);
+        const askingForDate = isAskingForDate(res.response);
+        const askingForTime = isAskingForTime(res.response);
+        const askingForPassengers = isAskingForPassengers(res.response);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: res.response,
+            timestamp: new Date().toISOString(),
+            vehicleOptions: vehicleOptions || undefined,
+            showContactForm: askingForContact,
+            showDatePicker: askingForDate,
+            showTimePicker: askingForTime,
+            showPassengerStepper: askingForPassengers,
+          },
+        ]);
+        if (askingForContact) setShowContactForm(true);
+        if (askingForTime) setShowTimePicker(true);
+        if (askingForPassengers) setShowPassengerStepper(true);
+      } else {
+        setError(res.error || 'Failed to get response.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    }
+    setIsLoading(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  // Handle time selection
+  const handleTimeSelect = async (timeValue: string) => {
+    if (!sessionId) return;
+    setShowTimePicker(false);
+    setSelectedTime(timeValue);
+
+    // Format time for human-readable message
+    const [hourStr, minStr] = timeValue.split(':');
+    const hour = parseInt(hourStr, 10);
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const ampm = hour < 12 ? 'am' : 'pm';
+    const formatted = `${hour12}:${minStr}${ampm}`;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: formatted,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await sendMessage(sessionId, formatted);
+      if (res.success && res.response) {
+        const vehicleOptions = parseVehicleOptions(res.response);
+        const askingForContact = isAskingForContact(res.response);
+        const askingForDate = isAskingForDate(res.response);
+        const askingForTime = isAskingForTime(res.response);
+        const askingForPassengers = isAskingForPassengers(res.response);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: res.response,
+            timestamp: new Date().toISOString(),
+            vehicleOptions: vehicleOptions || undefined,
+            showContactForm: askingForContact,
+            showDatePicker: askingForDate,
+            showTimePicker: askingForTime,
+            showPassengerStepper: askingForPassengers,
+          },
+        ]);
+        if (askingForContact) setShowContactForm(true);
+        if (askingForDate) setShowDatePicker(true);
+        if (askingForPassengers) setShowPassengerStepper(true);
+      } else {
+        setError(res.error || 'Failed to get response.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    }
+    setIsLoading(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  // Handle passenger count submit
+  const handlePassengerSubmit = async () => {
+    if (!sessionId) return;
+    setShowPassengerStepper(false);
+
+    const message = `${passengerCount} passenger${passengerCount > 1 ? 's' : ''}`;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await sendMessage(sessionId, message);
+      if (res.success && res.response) {
+        const vehicleOptions = parseVehicleOptions(res.response);
+        const askingForContact = isAskingForContact(res.response);
+        const askingForDate = isAskingForDate(res.response);
+        const askingForTime = isAskingForTime(res.response);
+        const askingForPassengers = isAskingForPassengers(res.response);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: res.response,
+            timestamp: new Date().toISOString(),
+            vehicleOptions: vehicleOptions || undefined,
+            showContactForm: askingForContact,
+            showDatePicker: askingForDate,
+            showTimePicker: askingForTime,
+            showPassengerStepper: askingForPassengers,
+          },
+        ]);
+        if (askingForContact) setShowContactForm(true);
+        if (askingForDate) setShowDatePicker(true);
+        if (askingForTime) setShowTimePicker(true);
+      } else {
+        setError(res.error || 'Failed to get response.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    }
+    setIsLoading(false);
+    setPassengerCount(1); // Reset for next time
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   return (
@@ -535,6 +789,86 @@ export default function ChatWidget() {
                       className="w-full rounded-lg bg-sage py-2.5 text-sm font-medium text-white transition-all hover:bg-sage-dark focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Submit Details
+                    </button>
+                  </div>
+                )}
+
+                {/* Date Picker */}
+                {showDatePicker && !isLoading && (
+                  <div className="bg-white rounded-xl p-4 shadow-soft space-y-3">
+                    <h4 className="font-medium text-navy text-sm">Select Date</h4>
+                    <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
+                      {getDateOptions().slice(0, 14).map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => handleDateSelect(option.value)}
+                          className="rounded-lg border border-gray-light px-3 py-2 text-sm text-navy text-left transition-all hover:border-sage hover:bg-sage/10 focus:outline-none focus:ring-2 focus:ring-sage"
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-gray-light">
+                      <label className="text-xs text-gray mb-1 block">Or pick a specific date:</label>
+                      <input
+                        type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        max={new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                        onChange={(e) => e.target.value && handleDateSelect(e.target.value)}
+                        className="w-full rounded-lg border border-gray-light px-3 py-2 text-sm text-navy focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Time Picker */}
+                {showTimePicker && !isLoading && (
+                  <div className="bg-white rounded-xl p-4 shadow-soft space-y-3">
+                    <h4 className="font-medium text-navy text-sm">Select Time</h4>
+                    <div className="grid grid-cols-4 gap-1 max-h-[200px] overflow-y-auto">
+                      {getTimeOptions().map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => handleTimeSelect(option.value)}
+                          className="rounded-lg border border-gray-light px-2 py-1.5 text-xs text-navy transition-all hover:border-sage hover:bg-sage/10 focus:outline-none focus:ring-2 focus:ring-sage"
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Passenger Stepper */}
+                {showPassengerStepper && !isLoading && (
+                  <div className="bg-white rounded-xl p-4 shadow-soft space-y-3">
+                    <h4 className="font-medium text-navy text-sm">Number of Passengers</h4>
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        onClick={() => setPassengerCount((c) => Math.max(1, c - 1))}
+                        disabled={passengerCount <= 1}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-sage text-sage transition-all hover:bg-sage hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                        </svg>
+                      </button>
+                      <span className="text-3xl font-bold text-navy w-12 text-center">{passengerCount}</span>
+                      <button
+                        onClick={() => setPassengerCount((c) => Math.min(16, c + 1))}
+                        disabled={passengerCount >= 16}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-sage text-sage transition-all hover:bg-sage hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-5 w-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                      </button>
+                    </div>
+                    <button
+                      onClick={handlePassengerSubmit}
+                      className="w-full rounded-lg bg-sage py-2.5 text-sm font-medium text-white transition-all hover:bg-sage-dark focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2"
+                    >
+                      Confirm {passengerCount} passenger{passengerCount > 1 ? 's' : ''}
                     </button>
                   </div>
                 )}
