@@ -7,10 +7,30 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
 const SESSION_STORAGE_KEY = 'dtc_chat_session';
 
+// Interactive element types for rich UI controls
+export interface VehicleOption {
+  id: string;
+  label: string;
+  price: number;  // in pence
+  capacity: number;
+}
+
+export interface CheckboxOption {
+  id: string;
+  label: string;
+}
+
+export interface InteractiveElement {
+  type: 'vehicle_options' | 'checkbox_list' | 'contact_form' | 'action_buttons';
+  options?: VehicleOption[] | CheckboxOption[];
+  actions?: Array<{ id: string; label: string; variant: 'primary' | 'secondary' }>;
+}
+
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
+  interactiveElement?: InteractiveElement;
 }
 
 export interface ChatSession {

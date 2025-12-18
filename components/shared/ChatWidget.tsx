@@ -6,10 +6,59 @@ import {
   initializeSession,
   sendMessage,
   clearStoredSessionId,
+  VehicleOption,
 } from '@/lib/services/chatApi';
 
 interface Message extends ChatMessage {
   id: string;
+  vehicleOptions?: VehicleOption[];
+  showContactForm?: boolean;
+  showQuoteActions?: boolean;
+}
+
+// Parse vehicle options from AI response text
+function parseVehicleOptions(text: string): VehicleOption[] | null {
+  const vehicles: VehicleOption[] = [];
+
+  // Match patterns like "Saloon (up to 4 passengers): £153" or "- Saloon - £153"
+  const patterns = [
+    /(?:^|\n)\s*[-*]?\s*(Saloon|Executive|MPV|Estate|Minibus|Luxury).*?(?:\(up to (\d+) passengers?\)|(?:up to (\d+))).*?[£:]?\s*[£]?(\d+(?:\.\d{2})?)/gi,
+    /(?:^|\n)\s*[-*]?\s*(Saloon|Executive|MPV|Estate|Minibus|Luxury)[^£\n]*[£](\d+(?:\.\d{2})?)/gi,
+  ];
+
+  for (const pattern of patterns) {
+    const regex = new RegExp(pattern);
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      const label = match[1];
+      const capacity = parseInt(match[2] || match[3] || '4', 10);
+      const price = parseFloat(match[4] || match[2]) * 100; // Convert to pence
+
+      // Avoid duplicates
+      if (!vehicles.find(v => v.label.toLowerCase() === label.toLowerCase())) {
+        vehicles.push({
+          id: label.toLowerCase(),
+          label,
+          price,
+          capacity,
+        });
+      }
+    }
+  }
+
+  return vehicles.length > 0 ? vehicles : null;
+}
+
+// Check if message is asking for contact details
+function isAskingForContact(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    lower.includes('lead passenger name') ||
+    lower.includes('passenger name') ||
+    lower.includes('phone number') ||
+    lower.includes('email address') ||
+    (lower.includes('contact') && lower.includes('details'))
+  );
 }
 
 export default function ChatWidget() {
@@ -20,6 +69,12 @@ export default function ChatWidget() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+  });
+  const [showContactForm, setShowContactForm] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -104,13 +159,23 @@ export default function ChatWidget() {
       const response = await sendMessage(sessionId, userMessage.content);
 
       if (response.success && response.response) {
+        // Parse vehicle options from response text
+        const vehicleOptions = parseVehicleOptions(response.response);
+        const showContactForm = isAskingForContact(response.response);
+
         const assistantMessage: Message = {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
           content: response.response,
           timestamp: new Date().toISOString(),
+          vehicleOptions: vehicleOptions || undefined,
+          showContactForm,
         };
         setMessages((prev) => [...prev, assistantMessage]);
+        // Show contact form if AI is asking for contact details
+        if (showContactForm) {
+          setShowContactForm(true);
+        }
       } else {
         setError(response.error || 'Failed to get response. Please try again.');
       }
@@ -139,6 +204,102 @@ export default function ChatWidget() {
     setMessages([]);
     setError(null);
     initChat();
+  };
+
+  // Handle vehicle selection
+  const handleVehicleSelect = (vehicle: VehicleOption) => {
+    const response = `I'd like the ${vehicle.label} please`;
+    setInputValue(response);
+    // Auto-send after brief delay
+    setTimeout(() => {
+      setInputValue('');
+      const userMessage: Message = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: response,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setIsLoading(true);
+      setError(null);
+
+      sendMessage(sessionId!, response).then((res) => {
+        if (res.success && res.response) {
+          const vehicleOptions = parseVehicleOptions(res.response);
+          const showContactForm = isAskingForContact(res.response);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `assistant-${Date.now()}`,
+              role: 'assistant',
+              content: res.response,
+              timestamp: new Date().toISOString(),
+              vehicleOptions: vehicleOptions || undefined,
+              showContactForm,
+            },
+          ]);
+        } else {
+          setError(res.error || 'Failed to get response.');
+        }
+        setIsLoading(false);
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }).catch(() => {
+        setError('Connection error. Please try again.');
+        setIsLoading(false);
+      });
+    }, 100);
+  };
+
+  // Handle contact form submission
+  const handleContactSubmit = async () => {
+    if (!sessionId || !contactForm.name || !contactForm.phone) return;
+
+    setShowContactForm(false);
+    const response = `My name is ${contactForm.name}, phone number is ${contactForm.phone}${contactForm.email ? `, and email is ${contactForm.email}` : ''}`;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: response,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await sendMessage(sessionId, response);
+      if (res.success && res.response) {
+        const vehicleOptions = parseVehicleOptions(res.response);
+        const showContact = isAskingForContact(res.response);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: res.response,
+            timestamp: new Date().toISOString(),
+            vehicleOptions: vehicleOptions || undefined,
+            showContactForm: showContact,
+          },
+        ]);
+        if (showContact) setShowContactForm(true);
+      } else {
+        setError(res.error || 'Failed to get response.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    }
+    setIsLoading(false);
+    setContactForm({ name: '', phone: '', email: '' });
+  };
+
+  // Handle quick action buttons
+  const handleQuickAction = (action: string) => {
+    setInputValue(action);
+    setTimeout(() => {
+      handleSend();
+    }, 50);
   };
 
   return (
@@ -270,21 +431,48 @@ export default function ChatWidget() {
             ) : (
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.role === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
-                  >
+                  <div key={message.id} className="space-y-2">
                     <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
-                        message.role === 'user'
-                          ? 'bg-sage text-white rounded-br-sm'
-                          : 'bg-white text-navy shadow-soft rounded-bl-sm'
+                      className={`flex ${
+                        message.role === 'user' ? 'justify-end' : 'justify-start'
                       }`}
                     >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                          message.role === 'user'
+                            ? 'bg-sage text-white rounded-br-sm'
+                            : 'bg-white text-navy shadow-soft rounded-bl-sm'
+                        }`}
+                      >
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      </div>
                     </div>
+
+                    {/* Vehicle Selection Buttons */}
+                    {message.vehicleOptions && message.vehicleOptions.length > 0 && (
+                      <div className="flex flex-col gap-2 pl-2">
+                        {message.vehicleOptions.map((vehicle) => (
+                          <button
+                            key={vehicle.id}
+                            onClick={() => handleVehicleSelect(vehicle)}
+                            disabled={isLoading}
+                            className="flex items-center justify-between w-full max-w-[280px] rounded-xl border-2 border-sage bg-white px-4 py-3 text-left transition-all hover:bg-sage hover:text-white hover:border-sage-dark focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+                          >
+                            <div>
+                              <span className="font-medium text-navy group-hover:text-white">
+                                {vehicle.label}
+                              </span>
+                              <span className="ml-2 text-xs text-gray group-hover:text-sage-light">
+                                up to {vehicle.capacity} passengers
+                              </span>
+                            </div>
+                            <span className="font-bold text-sage group-hover:text-white">
+                              {'\u00A3'}{(vehicle.price / 100).toFixed(0)}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -307,6 +495,76 @@ export default function ChatWidget() {
                     </div>
                   </div>
                 )}
+
+                {/* Contact Form */}
+                {showContactForm && !isLoading && (
+                  <div className="bg-white rounded-xl p-4 shadow-soft space-y-3">
+                    <h4 className="font-medium text-navy text-sm">Contact Details</h4>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Lead passenger name *"
+                        value={contactForm.name}
+                        onChange={(e) =>
+                          setContactForm((f) => ({ ...f, name: e.target.value }))
+                        }
+                        className="w-full rounded-lg border border-gray-light px-3 py-2 text-sm text-navy placeholder-gray focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                      />
+                      <input
+                        type="tel"
+                        placeholder="Phone number *"
+                        value={contactForm.phone}
+                        onChange={(e) =>
+                          setContactForm((f) => ({ ...f, phone: e.target.value }))
+                        }
+                        className="w-full rounded-lg border border-gray-light px-3 py-2 text-sm text-navy placeholder-gray focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email (optional)"
+                        value={contactForm.email}
+                        onChange={(e) =>
+                          setContactForm((f) => ({ ...f, email: e.target.value }))
+                        }
+                        className="w-full rounded-lg border border-gray-light px-3 py-2 text-sm text-navy placeholder-gray focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
+                      />
+                    </div>
+                    <button
+                      onClick={handleContactSubmit}
+                      disabled={!contactForm.name || !contactForm.phone}
+                      className="w-full rounded-lg bg-sage py-2.5 text-sm font-medium text-white transition-all hover:bg-sage-dark focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Submit Details
+                    </button>
+                  </div>
+                )}
+
+                {/* Quick Action Buttons for Extras */}
+                {messages.length > 0 &&
+                  messages[messages.length - 1].role === 'assistant' &&
+                  messages[messages.length - 1].content.toLowerCase().includes('extras') &&
+                  !isLoading && (
+                    <div className="flex flex-wrap gap-2 pl-2">
+                      <button
+                        onClick={() => handleQuickAction('No extras needed, thanks')}
+                        className="rounded-full border border-sage px-4 py-1.5 text-sm text-sage transition-all hover:bg-sage hover:text-white"
+                      >
+                        No extras needed
+                      </button>
+                      <button
+                        onClick={() => handleQuickAction('Yes, I need a child seat')}
+                        className="rounded-full border border-sage px-4 py-1.5 text-sm text-sage transition-all hover:bg-sage hover:text-white"
+                      >
+                        Child seat
+                      </button>
+                      <button
+                        onClick={() => handleQuickAction('Meet and greet please')}
+                        className="rounded-full border border-sage px-4 py-1.5 text-sm text-sage transition-all hover:bg-sage hover:text-white"
+                      >
+                        Meet & Greet
+                      </button>
+                    </div>
+                  )}
 
                 <div ref={messagesEndRef} />
               </div>
