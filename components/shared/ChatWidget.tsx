@@ -138,6 +138,7 @@ export default function ChatWidget() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showPassengerStepper, setShowPassengerStepper] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -892,8 +893,9 @@ export default function ChatWidget() {
                 {showDatePicker && !isLoading && (
                   <div className="bg-white rounded-xl p-4 shadow-soft space-y-3">
                     <h4 className="font-medium text-navy text-sm">Select Date</h4>
-                    <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
-                      {getDateOptions().slice(0, 14).map((option) => (
+                    {/* Quick date options */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {getDateOptions().slice(0, 6).map((option) => (
                         <button
                           key={option.value}
                           onClick={() => handleDateSelect(option.value)}
@@ -903,15 +905,71 @@ export default function ChatWidget() {
                         </button>
                       ))}
                     </div>
+                    {/* Custom Calendar */}
                     <div className="pt-2 border-t border-gray-light">
-                      <label className="text-xs text-gray mb-1 block">Or pick a specific date:</label>
-                      <input
-                        type="date"
-                        min={new Date().toISOString().split('T')[0]}
-                        max={new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                        onChange={(e) => e.target.value && handleDateSelect(e.target.value)}
-                        className="w-full rounded-lg border border-gray-light px-3 py-2 text-sm text-navy focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
-                      />
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
+                          disabled={calendarMonth.getMonth() === new Date().getMonth() && calendarMonth.getFullYear() === new Date().getFullYear()}
+                          className="p-1 rounded hover:bg-gray-light/50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-navy">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                          </svg>
+                        </button>
+                        <span className="text-sm font-medium text-navy">
+                          {calendarMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                        </span>
+                        <button
+                          onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
+                          disabled={calendarMonth > new Date(Date.now() + 80 * 24 * 60 * 60 * 1000)}
+                          className="p-1 rounded hover:bg-gray-light/50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-navy">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                          <div key={day} className="text-xs text-gray font-medium py-1">{day}</div>
+                        ))}
+                        {(() => {
+                          const firstDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1);
+                          const lastDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const maxDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+                          const days = [];
+                          // Padding for first week
+                          for (let i = 0; i < firstDay.getDay(); i++) {
+                            days.push(<div key={`empty-${i}`} />);
+                          }
+                          // Days of month
+                          for (let d = 1; d <= lastDay.getDate(); d++) {
+                            const date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), d);
+                            const dateStr = date.toISOString().split('T')[0];
+                            const isPast = date < today;
+                            const isTooFar = date > maxDate;
+                            const isDisabled = isPast || isTooFar;
+                            days.push(
+                              <button
+                                key={d}
+                                onClick={() => !isDisabled && handleDateSelect(dateStr)}
+                                disabled={isDisabled}
+                                className={`p-1.5 text-xs rounded transition-all ${
+                                  isDisabled
+                                    ? 'text-gray-light cursor-not-allowed'
+                                    : 'text-navy hover:bg-sage hover:text-white'
+                                }`}
+                              >
+                                {d}
+                              </button>
+                            );
+                          }
+                          return days;
+                        })()}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1008,7 +1066,7 @@ export default function ChatWidget() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder="Type your message..."
                 disabled={isLoading || isInitializing}
                 className="flex-1 rounded-full border border-gray-light bg-cream/30 px-4 py-2.5 text-sm text-navy placeholder-gray focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage disabled:opacity-50"
