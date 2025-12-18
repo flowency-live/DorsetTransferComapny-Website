@@ -119,6 +119,10 @@ export default function ChatWidget() {
       setError('Connection error. Please try again.');
     } finally {
       setIsLoading(false);
+      // Refocus input after response
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 

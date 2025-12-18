@@ -17,7 +17,7 @@ export const API_ENDPOINTS = {
   quotesRetrieve: '/quotes', // /quotes/{quoteId}?token=xxx
   bookings: '/bookings',
   vehicles: '/v1/vehicles',
-  fixedRoutes: '/v1/fixed-routes',
+  zonePricing: '/v1/zone-pricing',
   locations: '/v1/locations/autocomplete',
   feedback: '/v1/feedback',
 
