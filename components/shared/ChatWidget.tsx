@@ -24,28 +24,53 @@ interface Message extends ChatMessage {
 function parseVehicleOptions(text: string): VehicleOption[] | null {
   const vehicles: VehicleOption[] = [];
 
-  // Match patterns like "Saloon (up to 4 passengers): £153" or "- Saloon - £153"
-  const patterns = [
-    /(?:^|\n)\s*[-*]?\s*(Saloon|Executive|MPV|Estate|Minibus|Luxury).*?(?:\(up to (\d+) passengers?\)|(?:up to (\d+))).*?[£:]?\s*[£]?(\d+(?:\.\d{2})?)/gi,
-    /(?:^|\n)\s*[-*]?\s*(Saloon|Executive|MPV|Estate|Minibus|Luxury)[^£\n]*[£](\d+(?:\.\d{2})?)/gi,
-  ];
+  // Split into lines and look for vehicle patterns
+  const lines = text.split('\n');
 
-  for (const pattern of patterns) {
-    const regex = new RegExp(pattern);
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      const label = match[1];
-      const capacity = parseInt(match[2] || match[3] || '4', 10);
-      const price = parseFloat(match[4] || match[2]) * 100; // Convert to pence
+  for (const line of lines) {
+    // Skip empty lines
+    if (!line.trim()) continue;
 
-      // Avoid duplicates
-      if (!vehicles.find(v => v.label.toLowerCase() === label.toLowerCase())) {
-        vehicles.push({
-          id: label.toLowerCase(),
-          label,
-          price,
-          capacity,
-        });
+    // Look for lines with vehicle names and prices
+    // Match patterns like:
+    // - "Saloon (up to 4 passengers): £153"
+    // - "- Standard Saloon: £153"
+    // - "- Executive (4 passengers): £180"
+    // - "* MPV - £220"
+    // - "8-Seater Minibus (up to 8): £250"
+
+    // Check if line contains a price (£ followed by number)
+    const priceMatch = line.match(/[£](\d+(?:\.\d{2})?)/);
+    if (!priceMatch) continue;
+
+    const price = parseFloat(priceMatch[1]) * 100; // Convert to pence
+
+    // Check if line mentions a vehicle type
+    const vehiclePatterns = [
+      { pattern: /\b(standard\s*saloon|saloon)\b/i, label: 'Saloon', capacity: 4 },
+      { pattern: /\b(executive\s*saloon|executive)\b/i, label: 'Executive', capacity: 4 },
+      { pattern: /\b(mpv|people\s*carrier)\b/i, label: 'MPV', capacity: 6 },
+      { pattern: /\b(estate)\b/i, label: 'Estate', capacity: 4 },
+      { pattern: /\b(minibus|8[- ]?seater)\b/i, label: 'Minibus', capacity: 8 },
+      { pattern: /\b(luxury)\b/i, label: 'Luxury', capacity: 4 },
+    ];
+
+    for (const { pattern, label, capacity: defaultCapacity } of vehiclePatterns) {
+      if (pattern.test(line)) {
+        // Try to extract capacity from the line
+        const capacityMatch = line.match(/(?:up to\s*)?(\d+)\s*(?:passengers?|seats?)/i);
+        const capacity = capacityMatch ? parseInt(capacityMatch[1], 10) : defaultCapacity;
+
+        // Avoid duplicates
+        if (!vehicles.find(v => v.label === label)) {
+          vehicles.push({
+            id: label.toLowerCase(),
+            label,
+            price,
+            capacity,
+          });
+        }
+        break; // Found vehicle for this line, move to next line
       }
     }
   }
@@ -118,6 +143,15 @@ function isAskingForPassengers(text: string): boolean {
   );
 }
 
+// Check if message is asking for extras
+function isAskingForExtras(text: string): boolean {
+  const lower = text.toLowerCase();
+  return (
+    (lower.includes('child seat') || lower.includes('booster seat') || lower.includes('baby seat')) &&
+    (lower.includes('luggage') || lower.includes('need any'))
+  );
+}
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -138,6 +172,10 @@ export default function ChatWidget() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showPassengerStepper, setShowPassengerStepper] = useState(false);
+  const [showExtrasSelector, setShowExtrasSelector] = useState(false);
+  const [babySeats, setBabySeats] = useState(0);
+  const [childSeats, setChildSeats] = useState(0);
+  const [hasLargeLuggage, setHasLargeLuggage] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -267,6 +305,7 @@ export default function ChatWidget() {
         const askingForDate = isAskingForDate(response.response);
         const askingForTime = isAskingForTime(response.response);
         const askingForPassengers = isAskingForPassengers(response.response);
+        const askingForExtras = isAskingForExtras(response.response);
 
         const assistantMessage: Message = {
           id: `assistant-${Date.now()}`,
@@ -287,6 +326,7 @@ export default function ChatWidget() {
         if (askingForDate) setShowDatePicker(true);
         if (askingForTime) setShowTimePicker(true);
         if (askingForPassengers) setShowPassengerStepper(true);
+        if (askingForExtras) setShowExtrasSelector(true);
       } else {
         setError(response.error || 'Failed to get response. Please try again.');
       }
@@ -405,14 +445,6 @@ export default function ChatWidget() {
     setContactForm({ name: '', phone: '', email: '' });
   };
 
-  // Handle quick action buttons
-  const handleQuickAction = (action: string) => {
-    setInputValue(action);
-    setTimeout(() => {
-      handleSend();
-    }, 50);
-  };
-
   // Handle address option selection
   const handleAddressSelect = async (address: string) => {
     if (!sessionId || isLoading) return;
@@ -436,6 +468,7 @@ export default function ChatWidget() {
         const askingForDate = isAskingForDate(res.response);
         const askingForTime = isAskingForTime(res.response);
         const askingForPassengers = isAskingForPassengers(res.response);
+        const askingForExtras = isAskingForExtras(res.response);
         setMessages((prev) => [
           ...prev,
           {
@@ -455,6 +488,7 @@ export default function ChatWidget() {
         if (askingForDate) setShowDatePicker(true);
         if (askingForTime) setShowTimePicker(true);
         if (askingForPassengers) setShowPassengerStepper(true);
+        if (askingForExtras) setShowExtrasSelector(true);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -494,9 +528,9 @@ export default function ChatWidget() {
       if (res.success && res.response) {
         const vehicleOptions = parseVehicleOptions(res.response);
         const askingForContact = isAskingForContact(res.response);
-        const askingForDate = isAskingForDate(res.response);
         const askingForTime = isAskingForTime(res.response);
         const askingForPassengers = isAskingForPassengers(res.response);
+        const askingForExtras = isAskingForExtras(res.response);
         setMessages((prev) => [
           ...prev,
           {
@@ -506,7 +540,6 @@ export default function ChatWidget() {
             timestamp: new Date().toISOString(),
             vehicleOptions: vehicleOptions || undefined,
             showContactForm: askingForContact,
-            showDatePicker: askingForDate,
             showTimePicker: askingForTime,
             showPassengerStepper: askingForPassengers,
           },
@@ -514,6 +547,7 @@ export default function ChatWidget() {
         if (askingForContact) setShowContactForm(true);
         if (askingForTime) setShowTimePicker(true);
         if (askingForPassengers) setShowPassengerStepper(true);
+        if (askingForExtras) setShowExtrasSelector(true);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -552,9 +586,8 @@ export default function ChatWidget() {
       if (res.success && res.response) {
         const vehicleOptions = parseVehicleOptions(res.response);
         const askingForContact = isAskingForContact(res.response);
-        const askingForDate = isAskingForDate(res.response);
-        const askingForTime = isAskingForTime(res.response);
         const askingForPassengers = isAskingForPassengers(res.response);
+        const askingForExtras = isAskingForExtras(res.response);
         setMessages((prev) => [
           ...prev,
           {
@@ -564,14 +597,12 @@ export default function ChatWidget() {
             timestamp: new Date().toISOString(),
             vehicleOptions: vehicleOptions || undefined,
             showContactForm: askingForContact,
-            showDatePicker: askingForDate,
-            showTimePicker: askingForTime,
             showPassengerStepper: askingForPassengers,
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDatePicker(true);
         if (askingForPassengers) setShowPassengerStepper(true);
+        if (askingForExtras) setShowExtrasSelector(true);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -607,6 +638,7 @@ export default function ChatWidget() {
         const askingForDate = isAskingForDate(res.response);
         const askingForTime = isAskingForTime(res.response);
         const askingForPassengers = isAskingForPassengers(res.response);
+        const askingForExtras = isAskingForExtras(res.response);
         setMessages((prev) => [
           ...prev,
           {
@@ -624,6 +656,7 @@ export default function ChatWidget() {
         if (askingForContact) setShowContactForm(true);
         if (askingForDate) setShowDatePicker(true);
         if (askingForTime) setShowTimePicker(true);
+        if (askingForExtras) setShowExtrasSelector(true);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -632,6 +665,64 @@ export default function ChatWidget() {
     }
     setIsLoading(false);
     setPassengerCount(1); // Reset for next time
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  // Handle extras submit
+  const handleExtrasSubmit = async () => {
+    if (!sessionId) return;
+    setShowExtrasSelector(false);
+
+    // Build message based on selections
+    const extras: string[] = [];
+    if (babySeats > 0) extras.push(`${babySeats} baby seat${babySeats > 1 ? 's' : ''}`);
+    if (childSeats > 0) extras.push(`${childSeats} booster seat${childSeats > 1 ? 's' : ''}`);
+    if (hasLargeLuggage) extras.push('large luggage');
+
+    const message = extras.length > 0
+      ? `I need ${extras.join(' and ')}`
+      : 'No extras needed';
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await sendMessage(sessionId, message);
+      if (res.success && res.response) {
+        const vehicleOptions = parseVehicleOptions(res.response);
+        const askingForContact = isAskingForContact(res.response);
+        const askingForExtras = isAskingForExtras(res.response);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: res.response,
+            timestamp: new Date().toISOString(),
+            vehicleOptions: vehicleOptions || undefined,
+            showContactForm: askingForContact,
+          },
+        ]);
+        if (askingForContact) setShowContactForm(true);
+        if (askingForExtras) setShowExtrasSelector(true);
+      } else {
+        setError(res.error || 'Failed to get response.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    }
+    setIsLoading(false);
+    // Reset extras state for next time
+    setBabySeats(0);
+    setChildSeats(0);
+    setHasLargeLuggage(false);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
@@ -1027,32 +1118,96 @@ export default function ChatWidget() {
                   </div>
                 )}
 
-                {/* Quick Action Buttons for Extras */}
-                {messages.length > 0 &&
-                  messages[messages.length - 1].role === 'assistant' &&
-                  messages[messages.length - 1].content.toLowerCase().includes('extras') &&
-                  !isLoading && (
-                    <div className="flex flex-wrap gap-2 pl-2">
+                {/* Extras Selector */}
+                {showExtrasSelector && !isLoading && (
+                  <div className="bg-white rounded-xl p-4 shadow-soft space-y-4">
+                    <h4 className="font-medium text-navy text-sm">Optional Extras</h4>
+
+                    {/* Baby Seats (ages 0-4) */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-navy">Baby seats</span>
+                        <span className="text-xs text-gray ml-1">(ages 0-4)</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setBabySeats((c) => Math.max(0, c - 1))}
+                          disabled={babySeats <= 0}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-sage text-sage transition-all hover:bg-sage hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                          </svg>
+                        </button>
+                        <span className="text-lg font-bold text-navy w-6 text-center">{babySeats}</span>
+                        <button
+                          onClick={() => setBabySeats((c) => Math.min(3, c + 1))}
+                          disabled={babySeats >= 3}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-sage text-sage transition-all hover:bg-sage hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Child/Booster Seats (ages 5-12) */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm text-navy">Booster seats</span>
+                        <span className="text-xs text-gray ml-1">(ages 5-12)</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => setChildSeats((c) => Math.max(0, c - 1))}
+                          disabled={childSeats <= 0}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-sage text-sage transition-all hover:bg-sage hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                          </svg>
+                        </button>
+                        <span className="text-lg font-bold text-navy w-6 text-center">{childSeats}</span>
+                        <button
+                          onClick={() => setChildSeats((c) => Math.min(3, c + 1))}
+                          disabled={childSeats >= 3}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-sage text-sage transition-all hover:bg-sage hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Large Luggage */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-navy">Large luggage</span>
                       <button
-                        onClick={() => handleQuickAction('No extras needed, thanks')}
-                        className="rounded-full border border-sage px-4 py-1.5 text-sm text-sage transition-all hover:bg-sage hover:text-white"
+                        onClick={() => setHasLargeLuggage(!hasLargeLuggage)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          hasLargeLuggage ? 'bg-sage' : 'bg-gray-light'
+                        }`}
                       >
-                        No extras needed
-                      </button>
-                      <button
-                        onClick={() => handleQuickAction('Yes, I need a child seat')}
-                        className="rounded-full border border-sage px-4 py-1.5 text-sm text-sage transition-all hover:bg-sage hover:text-white"
-                      >
-                        Child seat
-                      </button>
-                      <button
-                        onClick={() => handleQuickAction('Meet and greet please')}
-                        className="rounded-full border border-sage px-4 py-1.5 text-sm text-sage transition-all hover:bg-sage hover:text-white"
-                      >
-                        Meet & Greet
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            hasLargeLuggage ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
                       </button>
                     </div>
-                  )}
+
+                    <button
+                      onClick={handleExtrasSubmit}
+                      className="w-full rounded-lg bg-sage py-2.5 text-sm font-medium text-white transition-all hover:bg-sage-dark focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2"
+                    >
+                      {babySeats === 0 && childSeats === 0 && !hasLargeLuggage
+                        ? 'No extras needed'
+                        : 'Confirm extras'}
+                    </button>
+                  </div>
+                )}
 
                 <div ref={messagesEndRef} />
               </div>
