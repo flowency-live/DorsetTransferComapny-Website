@@ -1,25 +1,30 @@
 'use client';
 
-import { MapPin, Clock, ArrowRight } from 'lucide-react';
+import { MapPin, ArrowRight, Car, Crown, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import Header from '@/components/shared/Header';
 import { buttonVariants } from '@/components/ui/button';
 
-import { getFixedRoutes } from '../quote/lib/api';
-import { FixedRoute } from '../quote/lib/types';
+import { getZonePricing } from '../quote/lib/api';
+import { ZonePricingRoute } from '../quote/lib/types';
+
+// Format price from pence to pounds
+function formatPrice(pence: number): string {
+  return `£${(pence / 100).toFixed(0)}`;
+}
 
 export default function PricingPage() {
-  const [routes, setRoutes] = useState<FixedRoute[]>([]);
+  const [routes, setRoutes] = useState<ZonePricingRoute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadRoutes() {
       try {
-        const data = await getFixedRoutes();
-        setRoutes(data.filter(r => r.active));
+        const data = await getZonePricing();
+        setRoutes(data);
         setLoading(false);
       } catch {
         setError('Failed to load pricing information');
@@ -30,15 +35,15 @@ export default function PricingPage() {
     loadRoutes();
   }, []);
 
-  // Group routes by departure location
+  // Group routes by zone name
   const groupedRoutes = routes.reduce((acc, route) => {
-    const from = route.originName;
+    const from = route.zoneName;
     if (!acc[from]) {
       acc[from] = [];
     }
     acc[from].push(route);
     return acc;
-  }, {} as Record<string, FixedRoute[]>);
+  }, {} as Record<string, ZonePricingRoute[]>);
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -48,10 +53,10 @@ export default function PricingPage() {
       <section className="py-12 md:py-20 bg-gradient-to-br from-sage-light via-cream to-background">
         <div className="container px-4 md:px-6 mx-auto max-w-4xl text-center">
           <h1 className="font-playfair text-4xl md:text-5xl lg:text-6xl font-bold text-navy mb-6">
-            Our Pricing
+            Zone Pricing
           </h1>
           <p className="text-lg md:text-xl text-navy-light max-w-2xl mx-auto mb-8">
-            Transparent, competitive rates across Dorset. No hidden fees, no surprises.
+            Fixed prices for popular routes. No hidden fees, no surprises.
           </p>
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-lg">
             <h2 className="font-playfair text-2xl md:text-3xl font-semibold text-navy mb-4">
@@ -108,7 +113,7 @@ export default function PricingPage() {
           {!loading && !error && Object.keys(groupedRoutes).length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground">
-                No fixed routes available at the moment.{' '}
+                No zone pricing available at the moment.{' '}
                 <Link href="/quote" className="text-sage-accessible hover:underline">
                   Get a custom quote
                 </Link>
@@ -116,20 +121,20 @@ export default function PricingPage() {
             </div>
           )}
 
-          {!loading && !error && Object.keys(groupedRoutes).map((fromLocation) => (
-            <div key={fromLocation} className="mb-12">
+          {!loading && !error && Object.keys(groupedRoutes).map((zoneName) => (
+            <div key={zoneName} className="mb-12">
               <h2 className="font-playfair text-2xl md:text-3xl font-semibold text-navy mb-6">
-                From {fromLocation}
+                From {zoneName}
               </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedRoutes[fromLocation].map((route) => (
+              <div className="grid gap-6 md:grid-cols-2">
+                {groupedRoutes[zoneName].map((route) => (
                   <div
-                    key={route.routeId}
+                    key={`${route.zoneId}-${route.destinationId}`}
                     className="bg-card rounded-2xl p-6 shadow-lg border-2 border-sage-light hover:border-sage transition-all hover:shadow-xl"
                   >
-                    {/* Route Info */}
-                    <div className="mb-4">
-                      <div className="flex items-start gap-2 mb-3">
+                    {/* Destination */}
+                    <div className="mb-5">
+                      <div className="flex items-start gap-2 mb-2">
                         <MapPin className="w-5 h-5 text-sage-dark flex-shrink-0 mt-0.5" />
                         <div className="flex-1">
                           <div className="font-semibold text-navy text-lg">
@@ -137,34 +142,43 @@ export default function PricingPage() {
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{route.distance} miles</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {route.estimatedDuration} min
-                        </span>
+                    {/* Vehicle Prices Grid */}
+                    <div className="grid grid-cols-3 gap-3 mb-5">
+                      {/* Standard */}
+                      <div className="text-center p-3 bg-sage-light/20 rounded-lg">
+                        <Car className="w-5 h-5 mx-auto text-sage-dark mb-1" />
+                        <p className="text-xs text-muted-foreground mb-1">Standard</p>
+                        <p className="text-lg font-bold text-sage-dark">
+                          {formatPrice(route.prices.standard.outbound)}
+                        </p>
+                      </div>
+                      {/* Executive */}
+                      <div className="text-center p-3 bg-gold/10 rounded-lg">
+                        <Crown className="w-5 h-5 mx-auto text-gold mb-1" />
+                        <p className="text-xs text-muted-foreground mb-1">Executive</p>
+                        <p className="text-lg font-bold text-gold">
+                          {formatPrice(route.prices.executive.outbound)}
+                        </p>
+                      </div>
+                      {/* Minibus */}
+                      <div className="text-center p-3 bg-navy/10 rounded-lg">
+                        <Users className="w-5 h-5 mx-auto text-navy mb-1" />
+                        <p className="text-xs text-muted-foreground mb-1">Minibus</p>
+                        <p className="text-lg font-bold text-navy">
+                          {formatPrice(route.prices.minibus.outbound)}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Vehicle Type */}
-                    <div className="mb-4 py-2 px-3 bg-sage-light/30 rounded-lg">
-                      <p className="text-xs text-navy-light font-medium">
-                        {route.vehicleName}
-                      </p>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mb-4">
-                      <div className="text-3xl font-bold text-sage-dark">
-                        £{(route.price / 100).toFixed(2)}
-                      </div>
-                      <p className="text-xs text-muted-foreground">One-way journey</p>
-                    </div>
+                    <p className="text-xs text-muted-foreground text-center mb-4">
+                      One-way prices shown. Return journeys available at checkout.
+                    </p>
 
                     {/* Book Now Button */}
                     <Link
-                      href={`/quote?route=${route.routeId}`}
+                      href="/quote"
                       className={buttonVariants({
                         variant: "hero-golden",
                         size: "default",

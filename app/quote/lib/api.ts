@@ -1,7 +1,7 @@
 // Quote Wizard API Client
 // Based on QUOTE_WIZARD_IMPLEMENTATION_SPEC.md
 
-import { QuoteRequest, QuoteResponse, Vehicle, ApiError, FixedRoute, FixedRoutesResponse, MultiVehicleQuoteResponse } from './types';
+import { QuoteRequest, QuoteResponse, Vehicle, ApiError, FixedRoute, FixedRoutesResponse, MultiVehicleQuoteResponse, ZonePricingRoute, ZonePricingResponse } from './types';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
 /**
@@ -59,11 +59,11 @@ export async function getVehicles(): Promise<Vehicle[]> {
 }
 
 /**
- * Get list of fixed route pricing
+ * Get list of fixed route pricing (DEPRECATED - use getZonePricing instead)
  * @returns Array of active fixed routes with pricing
  */
 export async function getFixedRoutes(): Promise<FixedRoute[]> {
-  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.fixedRoutes}`, {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.zonePricing}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -76,6 +76,33 @@ export async function getFixedRoutes(): Promise<FixedRoute[]> {
   }
 
   const data: FixedRoutesResponse = await response.json();
+  return data.routes;
+}
+
+/**
+ * Get zone pricing routes for customer website
+ * @returns Array of zone pricing routes with prices per vehicle type
+ */
+export async function getZonePricing(): Promise<ZonePricingRoute[]> {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.zonePricing}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch zone pricing';
+    try {
+      const error: ApiError = await response.json();
+      errorMessage = error.error?.message || errorMessage;
+    } catch {
+      errorMessage = `Server error (${response.status}): ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data: ZonePricingResponse = await response.json();
   return data.routes;
 }
 

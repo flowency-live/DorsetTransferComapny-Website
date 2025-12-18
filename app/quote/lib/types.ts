@@ -169,6 +169,30 @@ export interface FixedRoutesResponse {
   count: number;
 }
 
+// Zone Pricing Types (from /v1/zone-pricing endpoint)
+export interface ZonePricingVehiclePrices {
+  outbound: number;  // Price in pence
+  return: number;    // Price in pence
+}
+
+export interface ZonePricingRoute {
+  zoneId: string;
+  zoneName: string;           // e.g., "Bournemouth Central"
+  destinationId: string;
+  destinationName: string;    // e.g., "London Heathrow Airport (LHR)"
+  routeName: string;          // Full route name
+  prices: {
+    standard: ZonePricingVehiclePrices;
+    executive: ZonePricingVehiclePrices;
+    minibus: ZonePricingVehiclePrices;
+  };
+}
+
+export interface ZonePricingResponse {
+  routes: ZonePricingRoute[];
+  count: number;
+}
+
 // Vehicle pricing from compareMode response (matches backend response)
 export interface VehiclePricing {
   // Vehicle info (flat, not nested)
@@ -226,8 +250,8 @@ export interface VehiclePricing {
   };
 }
 
-// Debug info for zone pricing testing
-export interface ZonePricingDebugInfo {
+// Debug info for pricing engine
+export interface PricingEngineDebugInfo {
   pickup: {
     address: string;
     placeId: string;
@@ -252,7 +276,22 @@ export interface ZonePricingDebugInfo {
     pickupInArea: boolean;
     dropoffInArea: boolean;
   };
+  // Surge pricing info
+  surge?: {
+    applied: boolean;
+    multiplier: number;
+    rules: { name: string; multiplier: number }[];
+  };
+  // Corporate discount info
+  corporateDiscount?: {
+    applied: boolean;
+    percentage: number;
+    accountName?: string;
+  };
 }
+
+// Backwards compatibility alias
+export type ZonePricingDebugInfo = PricingEngineDebugInfo;
 
 // Multi-vehicle quote response (compareMode: true)
 export interface MultiVehicleQuoteResponse {
