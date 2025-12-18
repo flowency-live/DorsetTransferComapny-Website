@@ -142,18 +142,17 @@ export default function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Generate date options for next 90 days
+  // Generate date options for next 90 days (starting from tomorrow - no same day bookings)
   const getDateOptions = () => {
     const options: { value: string; label: string }[] = [];
     const today = new Date();
-    for (let i = 0; i < 90; i++) {
+    for (let i = 1; i <= 90; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
       const value = date.toISOString().split('T')[0];
       const dayName = date.toLocaleDateString('en-GB', { weekday: 'short' });
       const dateStr = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
       let label = `${dayName} ${dateStr}`;
-      if (i === 0) label = `Today (${dateStr})`;
       if (i === 1) label = `Tomorrow (${dateStr})`;
       options.push({ value, label });
     }
@@ -939,6 +938,8 @@ export default function ChatWidget() {
                           const lastDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0);
                           const today = new Date();
                           today.setHours(0, 0, 0, 0);
+                          const tomorrow = new Date(today);
+                          tomorrow.setDate(tomorrow.getDate() + 1);
                           const maxDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
                           const days = [];
                           // Padding for first week
@@ -949,7 +950,7 @@ export default function ChatWidget() {
                           for (let d = 1; d <= lastDay.getDate(); d++) {
                             const date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), d);
                             const dateStr = date.toISOString().split('T')[0];
-                            const isPast = date < today;
+                            const isPast = date < tomorrow; // No same day bookings
                             const isTooFar = date > maxDate;
                             const isDisabled = isPast || isTooFar;
                             days.push(
