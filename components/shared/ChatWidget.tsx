@@ -12,6 +12,7 @@ import {
 interface Message extends ChatMessage {
   id: string;
   vehicleOptions?: VehicleOption[];
+  addressOptions?: string[];
   showContactForm?: boolean;
   showQuoteActions?: boolean;
   showDatePicker?: boolean;
@@ -50,6 +51,27 @@ function parseVehicleOptions(text: string): VehicleOption[] | null {
   }
 
   return vehicles.length > 0 ? vehicles : null;
+}
+
+// Parse address options from AI response (bullet points)
+function parseAddressOptions(text: string): string[] | null {
+  const lines = text.split('\n');
+  const options: string[] = [];
+
+  for (const line of lines) {
+    // Match lines starting with - or * followed by an address
+    const match = line.match(/^\s*[-*]\s*(.+)$/);
+    if (match && match[1].length > 10) {
+      // Filter out non-address options (like vehicle types)
+      const option = match[1].trim();
+      if (!option.match(/^\w+\s*\(up to \d+ passengers?\)/i) &&
+          !option.match(/^(Saloon|Executive|MPV|Estate|Minibus)/i)) {
+        options.push(option);
+      }
+    }
+  }
+
+  return options.length > 1 ? options : null;
 }
 
 // Check if message is asking for contact details
@@ -238,8 +260,9 @@ export default function ChatWidget() {
       const response = await sendMessage(sessionId, userMessage.content);
 
       if (response.success && response.response) {
-        // Parse vehicle options from response text
+        // Parse options from response text
         const vehicleOptions = parseVehicleOptions(response.response);
+        const addressOptions = parseAddressOptions(response.response);
         const askingForContact = isAskingForContact(response.response);
         const askingForDate = isAskingForDate(response.response);
         const askingForTime = isAskingForTime(response.response);
@@ -251,6 +274,7 @@ export default function ChatWidget() {
           content: response.response,
           timestamp: new Date().toISOString(),
           vehicleOptions: vehicleOptions || undefined,
+          addressOptions: addressOptions || undefined,
           showContactForm: askingForContact,
           showDatePicker: askingForDate,
           showTimePicker: askingForTime,
@@ -387,6 +411,58 @@ export default function ChatWidget() {
     setTimeout(() => {
       handleSend();
     }, 50);
+  };
+
+  // Handle address option selection
+  const handleAddressSelect = async (address: string) => {
+    if (!sessionId || isLoading) return;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: address,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await sendMessage(sessionId, address);
+      if (res.success && res.response) {
+        const vehicleOptions = parseVehicleOptions(res.response);
+        const addressOptions = parseAddressOptions(res.response);
+        const askingForContact = isAskingForContact(res.response);
+        const askingForDate = isAskingForDate(res.response);
+        const askingForTime = isAskingForTime(res.response);
+        const askingForPassengers = isAskingForPassengers(res.response);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `assistant-${Date.now()}`,
+            role: 'assistant',
+            content: res.response,
+            timestamp: new Date().toISOString(),
+            vehicleOptions: vehicleOptions || undefined,
+            addressOptions: addressOptions || undefined,
+            showContactForm: askingForContact,
+            showDatePicker: askingForDate,
+            showTimePicker: askingForTime,
+            showPassengerStepper: askingForPassengers,
+          },
+        ]);
+        if (askingForContact) setShowContactForm(true);
+        if (askingForDate) setShowDatePicker(true);
+        if (askingForTime) setShowTimePicker(true);
+        if (askingForPassengers) setShowPassengerStepper(true);
+      } else {
+        setError(res.error || 'Failed to get response.');
+      }
+    } catch {
+      setError('Connection error. Please try again.');
+    }
+    setIsLoading(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   // Handle date selection
@@ -726,6 +802,22 @@ export default function ChatWidget() {
                             <span className="font-bold text-sage group-hover:text-white">
                               {'\u00A3'}{(vehicle.price / 100).toFixed(0)}
                             </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Address Selection Buttons */}
+                    {message.addressOptions && message.addressOptions.length > 0 && (
+                      <div className="flex flex-col gap-2 pl-2">
+                        {message.addressOptions.map((address, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleAddressSelect(address)}
+                            disabled={isLoading}
+                            className="w-full max-w-[320px] rounded-xl border-2 border-sage bg-white px-4 py-3 text-left text-sm text-navy transition-all hover:bg-sage hover:text-white hover:border-sage-dark focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {address}
                           </button>
                         ))}
                       </div>
