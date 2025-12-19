@@ -46,12 +46,13 @@ function parseVehicleOptions(text: string): VehicleOption[] | null {
     const price = parseFloat(priceMatch[1]) * 100; // Convert to pence
 
     // Check if line mentions a vehicle type
-    // Order matters - check more specific patterns first (e.g., "Executive Minibus" before "Executive")
+    // Order matters - check more specific patterns first (e.g., "Executive Sedan" before standalone "Sedan")
     const vehiclePatterns = [
       { pattern: /\b(executive\s*minibus)\b/i, label: 'Executive Minibus', capacity: 8 },
       { pattern: /\b(minibus|8[- ]?seater)\b/i, label: 'Minibus', capacity: 8 },
+      { pattern: /\bexecutive\s*(saloon|sedan)\b/i, label: 'Executive', capacity: 4 },
       { pattern: /\b(standard\s*(saloon|sedan)|(saloon|sedan))\b/i, label: 'Standard', capacity: 4 },
-      { pattern: /\b(executive\s*(saloon|sedan)|executive)\b/i, label: 'Executive', capacity: 4 },
+      { pattern: /\bexecutive\b/i, label: 'Executive', capacity: 4 },
       { pattern: /\b(mpv|people\s*carrier)\b/i, label: 'MPV', capacity: 6 },
       { pattern: /\b(estate)\b/i, label: 'Estate', capacity: 4 },
       { pattern: /\b(luxury)\b/i, label: 'Luxury', capacity: 4 },
