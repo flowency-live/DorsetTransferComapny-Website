@@ -325,10 +325,12 @@ export default function ChatWidget() {
         };
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Show appropriate interactive controls
+        // Show appropriate interactive controls (clear date/time if AI moved past them)
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDateButton(true);
-        if (askingForTime) setShowTimeButton(true);
+        setShowDateButton(askingForDate);
+        if (!askingForDate) setShowDatePicker(false);
+        setShowTimeButton(askingForTime);
+        if (!askingForTime) setShowTimePicker(false);
         if (askingForPassengers) setShowPassengerStepper(true);
         if (askingForExtras) setShowExtrasSelector(true);
       } else {
