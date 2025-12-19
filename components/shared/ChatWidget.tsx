@@ -326,14 +326,14 @@ export default function ChatWidget() {
         };
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Show appropriate interactive controls (clear date/time if AI moved past them)
+        // Show appropriate interactive controls (clear if AI moved past them)
         if (askingForContact) setShowContactForm(true);
         setShowDateButton(askingForDate);
         if (!askingForDate) setShowDatePicker(false);
         setShowTimeButton(askingForTime);
         if (!askingForTime) setShowTimePicker(false);
-        if (askingForPassengers) setShowPassengerStepper(true);
-        if (askingForExtras) setShowExtrasSelector(true);
+        setShowPassengerStepper(askingForPassengers);
+        setShowExtrasSelector(askingForExtras);
       } else {
         setError(response.error || 'Failed to get response. Please try again.');
       }
@@ -492,10 +492,10 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDateButton(true);
-        if (askingForTime) setShowTimeButton(true);
-        if (askingForPassengers) setShowPassengerStepper(true);
-        if (askingForExtras) setShowExtrasSelector(true);
+        setShowDateButton(askingForDate);
+        setShowTimeButton(askingForTime);
+        setShowPassengerStepper(askingForPassengers);
+        setShowExtrasSelector(askingForExtras);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -553,9 +553,9 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForTime) setShowTimeButton(true);
-        if (askingForPassengers) setShowPassengerStepper(true);
-        if (askingForExtras) setShowExtrasSelector(true);
+        setShowTimeButton(askingForTime);
+        setShowPassengerStepper(askingForPassengers);
+        setShowExtrasSelector(askingForExtras);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -610,8 +610,8 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForPassengers) setShowPassengerStepper(true);
-        if (askingForExtras) setShowExtrasSelector(true);
+        setShowPassengerStepper(askingForPassengers);
+        setShowExtrasSelector(askingForExtras);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -663,9 +663,9 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDateButton(true);
-        if (askingForTime) setShowTimeButton(true);
-        if (askingForExtras) setShowExtrasSelector(true);
+        setShowDateButton(askingForDate);
+        setShowTimeButton(askingForTime);
+        setShowExtrasSelector(askingForExtras);
       } else {
         setError(res.error || 'Failed to get response.');
       }
@@ -720,7 +720,7 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForExtras) setShowExtrasSelector(true);
+        setShowExtrasSelector(askingForExtras);
       } else {
         setError(res.error || 'Failed to get response.');
       }
