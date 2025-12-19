@@ -169,7 +169,9 @@ export default function ChatWidget() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [passengerCount, setPassengerCount] = useState(1);
+  const [showDateButton, setShowDateButton] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimeButton, setShowTimeButton] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showPassengerStepper, setShowPassengerStepper] = useState(false);
   const [showExtrasSelector, setShowExtrasSelector] = useState(false);
@@ -323,8 +325,8 @@ export default function ChatWidget() {
 
         // Show appropriate interactive controls
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDatePicker(true);
-        if (askingForTime) setShowTimePicker(true);
+        if (askingForDate) setShowDateButton(true);
+        if (askingForTime) setShowTimeButton(true);
         if (askingForPassengers) setShowPassengerStepper(true);
         if (askingForExtras) setShowExtrasSelector(true);
       } else {
@@ -485,8 +487,8 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDatePicker(true);
-        if (askingForTime) setShowTimePicker(true);
+        if (askingForDate) setShowDateButton(true);
+        if (askingForTime) setShowTimeButton(true);
         if (askingForPassengers) setShowPassengerStepper(true);
         if (askingForExtras) setShowExtrasSelector(true);
       } else {
@@ -502,6 +504,7 @@ export default function ChatWidget() {
   // Handle date selection
   const handleDateSelect = async (dateValue: string) => {
     if (!sessionId) return;
+    setShowDateButton(false);
     setShowDatePicker(false);
     setSelectedDate(dateValue);
 
@@ -545,7 +548,7 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForTime) setShowTimePicker(true);
+        if (askingForTime) setShowTimeButton(true);
         if (askingForPassengers) setShowPassengerStepper(true);
         if (askingForExtras) setShowExtrasSelector(true);
       } else {
@@ -561,6 +564,7 @@ export default function ChatWidget() {
   // Handle time selection
   const handleTimeSelect = async (timeValue: string) => {
     if (!sessionId) return;
+    setShowTimeButton(false);
     setShowTimePicker(false);
     setSelectedTime(timeValue);
 
@@ -654,8 +658,8 @@ export default function ChatWidget() {
           },
         ]);
         if (askingForContact) setShowContactForm(true);
-        if (askingForDate) setShowDatePicker(true);
-        if (askingForTime) setShowTimePicker(true);
+        if (askingForDate) setShowDateButton(true);
+        if (askingForTime) setShowTimeButton(true);
         if (askingForExtras) setShowExtrasSelector(true);
       } else {
         setError(res.error || 'Failed to get response.');
@@ -979,6 +983,24 @@ export default function ChatWidget() {
                   </div>
                 )}
 
+                {/* Select Date Button */}
+                {showDateButton && !showDatePicker && !isLoading && (
+                  <div className="pl-2">
+                    <button
+                      onClick={() => {
+                        setShowDateButton(false);
+                        setShowDatePicker(true);
+                      }}
+                      className="flex items-center gap-2 rounded-xl border-2 border-sage bg-white px-4 py-3 text-sm font-medium text-sage transition-all hover:bg-sage hover:text-white focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                      </svg>
+                      Select Date
+                    </button>
+                  </div>
+                )}
+
                 {/* Date Picker */}
                 {showDatePicker && !isLoading && (
                   <div className="bg-white rounded-xl p-4 shadow-soft space-y-3">
@@ -1063,6 +1085,24 @@ export default function ChatWidget() {
                         })()}
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Select Time Button */}
+                {showTimeButton && !showTimePicker && !isLoading && (
+                  <div className="pl-2">
+                    <button
+                      onClick={() => {
+                        setShowTimeButton(false);
+                        setShowTimePicker(true);
+                      }}
+                      className="flex items-center gap-2 rounded-xl border-2 border-sage bg-white px-4 py-3 text-sm font-medium text-sage transition-all hover:bg-sage hover:text-white focus:outline-none focus:ring-2 focus:ring-sage focus:ring-offset-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                      Select Time
+                    </button>
                   </div>
                 )}
 
