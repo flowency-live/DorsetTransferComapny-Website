@@ -407,10 +407,10 @@ export default function ChatWidget() {
 
   // Handle contact form submission
   const handleContactSubmit = async () => {
-    if (!sessionId || !contactForm.name || !contactForm.phone) return;
+    if (!sessionId || !contactForm.name || !contactForm.phone || !contactForm.email) return;
 
     setShowContactForm(false);
-    const response = `My name is ${contactForm.name}, phone number is ${contactForm.phone}${contactForm.email ? `, and email is ${contactForm.email}` : ''}`;
+    const response = `My name is ${contactForm.name}, phone number is ${contactForm.phone}, and email is ${contactForm.email}`;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
@@ -967,7 +967,7 @@ export default function ChatWidget() {
                       />
                       <input
                         type="email"
-                        placeholder="Email (optional)"
+                        placeholder="Email address"
                         value={contactForm.email}
                         onChange={(e) =>
                           setContactForm((f) => ({ ...f, email: e.target.value }))
