@@ -53,6 +53,9 @@ interface SendMessageResponse {
   response: string;
   sessionId: string;
   error?: string;
+  // Structured data from function calls (no parsing needed)
+  vehicleOptions?: VehicleOption[];
+  addressOptions?: string[];
 }
 
 interface GetSessionResponse {

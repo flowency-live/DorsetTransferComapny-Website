@@ -303,9 +303,9 @@ export default function ChatWidget() {
       const response = await sendMessage(sessionId, userMessage.content);
 
       if (response.success && response.response) {
-        // Parse options from response text
-        const vehicleOptions = parseVehicleOptions(response.response);
-        const addressOptions = parseAddressOptions(response.response);
+        // Use structured data from backend (no parsing needed)
+        const vehicleOptions = response.vehicleOptions || null;
+        const addressOptions = response.addressOptions || parseAddressOptions(response.response);
         const askingForContact = isAskingForContact(response.response);
         const askingForDate = isAskingForDate(response.response);
         const askingForTime = isAskingForTime(response.response);
@@ -469,8 +469,8 @@ export default function ChatWidget() {
     try {
       const res = await sendMessage(sessionId, address);
       if (res.success && res.response) {
-        const vehicleOptions = parseVehicleOptions(res.response);
-        const addressOptions = parseAddressOptions(res.response);
+        const vehicleOptions = res.vehicleOptions || null;
+        const addressOptions = res.addressOptions || parseAddressOptions(res.response);
         const askingForContact = isAskingForContact(res.response);
         const askingForDate = isAskingForDate(res.response);
         const askingForTime = isAskingForTime(res.response);
@@ -534,7 +534,7 @@ export default function ChatWidget() {
     try {
       const res = await sendMessage(sessionId, formatted);
       if (res.success && res.response) {
-        const vehicleOptions = parseVehicleOptions(res.response);
+        const vehicleOptions = res.vehicleOptions || null;
         const askingForContact = isAskingForContact(res.response);
         const askingForTime = isAskingForTime(res.response);
         const askingForPassengers = isAskingForPassengers(res.response);
@@ -593,7 +593,7 @@ export default function ChatWidget() {
     try {
       const res = await sendMessage(sessionId, formatted);
       if (res.success && res.response) {
-        const vehicleOptions = parseVehicleOptions(res.response);
+        const vehicleOptions = res.vehicleOptions || null;
         const askingForContact = isAskingForContact(res.response);
         const askingForPassengers = isAskingForPassengers(res.response);
         const askingForExtras = isAskingForExtras(res.response);
@@ -642,7 +642,7 @@ export default function ChatWidget() {
     try {
       const res = await sendMessage(sessionId, message);
       if (res.success && res.response) {
-        const vehicleOptions = parseVehicleOptions(res.response);
+        const vehicleOptions = res.vehicleOptions || null;
         const askingForContact = isAskingForContact(res.response);
         const askingForDate = isAskingForDate(res.response);
         const askingForTime = isAskingForTime(res.response);
@@ -705,7 +705,7 @@ export default function ChatWidget() {
     try {
       const res = await sendMessage(sessionId, message);
       if (res.success && res.response) {
-        const vehicleOptions = parseVehicleOptions(res.response);
+        const vehicleOptions = res.vehicleOptions || null;
         const askingForContact = isAskingForContact(res.response);
         const askingForExtras = isAskingForExtras(res.response);
         setMessages((prev) => [
