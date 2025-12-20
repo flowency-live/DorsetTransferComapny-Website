@@ -5,7 +5,7 @@
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'https://qcfd5p4514.execute-api.eu-west-2.amazonaws.com/dev';
+  'https://api.opstack.uk';
 
 /**
  * API Endpoints
