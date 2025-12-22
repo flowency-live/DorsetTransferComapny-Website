@@ -8,7 +8,7 @@ import { LocationType } from '../lib/types';
 interface LocationInputProps {
   label?: string;
   value: string;
-  onSelect: (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number) => void;
+  onSelect: (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number, postcode?: string) => void;
   placeholder?: string;
   error?: string;
   autoFocus?: boolean;
@@ -180,9 +180,10 @@ export default function LocationInput({
     setSuggestions([]);
     setHighlightedIndex(-1);
 
-    // Fetch coordinates for the selected place
+    // Fetch coordinates and postcode for the selected place
     let lat: number | undefined;
     let lng: number | undefined;
+    let postcode: string | undefined;
     try {
       const response = await fetch(
         `https://qcfd5p4514.execute-api.eu-west-2.amazonaws.com/dev/v1/locations/place-details?placeId=${encodeURIComponent(prediction.place_id)}`
@@ -193,12 +194,16 @@ export default function LocationInput({
           lat = data.location.lat;
           lng = data.location.lng;
         }
+        if (data.postcode) {
+          postcode = data.postcode;
+          console.log('[LocationInput] Postcode from API:', postcode);
+        }
       }
     } catch (err) {
-      console.error('[LocationInput] Failed to fetch coordinates:', err);
+      console.error('[LocationInput] Failed to fetch place details:', err);
     }
 
-    onSelect(prediction.description, prediction.place_id, prediction.locationType, lat, lng);
+    onSelect(prediction.description, prediction.place_id, prediction.locationType, lat, lng, postcode);
 
     // Notify parent for focus management
     if (onSelectionComplete) {

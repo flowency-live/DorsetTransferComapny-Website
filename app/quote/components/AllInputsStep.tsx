@@ -89,12 +89,12 @@ export default function AllInputsStep({
   const dropoffInputRef = useRef<HTMLInputElement>(null);
   const datePickerSectionRef = useRef<HTMLDivElement>(null);
 
-  const handlePickupSelect = (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number) => {
-    onPickupChange({ address, placeId, locationType, lat, lng });
+  const handlePickupSelect = (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number, postcode?: string) => {
+    onPickupChange({ address, placeId, locationType, lat, lng, postcode });
   };
 
-  const handleDropoffSelect = (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number) => {
-    onDropoffChange({ address, placeId, locationType, lat, lng });
+  const handleDropoffSelect = (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number, postcode?: string) => {
+    onDropoffChange({ address, placeId, locationType, lat, lng, postcode });
   };
 
   // Focus management callbacks

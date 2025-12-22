@@ -37,6 +37,7 @@ export interface Location {
   locationType?: LocationType;
   lat?: number;
   lng?: number;
+  postcode?: string; // Postcode extracted from Google Places API
 }
 
 // Waypoint Type (extends Location with wait time)
