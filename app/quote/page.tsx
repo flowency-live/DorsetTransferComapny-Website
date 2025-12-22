@@ -15,7 +15,7 @@ import LoadingState from './components/LoadingState';
 import PaymentForm, { PaymentDetails } from './components/PaymentForm';
 import QuoteResult from './components/QuoteResult';
 import VehicleComparisonGrid from './components/VehicleComparisonGrid';
-import { calculateMultiVehicleQuote } from './lib/api';
+import { calculateMultiVehicleQuote, saveQuote } from './lib/api';
 import { Extras, JourneyType, QuoteResponse, Location, Waypoint, MultiVehicleQuoteResponse } from './lib/types';
 
 type Step = 1 | 2;
@@ -182,7 +182,7 @@ function QuotePageContent() {
     setCurrentStep(1);
   };
 
-  const handleVehicleSelect = (vehicleId: string, isReturn: boolean) => {
+  const handleVehicleSelect = async (vehicleId: string, isReturn: boolean) => {
     if (!multiQuote) return;
 
     const vehiclePricing = multiQuote.vehicles[vehicleId as keyof typeof multiQuote.vehicles];
@@ -191,11 +191,11 @@ function QuotePageContent() {
     const priceInPence = isReturn ? vehiclePricing.return.price : vehiclePricing.oneWay.price;
     const displayPrice = isReturn ? vehiclePricing.return.displayPrice : vehiclePricing.oneWay.displayPrice;
 
-    // Create the final quote response for the booking flow
-    const finalQuote: QuoteResponse = {
-      quoteId: multiQuote.quoteId || `quote-${Date.now()}`,
-      status: multiQuote.status || 'valid',
-      expiresAt: multiQuote.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+    // Create the quote response for the booking flow
+    const quoteData: QuoteResponse = {
+      quoteId: '', // Will be assigned by backend
+      status: 'valid',
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
       journey: {
         ...multiQuote.journey,
         route: { polyline: null },
@@ -228,10 +228,28 @@ function QuotePageContent() {
       passengers: multiQuote.passengers,
       luggage: multiQuote.luggage,
       returnJourney: isReturn,
-      createdAt: multiQuote.createdAt,
+      createdAt: new Date().toISOString(),
     };
 
-    setQuote(finalQuote);
+    // Save the quote to database for analytics tracking
+    try {
+      const savedQuote = await saveQuote(quoteData);
+      // Update quote with the assigned quoteId from backend
+      const finalQuote: QuoteResponse = {
+        ...quoteData,
+        quoteId: savedQuote.quoteId,
+      };
+      setQuote(finalQuote);
+    } catch (err) {
+      // If save fails, still allow user to proceed with a temporary ID
+      // This ensures the booking flow isn't blocked by analytics
+      console.error('Failed to save quote for analytics:', err);
+      const finalQuote: QuoteResponse = {
+        ...quoteData,
+        quoteId: `temp-${Date.now()}`,
+      };
+      setQuote(finalQuote);
+    }
   };
 
   const handleNewQuote = () => {

@@ -139,3 +139,66 @@ export async function calculateMultiVehicleQuote(
 
   return response.json();
 }
+
+/**
+ * Save a quote to the database for analytics tracking
+ * Called when user selects a vehicle (before contact details)
+ * @param quote The quote data to save
+ * @returns Saved quote with quoteId and shareUrl
+ */
+export async function saveQuote(quote: QuoteResponse): Promise<{ quoteId: string; token: string; shareUrl: string; quote: QuoteResponse }> {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotesSave}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ quote }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to save quote';
+
+    try {
+      const error: ApiError = await response.json();
+      errorMessage = error.error?.message || errorMessage;
+      console.error('API Error Response:', error);
+    } catch (parseError) {
+      errorMessage = `Server error (${response.status}): ${response.statusText}`;
+      console.error('Failed to parse error response:', parseError);
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
+/**
+ * Retrieve a saved quote by ID and token
+ * @param quoteId The quote ID (e.g., DTC-Q22122502)
+ * @param token The magic token for access
+ * @returns The saved quote data
+ */
+export async function getQuoteByToken(quoteId: string, token: string): Promise<QuoteResponse> {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotesRetrieve}/${quoteId}?token=${token}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Quote not found or link expired';
+
+    try {
+      const error: ApiError = await response.json();
+      errorMessage = error.error?.message || error.error || errorMessage;
+    } catch {
+      errorMessage = `Server error (${response.status}): ${response.statusText}`;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
