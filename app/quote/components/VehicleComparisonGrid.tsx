@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Calendar, Check, Clock, MapPin, AlertTriangle, Share2, Phone, Bug, ChevronDown, ChevronUp, Tag } from 'lucide-react';
+import { Car, Calendar, Check, Clock, MapPin, AlertTriangle, Share2, Phone, Settings, ChevronDown, ChevronUp, Tag, Zap, Percent } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -122,7 +122,7 @@ export default function VehicleComparisonGrid({
         </div>
       )}
 
-      {/* Debug Panel for Zone Pricing Testing */}
+      {/* Pricing Engine Detail Panel */}
       {debugInfo && (
         <div className="bg-slate-800 rounded-2xl overflow-hidden text-white text-xs font-mono">
           <button
@@ -130,102 +130,167 @@ export default function VehicleComparisonGrid({
             className="w-full px-4 py-2 flex items-center justify-between bg-slate-700 hover:bg-slate-600"
           >
             <div className="flex items-center gap-2">
-              <Bug className="w-4 h-4" />
-              <span>Zone Pricing Debug</span>
+              <Settings className="w-4 h-4" />
+              <span>Pricing Engine Detail</span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                 debugInfo.pricingMethod === 'zone_pricing' ? 'bg-green-500' : 'bg-blue-500'
               }`}>
                 {debugInfo.pricingMethod === 'zone_pricing' ? 'ZONE PRICING' : 'VARIABLE PRICING'}
               </span>
+              {debugInfo.surge?.applied && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500">
+                  SURGE {debugInfo.surge.multiplier}x
+                </span>
+              )}
+              {debugInfo.corporateDiscount?.applied && (
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500">
+                  CORP -{debugInfo.corporateDiscount.percentage}%
+                </span>
+              )}
             </div>
             {showDebug ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
           {showDebug && (
             <div className="p-4 space-y-3">
-              {/* Pickup Info */}
+              {/* Pricing Method */}
               <div>
-                <div className="text-slate-400 mb-1">Pickup</div>
-                <div className="bg-slate-900 p-2 rounded">
-                  <div>Address: {debugInfo.pickup.address}</div>
-                  <div>PlaceId: {debugInfo.pickup.placeId}</div>
-                  <div className="flex items-center gap-2">
-                    Postcode: <span className={debugInfo.pickup.extractedPostcode ? 'text-green-400' : 'text-red-400'}>
-                      {debugInfo.pickup.extractedPostcode || 'NOT FOUND'}
-                    </span>
-                    {debugInfo.serviceArea.pickupInArea ? (
-                      <span className="text-green-400">(in service area)</span>
-                    ) : (
-                      <span className="text-red-400">(OUT OF SERVICE AREA)</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Dropoff Info */}
-              {debugInfo.dropoff && (
-                <div>
-                  <div className="text-slate-400 mb-1">Dropoff</div>
-                  <div className="bg-slate-900 p-2 rounded">
-                    <div>Address: {debugInfo.dropoff.address}</div>
-                    <div>PlaceId: {debugInfo.dropoff.placeId}</div>
-                    <div className="flex items-center gap-2">
-                      Postcode: <span className={debugInfo.dropoff.extractedPostcode ? 'text-green-400' : 'text-yellow-400'}>
-                        {debugInfo.dropoff.extractedPostcode || 'N/A (airport/station)'}
-                      </span>
-                      {debugInfo.serviceArea.dropoffInArea ? (
-                        <span className="text-green-400">(in service area)</span>
-                      ) : (
-                        <span className="text-yellow-400">(outside service area)</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Zone Match */}
-              <div>
-                <div className="text-slate-400 mb-1">Zone Match</div>
-                <div className="bg-slate-900 p-2 rounded">
-                  {debugInfo.zoneMatch ? (
-                    <div className="text-green-400">
-                      <div>Zone: {debugInfo.zoneMatch.zoneName} ({debugInfo.zoneMatch.zoneId})</div>
-                      {debugInfo.zoneMatch.isReversed && (
-                        <div className="text-yellow-400">REVERSED (dropoff is zone, pickup is destination)</div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-red-400">No zone match found</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Destination Match */}
-              <div>
-                <div className="text-slate-400 mb-1">Destination Match</div>
-                <div className="bg-slate-900 p-2 rounded">
-                  {debugInfo.destinationMatch ? (
-                    <div className="text-green-400">
-                      {debugInfo.destinationMatch.destinationName} ({debugInfo.destinationMatch.destinationId})
-                    </div>
-                  ) : (
-                    <div className="text-red-400">No destination match found</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Summary */}
-              <div className="pt-2 border-t border-slate-600">
-                <div className="text-slate-400 mb-1">Result</div>
+                <div className="text-slate-400 mb-1">1. Base Pricing Method</div>
                 <div className={`p-2 rounded ${
                   debugInfo.pricingMethod === 'zone_pricing' ? 'bg-green-900/50 text-green-300' : 'bg-blue-900/50 text-blue-300'
                 }`}>
                   {debugInfo.pricingMethod === 'zone_pricing'
-                    ? 'Using ZONE PRICING (fixed prices)'
-                    : 'Using VARIABLE PRICING (distance-based)'
+                    ? 'ZONE PRICING (fixed prices per zone-destination pair)'
+                    : 'VARIABLE PRICING (base fare + distance calculation)'
                   }
                 </div>
               </div>
+
+              {/* Surge Pricing */}
+              <div>
+                <div className="text-slate-400 mb-1 flex items-center gap-2">
+                  <Zap className="w-3 h-3" />
+                  2. Surge Pricing
+                </div>
+                <div className="bg-slate-900 p-2 rounded">
+                  {debugInfo.surge?.applied ? (
+                    <div className="text-orange-400">
+                      <div>Multiplier: {debugInfo.surge.multiplier}x</div>
+                      {debugInfo.surge.rules.length > 0 && (
+                        <div className="mt-1">
+                          Rules applied:
+                          <ul className="ml-2">
+                            {debugInfo.surge.rules.map((rule, idx) => (
+                              <li key={idx}>- {rule.name} ({rule.multiplier}x)</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-slate-500">No surge pricing applied</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Corporate Discount */}
+              <div>
+                <div className="text-slate-400 mb-1 flex items-center gap-2">
+                  <Percent className="w-3 h-3" />
+                  3. Corporate Discount
+                </div>
+                <div className="bg-slate-900 p-2 rounded">
+                  {debugInfo.corporateDiscount?.applied ? (
+                    <div className="text-purple-400">
+                      <div>Discount: {debugInfo.corporateDiscount.percentage}% off</div>
+                      {debugInfo.corporateDiscount.accountName && (
+                        <div>Account: {debugInfo.corporateDiscount.accountName}</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-slate-500">No corporate discount (public quote)</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Zone/Destination Details (collapsible) */}
+              <details className="pt-2 border-t border-slate-600">
+                <summary className="text-slate-400 cursor-pointer hover:text-slate-300">
+                  Location Details
+                </summary>
+                <div className="mt-2 space-y-2">
+                  {/* Pickup Info */}
+                  <div>
+                    <div className="text-slate-500 mb-1">Pickup</div>
+                    <div className="bg-slate-900 p-2 rounded">
+                      <div>Address: {debugInfo.pickup.address}</div>
+                      <div>PlaceId: {debugInfo.pickup.placeId}</div>
+                      <div className="flex items-center gap-2">
+                        Postcode: <span className={debugInfo.pickup.extractedPostcode ? 'text-green-400' : 'text-red-400'}>
+                          {debugInfo.pickup.extractedPostcode || 'NOT FOUND'}
+                        </span>
+                        {debugInfo.serviceArea.pickupInArea ? (
+                          <span className="text-green-400">(in service area)</span>
+                        ) : (
+                          <span className="text-red-400">(OUT OF SERVICE AREA)</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dropoff Info */}
+                  {debugInfo.dropoff && (
+                    <div>
+                      <div className="text-slate-500 mb-1">Dropoff</div>
+                      <div className="bg-slate-900 p-2 rounded">
+                        <div>Address: {debugInfo.dropoff.address}</div>
+                        <div>PlaceId: {debugInfo.dropoff.placeId}</div>
+                        <div className="flex items-center gap-2">
+                          Postcode: <span className={debugInfo.dropoff.extractedPostcode ? 'text-green-400' : 'text-yellow-400'}>
+                            {debugInfo.dropoff.extractedPostcode || 'N/A (airport/station)'}
+                          </span>
+                          {debugInfo.serviceArea.dropoffInArea ? (
+                            <span className="text-green-400">(in service area)</span>
+                          ) : (
+                            <span className="text-yellow-400">(outside service area)</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Zone Match */}
+                  <div>
+                    <div className="text-slate-500 mb-1">Zone Match</div>
+                    <div className="bg-slate-900 p-2 rounded">
+                      {debugInfo.zoneMatch ? (
+                        <div className="text-green-400">
+                          <div>Zone: {debugInfo.zoneMatch.zoneName} ({debugInfo.zoneMatch.zoneId})</div>
+                          {debugInfo.zoneMatch.isReversed && (
+                            <div className="text-yellow-400">REVERSED (dropoff is zone, pickup is destination)</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-slate-500">No zone match</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Destination Match */}
+                  <div>
+                    <div className="text-slate-500 mb-1">Destination Match</div>
+                    <div className="bg-slate-900 p-2 rounded">
+                      {debugInfo.destinationMatch ? (
+                        <div className="text-green-400">
+                          {debugInfo.destinationMatch.destinationName} ({debugInfo.destinationMatch.destinationId})
+                        </div>
+                      ) : (
+                        <div className="text-slate-500">No destination match</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           )}
         </div>
