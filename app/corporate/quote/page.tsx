@@ -234,7 +234,7 @@ function CorporateQuotePageContent() {
         apiDropoff = dropoffLocation!;
       }
 
-      // TODO: Pass corporate context to API for discount application
+      // Pass corporate account ID for discount application
       const response = await calculateMultiVehicleQuote({
         pickupLocation,
         dropoffLocation: apiDropoff,
@@ -246,6 +246,7 @@ function CorporateQuotePageContent() {
         durationHours: isHourly ? duration : undefined,
         extras: (extras.babySeats > 0 || extras.childSeats > 0) ? extras : undefined,
         compareMode: true,
+        corpAccountId: user?.corpAccountId,
       });
 
       setMultiQuote(response);

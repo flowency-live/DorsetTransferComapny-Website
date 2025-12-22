@@ -63,6 +63,7 @@ export interface QuoteRequest {
     email: string;
     phone: string;
   };
+  corpAccountId?: string; // Corporate account ID for discount application
 }
 
 // Quote Response (from POST /v1/quotes)
