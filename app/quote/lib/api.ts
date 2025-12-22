@@ -192,7 +192,7 @@ export async function getQuoteByToken(quoteId: string, token: string): Promise<Q
 
     try {
       const error: ApiError = await response.json();
-      errorMessage = error.error?.message || error.error || errorMessage;
+      errorMessage = error.error?.message || errorMessage;
     } catch {
       errorMessage = `Server error (${response.status}): ${response.statusText}`;
     }
