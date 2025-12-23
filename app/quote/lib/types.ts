@@ -53,7 +53,7 @@ export interface QuoteRequest {
   pickupTime: string; // ISO 8601 format
   passengers: number; // 1-8
   luggage?: number; // Number of bags
-  vehicleType: 'standard' | 'executive' | 'minibus';
+  vehicleType: string;
   returnJourney?: boolean;
   journeyType?: JourneyType; // 'one-way' | 'hourly'
   durationHours?: number; // Required for hourly journeys (2-6)
@@ -128,7 +128,7 @@ export interface QuoteFormData {
   pickupDate: Date | null;
   pickupTime: string;
   passengers: number;
-  vehicleType: 'standard' | 'executive' | 'minibus';
+  vehicleType: string;
   returnJourney: boolean;
   contactDetails: {
     name: string;
@@ -183,11 +183,7 @@ export interface ZonePricingRoute {
   destinationId: string;
   destinationName: string;    // e.g., "London Heathrow Airport (LHR)"
   routeName: string;          // Full route name
-  prices: {
-    standard: ZonePricingVehiclePrices;
-    executive: ZonePricingVehiclePrices;
-    minibus: ZonePricingVehiclePrices;
-  };
+  prices: Record<string, ZonePricingVehiclePrices>;
 }
 
 export interface ZonePricingResponse {
@@ -303,11 +299,7 @@ export interface MultiVehicleQuoteResponse {
     distance: { meters: number; miles: string; text: string };
     duration: { seconds: number; minutes: number; text: string };
   };
-  vehicles: {
-    standard: VehiclePricing;
-    executive: VehiclePricing;
-    minibus: VehiclePricing;
-  };
+  vehicles: Record<string, VehiclePricing>;
   pickupLocation: Location;
   dropoffLocation?: Location;
   durationHours?: number;

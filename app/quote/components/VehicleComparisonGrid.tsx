@@ -35,7 +35,8 @@ export default function VehicleComparisonGrid({
   const isFixedPrice = multiQuote.isZonePricing === true;
   const debugInfo = multiQuote._debug;
 
-  const vehicleTypes = ['standard', 'executive', 'minibus'] as const;
+  // Get vehicle types dynamically from API response (no hardcoding!)
+  const vehicleTypes = Object.keys(multiQuote.vehicles);
 
   // Filter vehicles by capacity
   const availableVehicles = vehicleTypes.filter(
