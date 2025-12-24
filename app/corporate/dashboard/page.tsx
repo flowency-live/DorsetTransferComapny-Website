@@ -26,6 +26,7 @@ interface DashboardData {
     id: string;
     date: string;
     passengerName: string;
+    bookedBy: string;
     pickup: string;
     dropoff: string;
     status: string;
@@ -266,6 +267,9 @@ export default function CorporateDashboardPage() {
                           Passenger
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-navy-light/70 uppercase tracking-wider">
+                          Booked By
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-navy-light/70 uppercase tracking-wider">
                           Pickup
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-navy-light/70 uppercase tracking-wider">
@@ -284,6 +288,9 @@ export default function CorporateDashboardPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-navy font-medium">
                             {booking.passengerName || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-navy-light/70">
+                            {booking.bookedBy || '-'}
                           </td>
                           <td className="px-6 py-4 text-sm text-navy-light/70 max-w-xs truncate">
                             {booking.pickup}

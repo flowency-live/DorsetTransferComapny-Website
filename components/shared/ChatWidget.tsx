@@ -384,7 +384,7 @@ export default function ChatWidget() {
       sendMessage(sessionId!, response).then((res) => {
         if (res.success && res.response) {
           const vehicleOptions = parseVehicleOptions(res.response);
-          const showContactForm = isAskingForContact(res.response);
+          const askingForContact = isAskingForContact(res.response);
           setMessages((prev) => [
             ...prev,
             {
@@ -393,9 +393,11 @@ export default function ChatWidget() {
               content: res.response,
               timestamp: new Date().toISOString(),
               vehicleOptions: vehicleOptions || undefined,
-              showContactForm,
+              showContactForm: askingForContact,
             },
           ]);
+          // Show contact form if AI is asking for contact details
+          if (askingForContact) setShowContactForm(true);
         } else {
           setError(res.error || 'Failed to get response.');
         }

@@ -8,6 +8,7 @@ import {
   addTeamMember,
   updateTeamMember,
   removeTeamMember,
+  resendInvite,
   getDashboard,
 } from '@/lib/services/corporateApi';
 import CorporateHeader from '@/components/corporate/CorporateHeader';
@@ -107,6 +108,23 @@ export default function CorporateTeamPage() {
       setMembers(members.filter((m) => m.userId !== userId));
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to remove team member');
+    }
+  };
+
+  const handleResendInvite = async (userId: string) => {
+    try {
+      const result = await resendInvite(userId);
+      if (result.success) {
+        setSuccessResult({
+          success: true,
+          magicLink: result.magicLink,
+          message: result.message,
+        });
+      } else {
+        alert(result.message || 'Failed to resend invite');
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to resend invite');
     }
   };
 
@@ -225,14 +243,24 @@ export default function CorporateTeamPage() {
                             ? new Date(member.lastLogin).toLocaleDateString()
                             : 'Never'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                           {member.userId !== user.userId && (
-                            <button
-                              onClick={() => handleRemoveMember(member.userId, member.name)}
-                              className="text-red-600 hover:text-red-800 font-medium"
-                            >
-                              Remove
-                            </button>
+                            <>
+                              {member.status === 'pending' && (
+                                <button
+                                  onClick={() => handleResendInvite(member.userId)}
+                                  className="text-sage hover:text-sage-dark font-medium"
+                                >
+                                  Resend Invite
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleRemoveMember(member.userId, member.name)}
+                                className="text-red-600 hover:text-red-800 font-medium"
+                              >
+                                Remove
+                              </button>
+                            </>
                           )}
                         </td>
                       </tr>
@@ -270,7 +298,7 @@ export default function CorporateTeamPage() {
                       required
                       value={newMember.name}
                       onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
                     />
                   </div>
                   <div>
@@ -283,7 +311,7 @@ export default function CorporateTeamPage() {
                       required
                       value={newMember.email}
                       onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
                     />
                   </div>
                   <div>
@@ -296,7 +324,7 @@ export default function CorporateTeamPage() {
                       onChange={(e) =>
                         setNewMember({ ...newMember, role: e.target.value as 'admin' | 'booker', requiresApproval: false })
                       }
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-sage focus:border-sage sm:text-sm"
+                      className="mt-1 block w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy bg-white"
                     >
                       <option value="booker">Booker - Can book transfers</option>
                       <option value="admin">Admin - Full access including team management</option>
@@ -311,7 +339,7 @@ export default function CorporateTeamPage() {
                           type="checkbox"
                           checked={newMember.requiresApproval}
                           onChange={(e) => setNewMember({ ...newMember, requiresApproval: e.target.checked })}
-                          className="h-4 w-4 text-sage border-gray-300 rounded focus:ring-sage"
+                          className="h-4 w-4 text-sage border-sage/30 rounded focus:ring-sage"
                         />
                       </div>
                       <div className="ml-3 text-sm">

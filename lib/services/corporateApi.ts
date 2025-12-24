@@ -66,6 +66,7 @@ interface DashboardResponse {
     id: string;
     date: string;
     passengerName: string;
+    bookedBy: string;
     pickup: string;
     dropoff: string;
     status: string;
@@ -385,6 +386,17 @@ export async function removeTeamMember(
 ): Promise<{ success: boolean; message: string }> {
   return authenticatedFetch(`${API_ENDPOINTS.corporateUsers}/${userId}`, {
     method: 'DELETE',
+  });
+}
+
+/**
+ * Resend invite to a pending team member (admin only)
+ */
+export async function resendInvite(
+  userId: string
+): Promise<{ success: boolean; message: string; magicLink?: string; instructions?: { note: string } }> {
+  return authenticatedFetch(`${API_ENDPOINTS.corporateUsers}/${userId}/resend-invite`, {
+    method: 'POST',
   });
 }
 
