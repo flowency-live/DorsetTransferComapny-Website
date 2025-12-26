@@ -5,7 +5,8 @@
 
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
-const STORAGE_KEY = 'dtc_corporate_token';
+// Note: Corporate auth now uses httpOnly cookies instead of localStorage
+// This provides better security against XSS attacks
 
 interface CorporateUser {
   userId: string;
@@ -140,44 +141,22 @@ interface UpdateTripData {
   luggage?: number;
 }
 
-/**
- * Get stored auth token
- */
-export function getStoredToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(STORAGE_KEY);
-}
-
-/**
- * Store auth token
- */
-export function storeToken(token: string): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, token);
-}
-
-/**
- * Clear auth token
- */
-export function clearToken(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEY);
-}
+// Note: Token storage functions removed - now using httpOnly cookies
+// The browser automatically sends cookies with requests when credentials: 'include' is used
 
 /**
  * Make authenticated API request
+ * Uses httpOnly cookies for authentication (credentials: 'include')
  */
 async function authenticatedFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getStoredToken();
-
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
+    credentials: 'include', // Send cookies with requests
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
@@ -196,6 +175,7 @@ async function authenticatedFetch<T>(
 export async function requestMagicLink(email: string): Promise<{ success: boolean; message: string }> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.corporateMagicLink}`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
@@ -206,45 +186,37 @@ export async function requestMagicLink(email: string): Promise<{ success: boolea
 /**
  * Verify magic link token
  * Returns needsPassword=true if user needs to set password
+ * Cookie is set automatically by the server if authentication succeeds
  */
 export async function verifyToken(token: string): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.corporateVerify}`, {
     method: 'POST',
+    credentials: 'include', // Receive and store cookie from server
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
   });
 
-  const data = await response.json();
-
-  // Only store JWT token if user has password set (needsPassword=false)
-  if (data.success && data.token && !data.needsPassword) {
-    storeToken(data.token);
-  }
-
-  return data;
+  return response.json();
 }
 
 /**
  * Login with email and password
+ * Cookie is set automatically by the server if authentication succeeds
  */
 export async function passwordLogin(email: string, password: string): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.corporateLogin}`, {
     method: 'POST',
+    credentials: 'include', // Receive and store cookie from server
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
 
-  const data = await response.json();
-
-  if (data.success && data.token) {
-    storeToken(data.token);
-  }
-
-  return data;
+  return response.json();
 }
 
 /**
  * Set password using magic link token
+ * Cookie is set automatically by the server if authentication succeeds
  */
 export async function setPassword(
   token: string,
@@ -253,17 +225,12 @@ export async function setPassword(
 ): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.corporateSetPassword}`, {
     method: 'POST',
+    credentials: 'include', // Receive and store cookie from server
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, password, confirmPassword }),
   });
 
-  const data = await response.json();
-
-  if (data.success && data.token) {
-    storeToken(data.token);
-  }
-
-  return data;
+  return response.json();
 }
 
 /**
@@ -272,6 +239,7 @@ export async function setPassword(
 export async function forgotPassword(email: string): Promise<AuthResponse> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.corporateForgotPassword}`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
   });
@@ -281,21 +249,29 @@ export async function forgotPassword(email: string): Promise<AuthResponse> {
 
 /**
  * Verify current session
+ * Uses cookie-based authentication automatically
  */
 export async function verifySession(): Promise<{ valid: boolean; user?: CorporateUser }> {
   try {
     return await authenticatedFetch(API_ENDPOINTS.corporateSession);
   } catch {
-    clearToken();
+    // Session invalid - cookie will be handled by server
     return { valid: false };
   }
 }
 
 /**
- * Logout - clear token
+ * Logout - clear session cookie via API
  */
-export function logout(): void {
-  clearToken();
+export async function logout(): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}${API_ENDPOINTS.corporateLogout}`, {
+      method: 'POST',
+      credentials: 'include', // Send cookie to clear it
+    });
+  } catch {
+    // Ignore errors - we're logging out anyway
+  }
 }
 
 /**

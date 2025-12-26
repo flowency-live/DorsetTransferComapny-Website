@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
   corporateLogin: '/corporate/auth/login',
   corporateSetPassword: '/corporate/auth/set-password',
   corporateForgotPassword: '/corporate/auth/forgot-password',
+  corporateLogout: '/corporate/auth/logout',
 
   // Corporate Portal API
   corporateMe: '/corporate/me',

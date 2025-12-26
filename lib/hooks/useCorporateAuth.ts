@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  getStoredToken,
   verifySession,
   logout as apiLogout,
 } from '@/lib/services/corporateApi';
@@ -32,14 +31,7 @@ export function useCorporateAuth(): UseCorporateAuthReturn {
   const router = useRouter();
 
   const checkAuth = useCallback(async (): Promise<boolean> => {
-    const token = getStoredToken();
-
-    if (!token) {
-      setUser(null);
-      setIsLoading(false);
-      return false;
-    }
-
+    // Cookie-based auth - just verify session, cookie sent automatically
     try {
       const result = await verifySession();
 
@@ -59,8 +51,8 @@ export function useCorporateAuth(): UseCorporateAuthReturn {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    apiLogout();
+  const logout = useCallback(async () => {
+    await apiLogout();
     setUser(null);
     router.push('/corporate/login');
   }, [router]);

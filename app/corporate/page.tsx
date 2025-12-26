@@ -2,20 +2,14 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getStoredToken, verifySession } from '@/lib/services/corporateApi';
+import { verifySession } from '@/lib/services/corporateApi';
 
 export default function CorporateIndexPage() {
   const router = useRouter();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = getStoredToken();
-
-      if (!token) {
-        router.replace('/corporate/login');
-        return;
-      }
-
+      // Cookie-based auth - just verify session, cookie sent automatically
       const result = await verifySession();
       if (result.valid) {
         router.replace('/corporate/dashboard');

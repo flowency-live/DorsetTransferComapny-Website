@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
-import { passwordLogin, getStoredToken, verifySession } from '@/lib/services/corporateApi';
+import { passwordLogin, verifySession } from '@/lib/services/corporateApi';
 
 export default function CorporateLoginPage() {
   const [email, setEmail] = useState('');
@@ -15,15 +15,12 @@ export default function CorporateLoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
 
-  // Check if already logged in
+  // Check if already logged in (cookie-based auth)
   useEffect(() => {
     const checkExistingSession = async () => {
-      const token = getStoredToken();
-      if (token) {
-        const result = await verifySession();
-        if (result.valid) {
-          router.push('/corporate/dashboard');
-        }
+      const result = await verifySession();
+      if (result.valid) {
+        router.push('/corporate/dashboard');
       }
     };
     checkExistingSession();
