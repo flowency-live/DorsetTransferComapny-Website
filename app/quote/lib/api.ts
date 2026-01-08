@@ -42,7 +42,7 @@ export async function calculateQuote(request: QuoteRequest): Promise<QuoteRespon
  * @returns Array of active vehicles with images and pricing
  */
 export async function getVehicles(): Promise<Vehicle[]> {
-  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.vehicles}`, {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.vehicleTypes}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
