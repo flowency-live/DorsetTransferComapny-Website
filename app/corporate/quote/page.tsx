@@ -74,6 +74,8 @@ function CorporateQuotePageContent() {
   // Transport details
   const [flightNumber, setFlightNumber] = useState('');
   const [trainNumber, setTrainNumber] = useState('');
+  const [returnFlightNumber, setReturnFlightNumber] = useState('');
+  const [returnTrainNumber, setReturnTrainNumber] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
   // Corporate-specific: Passenger name (booking for someone else)
@@ -678,6 +680,10 @@ function CorporateQuotePageContent() {
                 onExtrasChange={setExtras}
                 onFlightNumberChange={setFlightNumber}
                 onTrainNumberChange={setTrainNumber}
+                returnFlightNumber={returnFlightNumber}
+                returnTrainNumber={returnTrainNumber}
+                onReturnFlightNumberChange={setReturnFlightNumber}
+                onReturnTrainNumberChange={setReturnTrainNumber}
                 onReturnToPickupChange={setReturnToPickup}
                 specialRequests={specialRequests}
                 onSpecialRequestsChange={setSpecialRequests}
