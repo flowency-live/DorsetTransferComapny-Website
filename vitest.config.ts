@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./vitest.setup.ts'],
+    setupFiles: ['./vitest.setup.tsx'],
     include: ['**/*.test.{ts,tsx}'],
     exclude: ['node_modules', '.next', 'e2e'],
     coverage: {
@@ -18,7 +18,7 @@ export default defineConfig({
         '.next/',
         '**/*.d.ts',
         '**/*.config.{ts,js}',
-        '**/vitest.setup.ts',
+        '**/vitest.setup.tsx',
         'e2e/',
       ],
     },
