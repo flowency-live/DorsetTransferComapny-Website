@@ -55,6 +55,7 @@ export interface QuoteRequest {
   luggage?: number; // Number of bags
   vehicleType: string;
   returnJourney?: boolean;
+  returnPickupTime?: string; // ISO 8601 format - return journey pickup time
   journeyType?: JourneyType; // 'one-way' | 'hourly'
   durationHours?: number; // Required for hourly journeys (2-6)
   extras?: Extras; // Baby seats, child seats
@@ -114,6 +115,7 @@ export interface QuoteResponse {
   passengers: number;
   luggage?: number;
   returnJourney: boolean;
+  returnPickupTime?: string; // ISO 8601 format - return journey pickup time
   journeyType?: JourneyType;
   durationHours?: number;
   extras?: Extras;

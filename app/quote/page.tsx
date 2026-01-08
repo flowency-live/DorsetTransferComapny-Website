@@ -51,6 +51,9 @@ function QuotePageContent() {
   // Transport details (airport/train station)
   const [flightNumber, setFlightNumber] = useState('');
   const [trainNumber, setTrainNumber] = useState('');
+  // Return transport details (for round-trip journeys)
+  const [returnFlightNumber, setReturnFlightNumber] = useState('');
+  const [returnTrainNumber, setReturnTrainNumber] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
   // Step 2 state - multi-vehicle quote
@@ -153,6 +156,9 @@ function QuotePageContent() {
         apiDropoff = dropoffLocation!;
       }
 
+      // Check if this is a return journey
+      const isReturnJourney = journeyType === 'round-trip';
+
       // Use compareMode API to get all vehicle prices in one call
       const response = await calculateMultiVehicleQuote({
         pickupLocation,
@@ -165,6 +171,8 @@ function QuotePageContent() {
         durationHours: isHourly ? duration : undefined,
         extras: (extras.babySeats > 0 || extras.childSeats > 0) ? extras : undefined,
         compareMode: true,
+        returnJourney: isReturnJourney,
+        returnPickupTime: isReturnJourney && returnDate ? returnDate.toISOString() : undefined,
       });
 
       setMultiQuote(response);
@@ -228,6 +236,7 @@ function QuotePageContent() {
       passengers: multiQuote.passengers,
       luggage: multiQuote.luggage,
       returnJourney: isReturn,
+      returnPickupTime: isReturn && returnDate ? returnDate.toISOString() : undefined,
       createdAt: new Date().toISOString(),
     };
 
@@ -476,6 +485,8 @@ function QuotePageContent() {
               extras={extras}
               flightNumber={flightNumber}
               trainNumber={trainNumber}
+              returnFlightNumber={returnFlightNumber}
+              returnTrainNumber={returnTrainNumber}
               returnToPickup={returnToPickup}
               onPickupChange={setPickupLocation}
               onDropoffChange={setDropoffLocation}
@@ -490,6 +501,8 @@ function QuotePageContent() {
               onExtrasChange={setExtras}
               onFlightNumberChange={setFlightNumber}
               onTrainNumberChange={setTrainNumber}
+              onReturnFlightNumberChange={setReturnFlightNumber}
+              onReturnTrainNumberChange={setReturnTrainNumber}
               onReturnToPickupChange={setReturnToPickup}
               specialRequests={specialRequests}
               onSpecialRequestsChange={setSpecialRequests}

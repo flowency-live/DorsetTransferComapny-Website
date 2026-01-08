@@ -29,6 +29,8 @@ interface AllInputsStepProps {
   extras: Extras;
   flightNumber: string;
   trainNumber: string;
+  returnFlightNumber: string;
+  returnTrainNumber: string;
   returnToPickup: boolean;
   onPickupChange: (location: Location) => void;
   onDropoffChange: (location: Location) => void;
@@ -43,6 +45,8 @@ interface AllInputsStepProps {
   onExtrasChange: (extras: Extras) => void;
   onFlightNumberChange: (value: string) => void;
   onTrainNumberChange: (value: string) => void;
+  onReturnFlightNumberChange: (value: string) => void;
+  onReturnTrainNumberChange: (value: string) => void;
   onReturnToPickupChange: (value: boolean) => void;
   specialRequests: string;
   onSpecialRequestsChange: (value: string) => void;
@@ -62,6 +66,8 @@ export default function AllInputsStep({
   extras,
   flightNumber,
   trainNumber,
+  returnFlightNumber,
+  returnTrainNumber,
   returnToPickup,
   onPickupChange,
   onDropoffChange,
@@ -76,6 +82,8 @@ export default function AllInputsStep({
   onExtrasChange,
   onFlightNumberChange,
   onTrainNumberChange,
+  onReturnFlightNumberChange,
+  onReturnTrainNumberChange,
   onReturnToPickupChange,
   specialRequests,
   onSpecialRequestsChange,
@@ -117,6 +125,8 @@ export default function AllInputsStep({
 
   // Get transport type from pickup location
   const pickupTransportType = locationTypeToTransportType(pickup?.locationType);
+  // Get transport type from dropoff location (for return journey prompts)
+  const dropoffTransportType = locationTypeToTransportType(dropoff?.locationType);
 
   const handleWaypointChange = (index: number, waypoint: Waypoint) => {
     const newWaypoints = [...waypoints];
@@ -330,6 +340,19 @@ export default function AllInputsStep({
           trainNumber={trainNumber}
           onFlightNumberChange={onFlightNumberChange}
           onTrainNumberChange={onTrainNumberChange}
+          label="Outbound"
+        />
+      )}
+
+      {/* Return Transport Details - when round-trip AND dropoff is airport/train */}
+      {!isHourly && isRoundTrip && dropoffTransportType && (
+        <TransportDetails
+          transportType={dropoffTransportType}
+          flightNumber={returnFlightNumber}
+          trainNumber={returnTrainNumber}
+          onFlightNumberChange={onReturnFlightNumberChange}
+          onTrainNumberChange={onReturnTrainNumberChange}
+          label="Return"
         />
       )}
 

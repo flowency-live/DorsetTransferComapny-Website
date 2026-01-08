@@ -6,12 +6,21 @@ import { LocationType } from '../lib/types';
 
 export type TransportType = 'airport' | 'train_station' | null;
 
+// IATA flight number validation: 2-letter airline code + 1-4 digit flight number
+const IATA_FLIGHT_REGEX = /^[A-Z]{2}\d{1,4}$/i;
+
+export function validateFlightNumber(value: string): boolean {
+  if (!value) return true; // Optional field - empty is valid
+  return IATA_FLIGHT_REGEX.test(value);
+}
+
 interface TransportDetailsProps {
   transportType: TransportType;
   flightNumber: string;
   trainNumber: string;
   onFlightNumberChange: (value: string) => void;
   onTrainNumberChange: (value: string) => void;
+  label?: 'Outbound' | 'Return';
 }
 
 // Convert LocationType from API to TransportType for this component
@@ -27,10 +36,12 @@ export default function TransportDetails({
   trainNumber,
   onFlightNumberChange,
   onTrainNumberChange,
+  label,
 }: TransportDetailsProps) {
   if (!transportType) return null;
 
   const isAirport = transportType === 'airport';
+  const labelPrefix = label ? `${label} ` : '';
 
   return (
     <div className="bg-card rounded-2xl p-4 shadow-mobile border-2 border-sage-light animate-fade-up">
@@ -41,7 +52,7 @@ export default function TransportDetails({
           <Train className="w-5 h-5 text-sage-dark flex-shrink-0" />
         )}
         <h3 className="text-sm font-semibold text-foreground">
-          {isAirport ? 'Flight Details' : 'Train Details'}
+          {labelPrefix}{isAirport ? 'Flight Details' : 'Train Details'}
         </h3>
       </div>
 
@@ -56,8 +67,17 @@ export default function TransportDetails({
               value={flightNumber}
               onChange={(e) => onFlightNumberChange(e.target.value.toUpperCase())}
               placeholder="e.g. BA123"
-              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground"
+              className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 bg-background text-foreground ${
+                flightNumber && !validateFlightNumber(flightNumber)
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-border focus:ring-sage-dark'
+              }`}
             />
+            {flightNumber && !validateFlightNumber(flightNumber) && (
+              <p className="text-xs text-red-500 mt-1">
+                Invalid format. Use airline code + number (e.g. BA123)
+              </p>
+            )}
           </div>
         ) : (
           <div>
