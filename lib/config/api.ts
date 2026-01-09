@@ -60,6 +60,11 @@ export const API_ENDPOINTS = {
   // Chat Widget (AI Booking Assistant)
   chatSession: '/v2/chat/session',
   chatMessage: '/v2/chat/message',
+
+  // Feedback
+
+  // Flight lookup
+  flightsLookup: '/v2/flights/lookup',
 } as const;
 
 /**

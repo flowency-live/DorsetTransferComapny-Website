@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Plane, Train, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 
+import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
+import { getTenantHeaders } from '@/lib/config/tenant';
 import { LocationType } from '../lib/types';
 
 export type TransportType = 'airport' | 'train_station' | null;
@@ -10,8 +12,6 @@ export type TransportType = 'airport' | 'train_station' | null;
 // IATA flight number validation: 2-letter airline code + 1-4 digit flight number
 const IATA_FLIGHT_REGEX = /^[A-Z]{2}\d{1,4}$/i;
 
-// API URL for flight lookup
-const API_URL = process.env.NEXT_PUBLIC_RELAY_API_URL || 'https://relay.api.opstack.uk';
 
 export function validateFlightNumber(value: string): boolean {
   if (!value) return true; // Optional field - empty is valid
@@ -67,8 +67,8 @@ export default function TransportDetails({
 
     try {
       const response = await fetch(
-        `${API_URL}/v2/flights/lookup?flightNumber=${encodeURIComponent(flightNum)}`,
-        { headers: { 'X-Tenant-Id': 'TENANT#001' } }
+        `${API_BASE_URL}/v2/flights/lookup?flightNumber=${encodeURIComponent(flightNum)}`,
+        { headers: getTenantHeaders() }
       );
       const data: FlightLookupResult = await response.json();
 

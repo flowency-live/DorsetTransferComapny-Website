@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 
+import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { Location, Waypoint } from '../lib/types';
 import 'leaflet/dist/leaflet.css';
 
@@ -60,7 +61,7 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
 
       try {
         const response = await fetch(
-          `https://qcfd5p4514.execute-api.eu-west-2.amazonaws.com/dev/v1/locations/place-details?placeId=${encodeURIComponent(location.placeId)}`
+          `${API_BASE_URL}${API_ENDPOINTS.locationsPlaceDetails}?placeId=${encodeURIComponent(location.placeId)}`
         );
 
         if (!response.ok) {

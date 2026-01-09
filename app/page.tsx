@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
-import FeedbackButton from "./components/FeedbackButton";
+import { TENANT_CONFIG } from '@/lib/config/tenant';
 
 // Vehicles data
 const vehicles = [
@@ -215,9 +215,8 @@ export default function Home() {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-3">
-              <FeedbackButton />
               <a
-                href="https://relay.opstack.uk/admin"
+                href={TENANT_CONFIG.adminPortalUrl}
                 className="p-2 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110"
                 title="Admin Login"
                 target="_blank"
@@ -296,7 +295,7 @@ export default function Home() {
                     Get a Quote
                   </a>
                   <a
-                    href="https://relay.opstack.uk/admin"
+                    href={TENANT_CONFIG.adminPortalUrl}
                     className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-lg transition-all"
                     target="_blank"
                     rel="noopener noreferrer"
