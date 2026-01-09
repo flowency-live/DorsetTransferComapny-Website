@@ -2,7 +2,7 @@
 
 import { Car, Calendar, Check, Clock, MapPin, AlertTriangle, Share2, Phone, Settings, ChevronDown, ChevronUp, Tag, Zap, Percent } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +27,11 @@ export default function VehicleComparisonGrid({
   const [selectedIsReturn, setSelectedIsReturn] = useState<boolean>(journeyType === 'round-trip');
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+
+  // Scroll to top when vehicle comparison grid appears
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // Check if journey is outside service area
   const isOutOfServiceArea = multiQuote.outOfServiceArea === true;
