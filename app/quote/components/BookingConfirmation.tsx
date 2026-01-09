@@ -1,9 +1,11 @@
 'use client';
 
-import { CheckCircle, Calendar, MapPin, Users, Car, Mail, Phone, Download } from 'lucide-react';
+import { CheckCircle, Calendar, MapPin, Users, Car, Mail, Phone, Download, Loader2, Printer } from 'lucide-react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { generatePdf } from '@/lib/pdf';
 
 import { QuoteResponse } from '../lib/types';
 
@@ -17,6 +19,8 @@ interface BookingConfirmationProps {
 }
 
 export default function BookingConfirmation({ quote, contactDetails, bookingId, returnUrl = '/' }: BookingConfirmationProps) {
+  const [downloading, setDownloading] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', {
@@ -42,9 +46,19 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
     }).format(amount);
   };
 
-  const handleDownloadConfirmation = () => {
-    // TODO: Implement PDF download functionality
-    console.log('Download confirmation PDF');
+  const handleDownloadConfirmation = async () => {
+    setDownloading(true);
+    try {
+      await generatePdf('booking-confirmation-content', `booking-${bookingId}`);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
@@ -68,7 +82,7 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
 
       {/* Confirmation Content */}
       <section className="py-12">
-        <div className="container px-4 mx-auto max-w-3xl space-y-6">
+        <div id="booking-confirmation-content" className="container px-4 mx-auto max-w-3xl space-y-6">
 
           {/* Booking Reference */}
           <div className="bg-card rounded-3xl shadow-deep p-6 md:p-8">
@@ -283,16 +297,31 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 no-print">
             <Button
               type="button"
               variant="hero-outline"
               size="xl"
               onClick={handleDownloadConfirmation}
+              disabled={downloading}
               className="flex-1"
             >
-              <Download className="w-5 h-5 mr-2" />
-              Download Confirmation
+              {downloading ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-5 h-5 mr-2" />
+              )}
+              {downloading ? 'Generating PDF...' : 'Download'}
+            </Button>
+            <Button
+              type="button"
+              variant="hero-outline"
+              size="xl"
+              onClick={handlePrint}
+              className="flex-1"
+            >
+              <Printer className="w-5 h-5 mr-2" />
+              Print
             </Button>
             <Link href={returnUrl} className="flex-1">
               <Button

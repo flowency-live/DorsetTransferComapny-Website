@@ -203,3 +203,39 @@ export async function getQuoteByToken(quoteId: string, token: string): Promise<Q
 
   return response.json();
 }
+
+/**
+ * Share a saved quote via email
+ * @param quoteId The quote ID (e.g., DTC-Q22122502)
+ * @param token The magic token for access
+ * @param recipientEmail Email address to send the quote to
+ * @returns Success response
+ */
+export async function shareQuoteByEmail(
+  quoteId: string,
+  token: string,
+  recipientEmail: string
+): Promise<{ success: boolean; message: string }> {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotesRetrieve}/${quoteId}/share/email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json', ...getTenantHeaders(),
+    },
+    body: JSON.stringify({ recipientEmail, magicToken: token }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to send quote email';
+
+    try {
+      const error: ApiError = await response.json();
+      errorMessage = error.error?.message || error.error || errorMessage;
+    } catch {
+      errorMessage = `Server error (${response.status}): ${response.statusText}`;
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}

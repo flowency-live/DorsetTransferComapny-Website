@@ -1,11 +1,12 @@
 'use client';
 
-import { MapPin, Clock, Calendar, Users, Car, Luggage, Edit2, Share2, ArrowLeftRight, Plane, Train } from 'lucide-react';
+import { MapPin, Clock, Calendar, Users, Car, Luggage, Edit2, Share2, ArrowLeftRight, Plane, Train, Download, Loader2, Printer } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { generatePdf } from '@/lib/pdf';
 
 import { QuoteResponse } from '../lib/types';
 import MapPreview from './MapPreview';
@@ -30,6 +31,22 @@ interface QuoteResultProps {
 export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails }: QuoteResultProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadQuote = async () => {
+    setDownloading(true);
+    try {
+      await generatePdf('quote-result-content', `quote-${quote.quoteId || 'transfer'}`);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   // Scroll to top when quote result appears
   useEffect(() => {
@@ -65,7 +82,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
     <section className="py-6 pb-24">
       <div className="container px-4 mx-auto max-w-4xl">
         {/* Quote Card */}
-        <div className="bg-card rounded-3xl shadow-xl overflow-hidden">
+        <div id="quote-result-content" className="bg-card rounded-3xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-navy-sage p-6 text-white">
             <div className="flex items-center justify-between">
@@ -413,7 +430,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
           </div>
 
           {/* CTA */}
-          <div className="p-6 bg-muted/50 space-y-3">
+          <div className="p-6 bg-muted/50 space-y-3 no-print">
             <Button
               type="button"
               variant="hero-golden"
@@ -443,6 +460,33 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
+              </Button>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="xl"
+                className="flex-1"
+                onClick={handleDownloadQuote}
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                {downloading ? 'Generating...' : 'Download'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="xl"
+                className="flex-1"
+                onClick={handlePrint}
+              >
+                <Printer className="w-4 h-4 mr-2" />
+                Print
               </Button>
             </div>
             <div className="text-center space-y-1 pt-2">

@@ -1,10 +1,11 @@
 'use client';
 
-import { X, Copy, Mail, MessageCircle, Share2, Check, Loader2 } from 'lucide-react';
+import { X, Copy, Mail, MessageCircle, Share2, Check, Loader2, Send } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
+import { shareQuoteByEmail } from '../lib/api';
 
 import { QuoteResponse, MultiVehicleQuoteResponse, VehiclePricing } from '../lib/types';
 
@@ -30,8 +31,14 @@ export default function ShareQuoteModal({
 }: ShareQuoteModalProps) {
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [quoteId, setQuoteId] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailInput, setEmailInput] = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Prepare quote data for saving
   const prepareQuoteForSave = () => {
@@ -80,8 +87,13 @@ export default function ShareQuoteModal({
   useEffect(() => {
     if (!isOpen) {
       setShareUrl(null);
+      setQuoteId(null);
+      setToken(null);
       setCopied(false);
       setError(null);
+      setEmailInput('');
+      setEmailSent(false);
+      setEmailError(null);
     }
   }, [isOpen]);
 
@@ -106,6 +118,8 @@ export default function ShareQuoteModal({
 
       const data: SaveQuoteResponse = await response.json();
       setShareUrl(data.shareUrl);
+      setQuoteId(data.quoteId);
+      setToken(data.token);
     } catch (err) {
       console.error('Error saving quote:', err);
       setError('Failed to generate share link. Please try again.');
@@ -126,13 +140,23 @@ export default function ShareQuoteModal({
     }
   };
 
-  const handleShareEmail = () => {
-    if (!shareUrl) return;
-    const subject = encodeURIComponent('Your Transfer Quote - Dorset Transfer Company');
-    const body = encodeURIComponent(
-      `Here's your transfer quote from Dorset Transfer Company:\n\n${shareUrl}\n\nThis quote includes all the journey details and pricing.`
-    );
-    window.open(`mailto:?subject=${subject}&body=${body}`);
+  const handleShareEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quoteId || !token || !emailInput.trim()) return;
+
+    setSendingEmail(true);
+    setEmailError(null);
+
+    try {
+      await shareQuoteByEmail(quoteId, token, emailInput.trim());
+      setEmailSent(true);
+      setEmailInput('');
+    } catch (err) {
+      console.error('Error sending email:', err);
+      setEmailError(err instanceof Error ? err.message : 'Failed to send email');
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleShareWhatsApp = () => {
@@ -231,19 +255,57 @@ export default function ShareQuoteModal({
                 )}
               </div>
 
-              {/* Share buttons */}
+              {/* Email share form */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  <Mail className="w-4 h-4 inline mr-2" />
+                  Send via Email
+                </label>
+                {emailSent ? (
+                  <div className="flex items-center gap-2 text-green-600 py-2">
+                    <Check className="w-5 h-5" />
+                    <span>Quote sent successfully!</span>
+                    <button
+                      onClick={() => setEmailSent(false)}
+                      className="ml-auto text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      Send another
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleShareEmail} className="flex gap-2">
+                    <input
+                      type="email"
+                      placeholder="recipient@example.com"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm text-foreground border border-border"
+                      disabled={sendingEmail}
+                      required
+                    />
+                    <Button
+                      type="submit"
+                      disabled={sendingEmail || !emailInput.trim()}
+                      className="px-4 bg-navy-dark hover:bg-navy-dark/90 text-white disabled:opacity-50"
+                    >
+                      {sendingEmail ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </form>
+                )}
+                {emailError && (
+                  <p className="text-sm text-red-500 mt-1">{emailError}</p>
+                )}
+              </div>
+
+              {/* Other share options */}
               <div className="space-y-3">
-                <p className="text-sm font-medium text-foreground">Share via</p>
+                <p className="text-sm font-medium text-foreground">Other ways to share</p>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    onClick={handleShareEmail}
-                    className="flex items-center justify-center gap-2 bg-navy-dark hover:bg-navy-dark/90 text-white"
-                  >
-                    <Mail className="w-4 h-4" />
-                    Email
-                  </Button>
-
                   <Button
                     onClick={handleShareWhatsApp}
                     className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white"
@@ -251,17 +313,17 @@ export default function ShareQuoteModal({
                     <MessageCircle className="w-4 h-4" />
                     WhatsApp
                   </Button>
-                </div>
 
-                {typeof navigator !== 'undefined' && 'share' in navigator && (
-                  <Button
-                    onClick={handleShareNative}
-                    className="w-full flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    More Options
-                  </Button>
-                )}
+                  {typeof navigator !== 'undefined' && 'share' in navigator && (
+                    <Button
+                      onClick={handleShareNative}
+                      className="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      More Options
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Done button */}

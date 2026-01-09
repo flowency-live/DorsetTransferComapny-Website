@@ -252,3 +252,70 @@
 .icon-right.open {
   opacity: 0;
 }
+
+/* Print Styles */
+@media print {
+  /* Hide navigation, footers, and interactive elements */
+  header,
+  footer,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Show print-only elements */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Remove backgrounds and shadows for better printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .bg-card,
+  .bg-muted,
+  .bg-muted\/30,
+  .bg-muted\/50 {
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure good contrast */
+  .text-foreground,
+  .text-navy,
+  .text-navy-dark {
+    color: black !important;
+  }
+
+  .text-muted-foreground {
+    color: #666 !important;
+  }
+
+  /* Remove rounded corners for cleaner print */
+  .rounded-3xl,
+  .rounded-2xl,
+  .rounded-xl,
+  .rounded-lg {
+    border-radius: 0 !important;
+  }
+
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure links don't show URL */
+  a[href]:after {
+    content: none !important;
+  }
+}
