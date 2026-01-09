@@ -4,6 +4,7 @@
 import { QuoteRequest, QuoteResponse, Vehicle, ApiError, FixedRoute, FixedRoutesResponse, MultiVehicleQuoteResponse, ZonePricingRoute, ZonePricingResponse } from './types';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
+import { getTenantHeaders } from '@/lib/config/tenant';
 /**
  * Calculate a quote based on journey details
  * @param request Quote request data
@@ -13,7 +14,7 @@ export async function calculateQuote(request: QuoteRequest): Promise<QuoteRespon
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotes}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
     body: JSON.stringify(request),
   });
@@ -45,7 +46,7 @@ export async function getVehicles(): Promise<Vehicle[]> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.vehicleTypes}`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
   });
 
@@ -66,7 +67,7 @@ export async function getFixedRoutes(): Promise<FixedRoute[]> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.zonePricing}`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
   });
 
@@ -87,7 +88,7 @@ export async function getZonePricing(): Promise<ZonePricingRoute[]> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.zonePricing}`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
   });
 
@@ -117,7 +118,7 @@ export async function calculateMultiVehicleQuote(
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotes}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
     body: JSON.stringify(request),
   });
@@ -150,7 +151,7 @@ export async function saveQuote(quote: QuoteResponse): Promise<{ quoteId: string
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotesSave}`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
     body: JSON.stringify({ quote }),
   });
@@ -183,7 +184,7 @@ export async function getQuoteByToken(quoteId: string, token: string): Promise<Q
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.quotesRetrieve}/${quoteId}?token=${token}`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json', ...getTenantHeaders(),
     },
   });
 
