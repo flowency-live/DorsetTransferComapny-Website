@@ -3,6 +3,7 @@
 import { MapPin, Loader2, Crosshair } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 
+import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { LocationType } from '../lib/types';
 
 interface LocationInputProps {
@@ -67,7 +68,7 @@ export default function LocationInput({
     timeoutRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await fetch(`https://qcfd5p4514.execute-api.eu-west-2.amazonaws.com/dev/v1/locations/autocomplete?input=${encodeURIComponent(input)}`);
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.locations}?input=${encodeURIComponent(input)}`);
         const data = await response.json();
 
         if (data.predictions) {
@@ -186,7 +187,7 @@ export default function LocationInput({
     let postcode: string | undefined;
     try {
       const response = await fetch(
-        `https://qcfd5p4514.execute-api.eu-west-2.amazonaws.com/dev/v1/locations/place-details?placeId=${encodeURIComponent(prediction.place_id)}`
+        `${API_BASE_URL}${API_ENDPOINTS.locationsPlaceDetails}?placeId=${encodeURIComponent(prediction.place_id)}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -226,7 +227,7 @@ export default function LocationInput({
           const { latitude, longitude } = position.coords;
 
           const response = await fetch(
-            `https://qcfd5p4514.execute-api.eu-west-2.amazonaws.com/dev/v1/locations/geocode?lat=${latitude}&lng=${longitude}`
+            `${API_BASE_URL}${API_ENDPOINTS.locationsGeocode}?lat=${latitude}&lng=${longitude}`
           );
 
           if (!response.ok) {
