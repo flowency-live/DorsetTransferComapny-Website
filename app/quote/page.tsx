@@ -7,6 +7,7 @@ import Footer from '@/components/shared/Footer';
 import Header from '@/components/shared/Header';
 import { Button } from '@/components/ui/button';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
+import { getTenantHeaders } from '@/lib/config/tenant';
 
 import AllInputsStep from './components/AllInputsStep';
 import BookingConfirmation from './components/BookingConfirmation';
@@ -71,6 +72,7 @@ function QuotePageContent() {
   const [bookingId, setBookingId] = useState<string>('');
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [magicToken, setMagicToken] = useState<string | null>(null);
 
   // Validation for Step 1
   const canProceedFromStep1 = () => {
@@ -249,6 +251,8 @@ function QuotePageContent() {
         quoteId: savedQuote.quoteId,
       };
       setQuote(finalQuote);
+      // Store the magicToken for booking creation
+      setMagicToken(savedQuote.token);
     } catch (err) {
       // If save fails, still allow user to proceed with a temporary ID
       // This ensures the booking flow isn't blocked by analytics
@@ -258,6 +262,7 @@ function QuotePageContent() {
         quoteId: `temp-${Date.now()}`,
       };
       setQuote(finalQuote);
+      setMagicToken(null);
     }
   };
 
@@ -285,6 +290,7 @@ function QuotePageContent() {
     setContactDetails(null);
     setPaymentDetails(null);
     setBookingId('');
+    setMagicToken(null);
   };
 
   // Booking flow handlers
@@ -311,32 +317,26 @@ function QuotePageContent() {
         throw new Error('Missing quote or contact details');
       }
 
-      // Create booking via API
+      if (!magicToken || !quote.quoteId || quote.quoteId.startsWith('temp-')) {
+        throw new Error('Quote session expired. Please start a new quote.');
+      }
+
+      // Create booking via API (V2 requires quoteId + magicToken)
       const bookingData = {
-        // quoteId is optional - may not exist if quote wasn't saved
-        ...(quote.quoteId && { quoteId: quote.quoteId }),
+        quoteId: quote.quoteId,
+        magicToken: magicToken,
         customerName: contactDetails.name,
         customerEmail: contactDetails.email,
         customerPhone: contactDetails.phone,
-        pickupLocation: quote.pickupLocation,
-        dropoffLocation: quote.dropoffLocation,
-        waypoints: quote.waypoints,
-        pickupTime: quote.pickupTime,
-        passengers: quote.passengers,
-        luggage: quote.luggage,
-        vehicleType: quote.vehicleType,
-        pricing: quote.pricing,
-        journey: quote.journey,
-        returnJourney: quote.returnJourney,
-        paymentMethod: 'card',
-        paymentStatus: 'pending', // Will be updated after Stripe integration
         specialRequests: '', // TODO: Add to ContactDetailsForm
+        paymentMethod: 'card',
       };
 
       const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.bookings}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getTenantHeaders(),
         },
         body: JSON.stringify(bookingData),
       });
@@ -364,38 +364,46 @@ function QuotePageContent() {
   // Render booking confirmation
   if (bookingStage === 'confirmation' && quote && contactDetails && bookingId) {
     return (
-      <BookingConfirmation
-        quote={quote}
-        contactDetails={contactDetails}
-        bookingId={bookingId}
-      />
+      <div className="min-h-screen bg-background pt-20">
+        <Header />
+        <BookingConfirmation
+          quote={quote}
+          contactDetails={contactDetails}
+          bookingId={bookingId}
+        />
+        <Footer />
+      </div>
     );
   }
 
   // Render payment form
   if (bookingStage === 'payment' && quote && contactDetails) {
     return (
-      <div className="min-h-screen bg-background py-8">
-        <div className="container px-4 mx-auto max-w-md">
-          {bookingError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-              <p className="font-medium">Booking Error</p>
-              <p className="text-sm mt-1">{bookingError}</p>
-            </div>
-          )}
-          {bookingLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage-dark mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Creating your booking...</p>
-            </div>
-          ) : (
-            <PaymentForm
-              onSubmit={handlePaymentSubmit}
-              onBack={handlePaymentBack}
-              initialValues={paymentDetails || undefined}
-            />
-          )}
+      <div className="min-h-screen bg-background pt-20">
+        <Header />
+        <div className="py-8">
+          <div className="container px-4 mx-auto max-w-md">
+            {bookingError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+                <p className="font-medium">Booking Error</p>
+                <p className="text-sm mt-1">{bookingError}</p>
+              </div>
+            )}
+            {bookingLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage-dark mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Creating your booking...</p>
+              </div>
+            ) : (
+              <PaymentForm
+                onSubmit={handlePaymentSubmit}
+                onBack={handlePaymentBack}
+                initialValues={paymentDetails || undefined}
+              />
+            )}
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -403,11 +411,19 @@ function QuotePageContent() {
   // Render contact details form
   if (bookingStage === 'contact' && quote) {
     return (
-      <ContactDetailsForm
-        onSubmit={handleContactSubmit}
-        onBack={handleContactBack}
-        initialValues={contactDetails || undefined}
-      />
+      <div className="min-h-screen bg-background pt-20">
+        <Header />
+        <div className="py-8">
+          <div className="container px-4 mx-auto max-w-md">
+            <ContactDetailsForm
+              onSubmit={handleContactSubmit}
+              onBack={handleContactBack}
+              initialValues={contactDetails || undefined}
+            />
+          </div>
+        </div>
+        <Footer />
+      </div>
     );
   }
 

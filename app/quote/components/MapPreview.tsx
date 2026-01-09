@@ -156,7 +156,7 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
 
   if (isGeocoding || locations.length === 0) {
     return (
-      <div className={`bg-card rounded-2xl overflow-hidden shadow-mobile border-2 border-sage-light ${className}`}>
+      <div className={`bg-card rounded-2xl overflow-hidden shadow-mobile border-2 border-sage-light isolate z-0 ${className}`}>
         <div className="w-full h-48 md:h-56 flex items-center justify-center text-muted-foreground text-sm">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-sage-light border-t-sage-dark mr-3"></div>
           Loading map...
@@ -166,7 +166,7 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
   }
 
   return (
-    <div className={`bg-card rounded-2xl overflow-hidden shadow-mobile border-2 border-sage-light ${className}`}>
+    <div className={`bg-card rounded-2xl overflow-hidden shadow-mobile border-2 border-sage-light isolate z-0 ${className}`}>
       <div className="relative w-full h-48 md:h-56">
         <MapContent
           locations={locations}

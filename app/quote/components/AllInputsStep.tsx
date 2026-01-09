@@ -114,12 +114,8 @@ export default function AllInputsStep({
 
   const focusDateSection = useCallback(() => {
     if (datePickerSectionRef.current) {
-      // Scroll the date section into view and focus first focusable element
+      // Scroll the date section into view but dont auto-focus to avoid opening DatePicker
       datePickerSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const firstFocusable = datePickerSectionRef.current.querySelector('input, select, button') as HTMLElement;
-      if (firstFocusable) {
-        setTimeout(() => firstFocusable.focus(), 300); // Delay to allow scroll
-      }
     }
   }, []);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Clock, Calendar, Users, Car, Luggage, Edit2, Share2 } from 'lucide-react';
+import { MapPin, Clock, Calendar, Users, Car, Luggage, Edit2, Share2, ArrowLeftRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -51,6 +51,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
   }, [quote.expiresAt]);
 
   const pickupDate = new Date(quote.pickupTime);
+  const returnPickupDate = quote.returnPickupTime ? new Date(quote.returnPickupTime) : null;
 
   return (
     <section className="py-6 pb-24">
@@ -59,9 +60,17 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
         <div className="bg-card rounded-3xl shadow-xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-navy-sage p-6 text-white">
-            <h2 className="text-2xl md:text-3xl font-bold font-playfair mb-2">
-              Your Quote
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl md:text-3xl font-bold font-playfair mb-2">
+                Your Quote
+              </h2>
+              {quote.returnJourney && (
+                <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full">
+                  <ArrowLeftRight className="w-4 h-4" />
+                  <span className="text-sm font-medium">Return Trip</span>
+                </div>
+              )}
+            </div>
             <p className="text-sm opacity-90">
               Quote ID: {quote.quoteId}
             </p>
@@ -208,7 +217,9 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
               <div className="flex items-center gap-3">
                 <Calendar className="w-5 h-5 text-sage-dark" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Pickup Date</p>
+                  <p className="text-xs text-muted-foreground">
+                    {quote.returnJourney ? 'Outbound Date' : 'Pickup Date'}
+                  </p>
                   <p className="text-sm font-medium text-foreground">
                     {pickupDate.toLocaleDateString('en-GB', {
                       weekday: 'short',
@@ -222,7 +233,9 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-sage-dark" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Pickup Time</p>
+                  <p className="text-xs text-muted-foreground">
+                    {quote.returnJourney ? 'Outbound Time' : 'Pickup Time'}
+                  </p>
                   <p className="text-sm font-medium text-foreground">
                     {pickupDate.toLocaleTimeString('en-GB', {
                       hour: '2-digit',
@@ -231,6 +244,36 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                   </p>
                 </div>
               </div>
+              {returnPickupDate && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-navy-dark" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Return Date</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {returnPickupDate.toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-5 h-5 text-navy-dark" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Return Time</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {returnPickupDate.toLocaleTimeString('en-GB', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
               <div className="flex items-center gap-3">
                 <Users className="w-5 h-5 text-sage-dark" />
                 <div>
