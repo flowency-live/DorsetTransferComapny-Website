@@ -55,6 +55,7 @@ export const API_ENDPOINTS = {
   driverVehicles: '/v2/driver/vehicles',
   driverDocuments: '/v2/driver/documents',
   driverAvailability: '/v2/driver/availability',
+  driverLicenseCheck: '/v2/driver/license-check',
 
   // Chat Widget (AI Booking Assistant)
   chatSession: '/v2/chat/session',
