@@ -465,7 +465,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
             <div className="flex gap-3">
               <Button
                 type="button"
-                variant="outline"
+                variant="hero-outline"
                 size="xl"
                 className="flex-1"
                 onClick={handleDownloadQuote}
@@ -480,7 +480,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="hero-outline"
                 size="xl"
                 className="flex-1"
                 onClick={handlePrint}
