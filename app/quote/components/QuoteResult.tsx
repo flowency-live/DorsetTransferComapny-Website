@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Clock, Calendar, Users, Car, Luggage, Edit2, Share2, ArrowLeftRight } from 'lucide-react';
+import { MapPin, Clock, Calendar, Users, Car, Luggage, Edit2, Share2, ArrowLeftRight, Plane, Train } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -12,14 +12,22 @@ import MapPreview from './MapPreview';
 import ShareQuoteModal from './ShareQuoteModal';
 
 
+interface TransportDetails {
+  flightNumber?: string;
+  trainNumber?: string;
+  returnFlightNumber?: string;
+  returnTrainNumber?: string;
+}
+
 interface QuoteResultProps {
   quote: QuoteResponse;
   onNewQuote: () => void;
   onBack?: () => void;
   onConfirmBooking?: () => void;
+  transportDetails?: TransportDetails;
 }
 
-export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking }: QuoteResultProps) {
+export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails }: QuoteResultProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -213,7 +221,8 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
             </div>
 
             {/* Trip Details */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-xl">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-muted/30 rounded-xl">
+              {/* Outbound Date */}
               <div className="flex items-center gap-3">
                 <Calendar className="w-5 h-5 text-sage-dark" />
                 <div>
@@ -230,6 +239,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                   </p>
                 </div>
               </div>
+              {/* Outbound Time */}
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-sage-dark" />
                 <div>
@@ -244,8 +254,30 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                   </p>
                 </div>
               </div>
+              {/* Outbound Flight/Train Tracking */}
+              {transportDetails?.flightNumber ? (
+                <div className="flex items-center gap-3">
+                  <Plane className="w-5 h-5 text-sage-dark" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Flight Tracking</p>
+                    <p className="text-sm font-medium text-foreground">{transportDetails.flightNumber}</p>
+                  </div>
+                </div>
+              ) : transportDetails?.trainNumber ? (
+                <div className="flex items-center gap-3">
+                  <Train className="w-5 h-5 text-sage-dark" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Train Service</p>
+                    <p className="text-sm font-medium text-foreground">{transportDetails.trainNumber}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="hidden md:block" />
+              )}
+              {/* Return Journey Details */}
               {returnPickupDate && (
                 <>
+                  {/* Return Date */}
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-navy-dark" />
                     <div>
@@ -260,6 +292,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                       </p>
                     </div>
                   </div>
+                  {/* Return Time */}
                   <div className="flex items-center gap-3">
                     <Clock className="w-5 h-5 text-navy-dark" />
                     <div>
@@ -272,6 +305,26 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                       </p>
                     </div>
                   </div>
+                  {/* Return Flight/Train Tracking */}
+                  {transportDetails?.returnFlightNumber ? (
+                    <div className="flex items-center gap-3">
+                      <Plane className="w-5 h-5 text-navy-dark" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Return Flight</p>
+                        <p className="text-sm font-medium text-foreground">{transportDetails.returnFlightNumber}</p>
+                      </div>
+                    </div>
+                  ) : transportDetails?.returnTrainNumber ? (
+                    <div className="flex items-center gap-3">
+                      <Train className="w-5 h-5 text-navy-dark" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Return Train</p>
+                        <p className="text-sm font-medium text-foreground">{transportDetails.returnTrainNumber}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="hidden md:block" />
+                  )}
                 </>
               )}
               <div className="flex items-center gap-3">

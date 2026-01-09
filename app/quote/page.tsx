@@ -437,6 +437,12 @@ function QuotePageContent() {
           quote={quote}
           onNewQuote={handleNewQuote}
           onConfirmBooking={handleConfirmBooking}
+          transportDetails={{
+            flightNumber: flightNumber || undefined,
+            trainNumber: trainNumber || undefined,
+            returnFlightNumber: returnFlightNumber || undefined,
+            returnTrainNumber: returnTrainNumber || undefined,
+          }}
         />
 
         <Footer />
