@@ -328,20 +328,20 @@ export default function AllInputsStep({
         </div>
       )}
 
-      {/* Transport Details - Airport/Train Station (after date picker) */}
-      {!isHourly && pickupTransportType && (
+      {/* Transport Details - Airport/Train Station (all journey types) */}
+      {pickupTransportType && (
         <TransportDetails
           transportType={pickupTransportType}
           flightNumber={flightNumber}
           trainNumber={trainNumber}
           onFlightNumberChange={onFlightNumberChange}
           onTrainNumberChange={onTrainNumberChange}
-          label="Outbound"
+          label={isRoundTrip ? 'Outbound' : undefined}
         />
       )}
 
       {/* Return Transport Details - when round-trip AND dropoff is airport/train */}
-      {!isHourly && isRoundTrip && dropoffTransportType && (
+      {isRoundTrip && dropoffTransportType && (
         <TransportDetails
           transportType={dropoffTransportType}
           flightNumber={returnFlightNumber}

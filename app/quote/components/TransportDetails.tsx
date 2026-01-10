@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { Plane, Train, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { useMemo } from 'react';
+import { Plane, Train, AlertCircle, CheckCircle } from 'lucide-react';
 
-import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
-import { getTenantHeaders } from '@/lib/config/tenant';
+import { getAirlineFromFlightNumber } from '@/lib/data/airlines';
 import { LocationType } from '../lib/types';
 
 export type TransportType = 'airport' | 'train_station' | null;
@@ -12,19 +11,9 @@ export type TransportType = 'airport' | 'train_station' | null;
 // IATA flight number validation: 2-letter airline code + 1-4 digit flight number
 const IATA_FLIGHT_REGEX = /^[A-Z]{2}\d{1,4}$/i;
 
-
 export function validateFlightNumber(value: string): boolean {
   if (!value) return true; // Optional field - empty is valid
   return IATA_FLIGHT_REGEX.test(value);
-}
-
-interface FlightLookupResult {
-  valid: boolean;
-  flightNumber: string;
-  airline?: string | null;
-  airlineIata?: string;
-  notFound?: boolean;
-  error?: string;
 }
 
 interface TransportDetailsProps {
@@ -51,45 +40,10 @@ export default function TransportDetails({
   onTrainNumberChange,
   label,
 }: TransportDetailsProps) {
-  const [airlineName, setAirlineName] = useState<string | null>(null);
-  const [isLookingUp, setIsLookingUp] = useState(false);
-  const [lookupStatus, setLookupStatus] = useState<'idle' | 'found' | 'not-found'>('idle');
-
-  const lookupFlight = useCallback(async (flightNum: string) => {
-    if (!flightNum || !validateFlightNumber(flightNum)) {
-      setAirlineName(null);
-      setLookupStatus('idle');
-      return;
-    }
-
-    setIsLookingUp(true);
-    setLookupStatus('idle');
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/v2/flights/lookup?flightNumber=${encodeURIComponent(flightNum)}`,
-        { headers: getTenantHeaders() }
-      );
-      const data: FlightLookupResult = await response.json();
-
-      if (data.valid && data.airline) {
-        setAirlineName(data.airline);
-        setLookupStatus('found');
-      } else {
-        setAirlineName(null);
-        setLookupStatus(data.notFound ? 'not-found' : 'idle');
-      }
-    } catch {
-      setAirlineName(null);
-      setLookupStatus('idle');
-    } finally {
-      setIsLookingUp(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setAirlineName(null);
-    setLookupStatus('idle');
+  // Instant local lookup - no API call needed
+  const airlineName = useMemo(() => {
+    if (!flightNumber || !validateFlightNumber(flightNumber)) return null;
+    return getAirlineFromFlightNumber(flightNumber);
   }, [flightNumber]);
 
   if (!transportType) return null;
@@ -116,39 +70,29 @@ export default function TransportDetails({
             <label className="block text-xs font-medium text-muted-foreground mb-1.5">
               Flight Number (optional)
             </label>
-            <div className="relative">
+            <div className="flex items-center gap-3">
               <input
                 type="text"
                 value={flightNumber}
                 onChange={(e) => onFlightNumberChange(e.target.value.toUpperCase())}
-                onBlur={() => lookupFlight(flightNumber)}
-                placeholder="e.g. BA123"
-                className={`w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 bg-background text-foreground ${
+                placeholder="BA123"
+                maxLength={7}
+                className={`w-24 px-3 py-3 rounded-xl border focus:outline-none focus:ring-2 bg-background text-foreground text-center font-mono uppercase tracking-wide ${
                   flightNumber && !validateFlightNumber(flightNumber)
                     ? 'border-red-500 focus:ring-red-500'
                     : 'border-border focus:ring-sage-dark'
                 }`}
               />
-              {isLookingUp && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-5 h-5 text-sage-dark animate-spin" />
+              {airlineName && (
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  <span className="text-sm text-green-700 font-medium">{airlineName}</span>
                 </div>
               )}
             </div>
             {flightNumber && !validateFlightNumber(flightNumber) && (
               <p className="text-xs text-red-500 mt-1">
-                Invalid format. Use airline code + number (e.g. BA123)
-              </p>
-            )}
-            {airlineName && lookupStatus === 'found' && (
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">{airlineName}</span>
-              </div>
-            )}
-            {lookupStatus === 'not-found' && flightNumber && validateFlightNumber(flightNumber) && (
-              <p className="text-xs text-amber-600 mt-1">
-                Flight number valid but not found in schedule
+                Invalid format (e.g. BA123)
               </p>
             )}
           </div>
@@ -162,7 +106,7 @@ export default function TransportDetails({
               value={trainNumber}
               onChange={(e) => onTrainNumberChange(e.target.value)}
               placeholder="e.g. 1A23 or 14:30 from London"
-              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground"
+              className="w-full px-4 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground text-sm"
             />
           </div>
         )}
