@@ -12,12 +12,22 @@ interface Coordinates {
   lng: number;
 }
 
+interface JourneyInfo {
+  distance: {
+    text: string;
+  };
+  duration: {
+    text: string;
+  };
+}
+
 interface MapPreviewProps {
   pickup: Location | null;
   dropoff: Location | null;
   waypoints?: Waypoint[];
   pickupTime?: Date | null;
   className?: string;
+  journey?: JourneyInfo;
 }
 
 // Dynamically import the entire map implementation to avoid SSR issues
@@ -34,7 +44,7 @@ const MapContent = dynamic(
   }
 );
 
-export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime = null, className = '' }: MapPreviewProps) {
+export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime = null, className = '', journey }: MapPreviewProps) {
   const [mounted, setMounted] = useState(false);
   const [coordinates, setCoordinates] = useState<Map<string, Coordinates>>(new Map());
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -204,6 +214,18 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
             <div className="flex items-start gap-2">
               <span className="font-semibold min-w-[60px]">Dropoff:</span>
               <span className="truncate">{dropoff.address}</span>
+            </div>
+          )}
+          {journey && (
+            <div className="flex items-start gap-4 mt-2 pt-2 border-t border-sage-light">
+              <div className="flex items-center gap-1">
+                <span className="font-semibold">Distance:</span>
+                <span>{journey.distance.text}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="font-semibold">Estimated:</span>
+                <span>{journey.duration.text}</span>
+              </div>
             </div>
           )}
           {pickupTime && (

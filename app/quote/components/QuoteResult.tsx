@@ -160,6 +160,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                 dropoff={quote.dropoffLocation}
                 waypoints={quote.waypoints}
                 pickupTime={new Date(quote.pickupTime)}
+                journey={quote.journey}
               />
             </div>
           </div>

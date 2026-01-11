@@ -1,7 +1,7 @@
 'use client';
 
 import { X, Copy, Mail, MessageCircle, Share2, Check, Loader2, Send } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
@@ -40,8 +40,11 @@ export default function ShareQuoteModal({
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
 
-  // Prepare quote data for saving
-  const prepareQuoteForSave = () => {
+  // Track if we've already initiated a save for this modal open
+  const saveInitiatedRef = useRef(false);
+
+  // Memoized prepare quote data for saving
+  const prepareQuoteForSave = useCallback(() => {
     // Check if it's a multi-vehicle response
     if ('compareMode' in quoteData && quoteData.compareMode) {
       const vehicleData = quoteData.vehicles[selectedVehicle as keyof typeof quoteData.vehicles] as VehiclePricing;
@@ -74,30 +77,10 @@ export default function ShareQuoteModal({
       waypoints: singleQuote.waypoints,
       returnJourney: singleQuote.returnJourney,
     };
-  };
+  }, [quoteData, selectedVehicle]);
 
-  // Auto-generate share link when modal opens
-  useEffect(() => {
-    if (isOpen && !shareUrl && !saving) {
-      handleSaveQuote();
-    }
-  }, [isOpen]);
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setShareUrl(null);
-      setQuoteId(null);
-      setToken(null);
-      setCopied(false);
-      setError(null);
-      setEmailInput('');
-      setEmailSent(false);
-      setEmailError(null);
-    }
-  }, [isOpen]);
-
-  const handleSaveQuote = async () => {
+  // Memoized save quote handler
+  const handleSaveQuote = useCallback(async () => {
     setSaving(true);
     setError(null);
 
@@ -126,7 +109,31 @@ export default function ShareQuoteModal({
     } finally {
       setSaving(false);
     }
-  };
+  }, [prepareQuoteForSave]);
+
+  // Auto-generate share link when modal opens (only once per open)
+  useEffect(() => {
+    if (isOpen && !saveInitiatedRef.current) {
+      saveInitiatedRef.current = true;
+      handleSaveQuote();
+    }
+  }, [isOpen, handleSaveQuote]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Reset the save initiated flag when modal closes
+      saveInitiatedRef.current = false;
+      setShareUrl(null);
+      setQuoteId(null);
+      setToken(null);
+      setCopied(false);
+      setError(null);
+      setEmailInput('');
+      setEmailSent(false);
+      setEmailError(null);
+    }
+  }, [isOpen]);
 
   const handleCopyLink = async () => {
     if (!shareUrl) return;

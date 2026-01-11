@@ -341,7 +341,7 @@ export default function VehicleComparisonGrid({
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">{multiQuote.journey.duration.text}</span>
+              <span className="text-muted-foreground">Est. {multiQuote.journey.duration.text}</span>
             </div>
           </div>
         </div>
