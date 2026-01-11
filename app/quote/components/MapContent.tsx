@@ -34,8 +34,9 @@ interface MapContentProps {
 function isMapValid(map: L.Map | null): map is L.Map {
   if (!map) return false;
   try {
-    // Accessing getContainer will throw if map is destroyed
-    return !!map.getContainer();
+    // Check if map container exists and is still in the DOM
+    const container = map.getContainer();
+    return !!container && !!container.parentElement && document.body.contains(container);
   } catch {
     return false;
   }
@@ -47,12 +48,17 @@ export default function MapContent({ locations, mapCenter }: MapContentProps) {
   const mapRef = useRef<L.Map | null>(null);
   const isMountedRef = useRef(true);
 
-  // Memoized safe fitBounds operation
+  // Memoized safe fitBounds operation - disable animation to prevent race condition
   const safeFitBounds = useCallback((map: L.Map, bounds: [number, number][]) => {
     if (!isMountedRef.current || !isMapValid(map)) return;
 
     try {
-      map.fitBounds(bounds, { padding: [30, 30], maxZoom: 12 });
+      // Disable animation to prevent _leaflet_pos error during unmount
+      map.fitBounds(bounds, {
+        padding: [30, 30],
+        maxZoom: 12,
+        animate: false  // Critical: prevents animation race condition
+      });
     } catch {
       // Map may have been destroyed - silently ignore
     }
@@ -63,12 +69,14 @@ export default function MapContent({ locations, mapCenter }: MapContentProps) {
 
     if (!containerRef.current || mapRef.current) return;
 
-    // Initialize map
+    // Initialize map with zoomAnimation disabled to prevent race conditions
     const map = L.map(containerRef.current, {
       center: mapCenter,
       zoom: 10,
       scrollWheelZoom: false,
       attributionControl: false,
+      zoomAnimation: false,  // Prevents _leaflet_pos error during unmount
+      fadeAnimation: false,
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -77,45 +85,34 @@ export default function MapContent({ locations, mapCenter }: MapContentProps) {
 
     mapRef.current = map;
 
-    // Add markers
-    const validLocations = locations.filter(loc => loc.coords);
-    validLocations.forEach(loc => {
-      if (loc.coords && isMapValid(map)) {
-        const marker = L.marker([loc.coords.lat, loc.coords.lng]).addTo(map);
-        marker.bindPopup(`<strong>${loc.type}</strong><br/>${loc.location.address}`);
+    // Add markers and fit bounds once map is ready
+    map.whenReady(() => {
+      if (!isMountedRef.current || !isMapValid(map)) return;
+
+      const validLocations = locations.filter(loc => loc.coords);
+
+      // Add markers
+      validLocations.forEach(loc => {
+        if (loc.coords && isMapValid(map)) {
+          const marker = L.marker([loc.coords.lat, loc.coords.lng]).addTo(map);
+          marker.bindPopup(`<strong>${loc.type}</strong><br/>${loc.location.address}`);
+        }
+      });
+
+      // Draw route line
+      if (validLocations.length > 1 && isMapValid(map)) {
+        const polylineCoords = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
+        L.polyline(polylineCoords, { color: '#8fb894', weight: 4, opacity: 0.7 }).addTo(map);
+      }
+
+      // Fit bounds to show all markers
+      if (validLocations.length > 0) {
+        const bounds = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
+        safeFitBounds(map, bounds);
       }
     });
 
-    // Draw route line
-    if (validLocations.length > 1 && isMapValid(map)) {
-      const polylineCoords = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
-      L.polyline(polylineCoords, { color: '#8fb894', weight: 4, opacity: 0.7 }).addTo(map);
-    }
-
-    // Fit bounds with safety check
-    if (validLocations.length > 0) {
-      const bounds = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
-      // Use setTimeout instead of requestAnimationFrame for better cleanup handling
-      const timeoutId = setTimeout(() => {
-        safeFitBounds(map, bounds);
-      }, 100);
-
-      // Store timeout ID for cleanup
-      return () => {
-        clearTimeout(timeoutId);
-        isMountedRef.current = false;
-        if (mapRef.current) {
-          try {
-            mapRef.current.remove();
-          } catch {
-            // Map may already be destroyed
-          }
-          mapRef.current = null;
-        }
-      };
-    }
-
-    // Cleanup when no bounds to fit
+    // Cleanup function
     return () => {
       isMountedRef.current = false;
       if (mapRef.current) {
@@ -131,7 +128,7 @@ export default function MapContent({ locations, mapCenter }: MapContentProps) {
 
   // Update map bounds when locations change (for dynamic updates)
   useEffect(() => {
-    if (!isMapValid(mapRef.current)) return;
+    if (!isMountedRef.current || !isMapValid(mapRef.current)) return;
 
     const map = mapRef.current;
     const validLocations = locations.filter(loc => loc.coords);
