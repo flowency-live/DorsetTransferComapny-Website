@@ -277,7 +277,7 @@ function CorporateQuotePageContent() {
     const finalQuote: QuoteResponse = {
       quoteId: multiQuote.quoteId || `quote-${Date.now()}`,
       status: multiQuote.status || 'valid',
-      expiresAt: multiQuote.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      expiresAt: multiQuote.expiresAt || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // 48 hours
       journey: {
         ...multiQuote.journey,
         route: { polyline: null },
@@ -309,6 +309,9 @@ function CorporateQuotePageContent() {
       passengers: multiQuote.passengers,
       luggage: multiQuote.luggage,
       returnJourney: isReturn,
+      journeyType: multiQuote.journeyType,
+      durationHours: multiQuote.durationHours,
+      extras: multiQuote.extras,
       createdAt: multiQuote.createdAt,
     };
 
