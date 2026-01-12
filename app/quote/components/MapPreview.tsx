@@ -133,10 +133,16 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
       if (coords) points.push({ location: w, type: 'waypoint', coords });
     });
 
+    // Only add dropoff if it's different from pickup (handles hourly bookings with return to pickup)
     if (dropoff) {
-      const key = getKey(dropoff);
-      const coords = key ? coordinates.get(key) : undefined;
-      if (coords) points.push({ location: dropoff, type: 'dropoff', coords });
+      const pickupKey = pickup ? getKey(pickup) : null;
+      const dropoffKey = getKey(dropoff);
+      const isSameAsPickup = pickupKey && dropoffKey && pickupKey === dropoffKey;
+
+      if (!isSameAsPickup) {
+        const coords = dropoffKey ? coordinates.get(dropoffKey) : undefined;
+        if (coords) points.push({ location: dropoff, type: 'dropoff', coords });
+      }
     }
 
     return points;
@@ -210,7 +216,7 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
               </div>
             </div>
           )}
-          {dropoff && (
+          {dropoff && pickup && (pickup.placeId || pickup.address) !== (dropoff.placeId || dropoff.address) && (
             <div className="flex items-start gap-2">
               <span className="font-semibold min-w-[60px]">Dropoff:</span>
               <span className="truncate">{dropoff.address}</span>
