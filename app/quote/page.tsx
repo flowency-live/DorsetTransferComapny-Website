@@ -327,7 +327,7 @@ function QuotePageContent() {
         customerName: contactDetails.name,
         customerEmail: contactDetails.email,
         customerPhone: contactDetails.phone,
-        specialRequests: '', // TODO: Add to ContactDetailsForm
+        specialRequests,
         paymentMethod: 'card',
       };
 
@@ -369,6 +369,7 @@ function QuotePageContent() {
           quote={quote}
           contactDetails={contactDetails}
           bookingId={bookingId}
+          specialRequests={specialRequests}
         />
         <Footer />
       </div>

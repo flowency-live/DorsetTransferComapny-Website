@@ -15,10 +15,11 @@ interface BookingConfirmationProps {
   quote: QuoteResponse;
   contactDetails: ContactDetails;
   bookingId: string;
+  specialRequests?: string;
   returnUrl?: string;
 }
 
-export default function BookingConfirmation({ quote, contactDetails, bookingId, returnUrl = '/' }: BookingConfirmationProps) {
+export default function BookingConfirmation({ quote, contactDetails, bookingId, specialRequests, returnUrl = '/' }: BookingConfirmationProps) {
   const [downloading, setDownloading] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -191,6 +192,16 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
               </div>
             </div>
           </div>
+
+          {/* Special Requests */}
+          {specialRequests && (
+            <div className="bg-card rounded-3xl shadow-deep p-6 md:p-8">
+              <h2 className="font-playfair text-xl md:text-2xl font-semibold text-foreground mb-4">
+                Special Requests
+              </h2>
+              <p className="text-base text-foreground whitespace-pre-wrap">{specialRequests}</p>
+            </div>
+          )}
 
           {/* Contact Details */}
           <div className="bg-card rounded-3xl shadow-deep p-6 md:p-8">

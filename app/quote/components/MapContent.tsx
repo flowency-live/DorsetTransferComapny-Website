@@ -1,7 +1,7 @@
 'use client';
 
 import L from 'leaflet';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { Location } from '../lib/types';
 import 'leaflet/dist/leaflet.css';
@@ -34,7 +34,6 @@ interface MapContentProps {
 function isMapValid(map: L.Map | null): map is L.Map {
   if (!map) return false;
   try {
-    // Check if map container exists and is still in the DOM
     const container = map.getContainer();
     return !!container && !!container.parentElement && document.body.contains(container);
   } catch {
@@ -42,41 +41,26 @@ function isMapValid(map: L.Map | null): map is L.Map {
   }
 }
 
-// Pure Leaflet implementation - no react-leaflet hooks
 export default function MapContent({ locations, mapCenter }: MapContentProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const polylineRef = useRef<L.Polyline | null>(null);
   const isMountedRef = useRef(true);
 
-  // Memoized safe fitBounds operation - disable animation to prevent race condition
-  const safeFitBounds = useCallback((map: L.Map, bounds: [number, number][]) => {
-    if (!isMountedRef.current || !isMapValid(map)) return;
-
-    try {
-      // Disable animation to prevent _leaflet_pos error during unmount
-      map.fitBounds(bounds, {
-        padding: [30, 30],
-        maxZoom: 12,
-        animate: false  // Critical: prevents animation race condition
-      });
-    } catch {
-      // Map may have been destroyed - silently ignore
-    }
-  }, []);
-
+  // Map initialization - runs ONCE on mount
   useEffect(() => {
     isMountedRef.current = true;
 
     if (!containerRef.current || mapRef.current) return;
 
-    // Initialize map with zoomAnimation disabled to prevent race conditions
     const map = L.map(containerRef.current, {
       center: mapCenter,
       zoom: 10,
       scrollWheelZoom: false,
       attributionControl: false,
-      zoomAnimation: false,  // Prevents _leaflet_pos error during unmount
-      fadeAnimation: false,
+      zoomAnimation: true,
+      fadeAnimation: true,
     });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -85,34 +69,7 @@ export default function MapContent({ locations, mapCenter }: MapContentProps) {
 
     mapRef.current = map;
 
-    // Add markers and fit bounds once map is ready
-    map.whenReady(() => {
-      if (!isMountedRef.current || !isMapValid(map)) return;
-
-      const validLocations = locations.filter(loc => loc.coords);
-
-      // Add markers
-      validLocations.forEach(loc => {
-        if (loc.coords && isMapValid(map)) {
-          const marker = L.marker([loc.coords.lat, loc.coords.lng]).addTo(map);
-          marker.bindPopup(`<strong>${loc.type}</strong><br/>${loc.location.address}`);
-        }
-      });
-
-      // Draw route line
-      if (validLocations.length > 1 && isMapValid(map)) {
-        const polylineCoords = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
-        L.polyline(polylineCoords, { color: '#8fb894', weight: 4, opacity: 0.7 }).addTo(map);
-      }
-
-      // Fit bounds to show all markers
-      if (validLocations.length > 0) {
-        const bounds = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
-        safeFitBounds(map, bounds);
-      }
-    });
-
-    // Cleanup function
+    // Cleanup on unmount only
     return () => {
       isMountedRef.current = false;
       if (mapRef.current) {
@@ -124,20 +81,67 @@ export default function MapContent({ locations, mapCenter }: MapContentProps) {
         mapRef.current = null;
       }
     };
-  }, [locations, mapCenter, safeFitBounds]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - map initializes once
 
-  // Update map bounds when locations change (for dynamic updates)
+  // Markers and route update - runs when locations change
   useEffect(() => {
-    if (!isMountedRef.current || !isMapValid(mapRef.current)) return;
-
     const map = mapRef.current;
-    const validLocations = locations.filter(loc => loc.coords);
+    if (!isMountedRef.current || !isMapValid(map)) return;
 
-    if (validLocations.length > 0) {
-      const bounds = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
-      safeFitBounds(map, bounds);
+    // Clear existing markers
+    markersRef.current.forEach(marker => {
+      try {
+        marker.remove();
+      } catch {
+        // Marker may already be removed
+      }
+    });
+    markersRef.current = [];
+
+    // Clear existing polyline
+    if (polylineRef.current) {
+      try {
+        polylineRef.current.remove();
+      } catch {
+        // Polyline may already be removed
+      }
+      polylineRef.current = null;
     }
-  }, [locations, safeFitBounds]);
+
+    const validLocations = locations.filter(loc => loc.coords);
+    if (validLocations.length === 0) return;
+
+    // Add markers
+    validLocations.forEach(loc => {
+      if (loc.coords && isMapValid(map)) {
+        const marker = L.marker([loc.coords.lat, loc.coords.lng]).addTo(map);
+        marker.bindPopup(`<strong>${loc.type}</strong><br/>${loc.location.address}`);
+        markersRef.current.push(marker);
+      }
+    });
+
+    // Draw route line if multiple points
+    if (validLocations.length > 1 && isMapValid(map)) {
+      const polylineCoords = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
+      polylineRef.current = L.polyline(polylineCoords, { color: '#8fb894', weight: 4, opacity: 0.7 }).addTo(map);
+    }
+
+    // Fit bounds to show all markers with animation
+    if (validLocations.length > 0 && isMapValid(map)) {
+      const bounds = validLocations.map(loc => [loc.coords!.lat, loc.coords!.lng] as [number, number]);
+      try {
+        map.fitBounds(bounds, {
+          padding: [30, 30],
+          maxZoom: 12,
+          animate: true,
+          duration: 0.5,
+        });
+      } catch {
+        // Bounds fitting may fail if map is being destroyed
+      }
+    }
+  }, [locations]);
 
   return <div ref={containerRef} className="w-full h-full" style={{ minHeight: '200px' }} />;
 }

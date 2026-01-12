@@ -17,15 +17,19 @@ interface OptionalExtrasProps {
 export default function OptionalExtras({ extras, onChange, maxSeats = 4 }: OptionalExtrasProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const hasExtras = extras.babySeats > 0 || extras.childSeats > 0;
+  const totalSeats = extras.babySeats + extras.childSeats;
+  const hasExtras = totalSeats > 0;
+  const canAddMore = totalSeats < maxSeats;
 
   const handleBabySeatsChange = (delta: number) => {
-    const newValue = Math.max(0, Math.min(maxSeats, extras.babySeats + delta));
+    if (delta > 0 && !canAddMore) return;
+    const newValue = Math.max(0, extras.babySeats + delta);
     onChange({ ...extras, babySeats: newValue });
   };
 
   const handleChildSeatsChange = (delta: number) => {
-    const newValue = Math.max(0, Math.min(maxSeats, extras.childSeats + delta));
+    if (delta > 0 && !canAddMore) return;
+    const newValue = Math.max(0, extras.childSeats + delta);
     onChange({ ...extras, childSeats: newValue });
   };
 
@@ -42,7 +46,7 @@ export default function OptionalExtras({ extras, onChange, maxSeats = 4 }: Optio
           <span className="font-medium text-foreground">Optional Extras</span>
           {hasExtras && (
             <span className="text-xs px-2 py-0.5 bg-sage-dark/10 text-sage-dark rounded-full">
-              {extras.babySeats + extras.childSeats} selected
+              {totalSeats} selected
             </span>
           )}
         </div>
@@ -76,7 +80,7 @@ export default function OptionalExtras({ extras, onChange, maxSeats = 4 }: Optio
               <button
                 type="button"
                 onClick={() => handleBabySeatsChange(1)}
-                disabled={extras.babySeats >= maxSeats}
+                disabled={!canAddMore}
                 className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Increase baby seats"
               >
@@ -105,7 +109,7 @@ export default function OptionalExtras({ extras, onChange, maxSeats = 4 }: Optio
               <button
                 type="button"
                 onClick={() => handleChildSeatsChange(1)}
-                disabled={extras.childSeats >= maxSeats}
+                disabled={!canAddMore}
                 className="w-10 h-10 rounded-full border border-border flex items-center justify-center hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 aria-label="Increase child seats"
               >
@@ -115,7 +119,7 @@ export default function OptionalExtras({ extras, onChange, maxSeats = 4 }: Optio
           </div>
 
           <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-            Child seats are provided free of charge
+            Child seats are provided free of charge (max {maxSeats} total for {maxSeats} passengers)
           </p>
         </div>
       )}
