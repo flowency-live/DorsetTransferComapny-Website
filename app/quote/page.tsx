@@ -446,7 +446,6 @@ function QuotePageContent() {
             returnFlightNumber: returnFlightNumber || undefined,
             returnTrainNumber: returnTrainNumber || undefined,
           }}
-          specialRequests={specialRequests}
         />
 
         <Footer />
