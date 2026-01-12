@@ -26,9 +26,10 @@ interface QuoteResultProps {
   onBack?: () => void;
   onConfirmBooking?: () => void;
   transportDetails?: TransportDetails;
+  specialRequests?: string;
 }
 
-export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails }: QuoteResultProps) {
+export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails, specialRequests }: QuoteResultProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -384,6 +385,14 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                 </div>
               )}
             </div>
+
+            {/* Special Requests */}
+            {specialRequests && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800">
+                <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-2">Special Requests</h4>
+                <p className="text-sm text-amber-800 dark:text-amber-200 whitespace-pre-wrap">{specialRequests}</p>
+              </div>
+            )}
 
             {/* Pricing Breakdown */}
             <div className="border-t border-border pt-6">
