@@ -12,7 +12,7 @@ import WaypointInput from './WaypointInput';
 import { Extras, JourneyType, Location, LocationType, Waypoint } from '../lib/types';
 
 import DateTimePickerMobile from './DateTimePickerMobile';
-import HourlyTimeSelector, { calculateHourlyDuration } from './HourlyTimeSelector';
+import HourlyTimeSelector from './HourlyTimeSelector';
 import TransportDetails, { locationTypeToTransportType } from './TransportDetails';
 
 interface AllInputsStepProps {
@@ -21,7 +21,6 @@ interface AllInputsStepProps {
   waypoints: Waypoint[];
   pickupDate: Date | null;
   returnDate: Date | null;
-  endTime: Date | null;
   passengers: number;
   luggage: number;
   journeyType: JourneyType;
@@ -37,7 +36,6 @@ interface AllInputsStepProps {
   onWaypointsChange: (waypoints: Waypoint[]) => void;
   onDateChange: (date: Date) => void;
   onReturnDateChange: (date: Date) => void;
-  onEndTimeChange: (date: Date) => void;
   onPassengersChange: (count: number) => void;
   onLuggageChange: (count: number) => void;
   onJourneyTypeChange: (type: JourneyType) => void;
@@ -58,7 +56,6 @@ export default function AllInputsStep({
   waypoints,
   pickupDate,
   returnDate,
-  endTime,
   passengers,
   luggage,
   journeyType,
@@ -74,7 +71,6 @@ export default function AllInputsStep({
   onWaypointsChange,
   onDateChange,
   onReturnDateChange,
-  onEndTimeChange,
   onPassengersChange,
   onLuggageChange,
   onJourneyTypeChange,
@@ -352,7 +348,7 @@ export default function AllInputsStep({
         />
       )}
 
-      {/* Hourly Time Selection - Start & End Time */}
+      {/* Hourly Time Selection - Start Time & Duration */}
       {isHourly && pickup && (
         <div ref={datePickerSectionRef} className="bg-card rounded-2xl p-4 shadow-mobile border-2 border-sage-light animate-fade-up">
           <div className="mb-3">
@@ -360,24 +356,9 @@ export default function AllInputsStep({
           </div>
           <HourlyTimeSelector
             startTime={pickupDate}
-            endTime={endTime}
-            onStartTimeChange={(date) => {
-              onDateChange(date);
-              // Auto-calculate duration when times change
-              if (endTime) {
-                const hours = calculateHourlyDuration(date, endTime);
-                onDurationChange(hours);
-              }
-            }}
-            onEndTimeChange={(date) => {
-              onEndTimeChange(date);
-              // Auto-calculate duration when times change
-              if (pickupDate) {
-                const hours = calculateHourlyDuration(pickupDate, date);
-                onDurationChange(hours);
-              }
-            }}
-            calculatedHours={duration}
+            duration={duration}
+            onStartTimeChange={onDateChange}
+            onDurationChange={onDurationChange}
           />
         </div>
       )}

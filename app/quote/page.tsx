@@ -16,6 +16,7 @@ import LoadingState from './components/LoadingState';
 import PaymentForm, { PaymentDetails } from './components/PaymentForm';
 import QuoteResult from './components/QuoteResult';
 import VehicleComparisonGrid from './components/VehicleComparisonGrid';
+import { MIN_HOURS, MAX_HOURS } from './components/HourlyTimeSelector';
 import { calculateMultiVehicleQuote, saveQuote } from './lib/api';
 import { Extras, JourneyType, QuoteResponse, Location, Waypoint, MultiVehicleQuoteResponse } from './lib/types';
 
@@ -30,13 +31,12 @@ function QuotePageContent() {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [pickupDate, setPickupDate] = useState<Date | null>(null);
   const [returnDate, setReturnDate] = useState<Date | null>(null);
-  const [endTime, setEndTime] = useState<Date | null>(null);
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(0);
 
   // Journey type & extras state
   const [journeyType, setJourneyType] = useState<JourneyType>('one-way');
-  const [duration, setDuration] = useState(5); // Default to minimum 5 hours
+  const [duration, setDuration] = useState(4); // Default to minimum 4 hours
   const [extras, setExtras] = useState<Extras>({ babySeats: 0, childSeats: 0 });
   const [returnToPickup, setReturnToPickup] = useState(true); // For hourly mode: return to pickup location
 
@@ -76,13 +76,13 @@ function QuotePageContent() {
 
   // Validation for Step 1
   const canProceedFromStep1 = () => {
-    // For hourly: pickup, start time, end time, and minimum 5 hours required
+    // For hourly: pickup, start time, and duration between 4-12 hours
     // If not returning to pickup, also require dropoff
     if (journeyType === 'hourly') {
       const baseValid = pickupLocation?.address.trim() !== '' &&
         pickupDate !== null &&
-        endTime !== null &&
-        duration >= 5;
+        duration >= MIN_HOURS &&
+        duration <= MAX_HOURS;
 
       // If returning to pickup, no dropoff needed
       if (returnToPickup) {
@@ -274,11 +274,10 @@ function QuotePageContent() {
     setWaypoints([]);
     setPickupDate(null);
     setReturnDate(null);
-    setEndTime(null);
     setPassengers(2);
     setLuggage(0);
     setJourneyType('one-way');
-    setDuration(5);
+    setDuration(4);
     setExtras({ babySeats: 0, childSeats: 0 });
     setReturnToPickup(true);
     setFlightNumber('');
@@ -499,7 +498,6 @@ function QuotePageContent() {
               waypoints={waypoints}
               pickupDate={pickupDate}
               returnDate={returnDate}
-              endTime={endTime}
               passengers={passengers}
               luggage={luggage}
               journeyType={journeyType}
@@ -515,7 +513,6 @@ function QuotePageContent() {
               onWaypointsChange={setWaypoints}
               onDateChange={setPickupDate}
               onReturnDateChange={setReturnDate}
-              onEndTimeChange={setEndTime}
               onPassengersChange={setPassengers}
               onLuggageChange={setLuggage}
               onJourneyTypeChange={handleJourneyTypeChange}

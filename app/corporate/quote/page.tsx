@@ -54,13 +54,12 @@ function CorporateQuotePageContent() {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [pickupDate, setPickupDate] = useState<Date | null>(null);
   const [returnDate, setReturnDate] = useState<Date | null>(null);
-  const [endTime, setEndTime] = useState<Date | null>(null);
   const [passengers, setPassengers] = useState(2);
   const [luggage, setLuggage] = useState(0);
 
   // Journey type & extras state
   const [journeyType, setJourneyType] = useState<JourneyType>('one-way');
-  const [duration, setDuration] = useState(5);
+  const [duration, setDuration] = useState(4);
   const [extras, setExtras] = useState<Extras>({ babySeats: 0, childSeats: 0 });
   const [returnToPickup, setReturnToPickup] = useState(true);
 
@@ -175,8 +174,8 @@ function CorporateQuotePageContent() {
     if (journeyType === 'hourly') {
       const baseValid = pickupLocation?.address.trim() !== '' &&
         pickupDate !== null &&
-        endTime !== null &&
-        duration >= 5;
+        duration >= 4 &&
+        duration <= 12;
       if (returnToPickup) {
         return baseValid;
       }
@@ -324,11 +323,10 @@ function CorporateQuotePageContent() {
     setWaypoints([]);
     setPickupDate(null);
     setReturnDate(null);
-    setEndTime(null);
     setPassengers(2);
     setLuggage(0);
     setJourneyType('one-way');
-    setDuration(5);
+    setDuration(4);
     setExtras({ babySeats: 0, childSeats: 0 });
     setReturnToPickup(true);
     setFlightNumber('');
@@ -658,7 +656,6 @@ function CorporateQuotePageContent() {
                 waypoints={waypoints}
                 pickupDate={pickupDate}
                 returnDate={returnDate}
-                endTime={endTime}
                 passengers={passengers}
                 luggage={luggage}
                 journeyType={journeyType}
@@ -672,7 +669,6 @@ function CorporateQuotePageContent() {
                 onWaypointsChange={setWaypoints}
                 onDateChange={setPickupDate}
                 onReturnDateChange={setReturnDate}
-                onEndTimeChange={setEndTime}
                 onPassengersChange={setPassengers}
                 onLuggageChange={setLuggage}
                 onJourneyTypeChange={handleJourneyTypeChange}
