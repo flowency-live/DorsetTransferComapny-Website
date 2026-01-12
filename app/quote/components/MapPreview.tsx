@@ -223,12 +223,12 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
             </div>
           )}
           {journey && (
-            <div className="flex items-start gap-4 mt-2 pt-2 border-t border-sage-light">
-              <div className="flex items-center gap-1">
+            <div className="flex items-baseline gap-4 mt-2 pt-2 border-t border-sage-light">
+              <div className="flex items-baseline gap-1">
                 <span className="font-semibold">Distance:</span>
                 <span>{journey.distance.text}</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-baseline gap-1">
                 <span className="font-semibold">Estimated:</span>
                 <span>{journey.duration.text}</span>
               </div>

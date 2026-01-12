@@ -39,8 +39,9 @@ export default function DateTimePickerMobile({
   maxDate.setMonth(maxDate.getMonth() + 6);
 
   // Extract time components from selectedDate
+  // Default to 9:00 AM when no date selected (typical pickup time)
   const getHour12 = () => {
-    if (!selectedDate) return 12;
+    if (!selectedDate) return 9; // Default to 9 AM
     const h = selectedDate.getHours();
     if (h === 0) return 12;
     if (h > 12) return h - 12;
@@ -53,7 +54,7 @@ export default function DateTimePickerMobile({
   };
 
   const getAmPm = (): 'AM' | 'PM' => {
-    if (!selectedDate) return 'AM';
+    if (!selectedDate) return 'AM'; // Always default to AM
     return selectedDate.getHours() >= 12 ? 'PM' : 'AM';
   };
 
@@ -69,18 +70,26 @@ export default function DateTimePickerMobile({
 
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      // Preserve existing time if set, otherwise default to noon
+      // Preserve existing time if set, otherwise default to 9 AM
       if (selectedDate) {
         date.setHours(selectedDate.getHours(), selectedDate.getMinutes(), 0, 0);
       } else {
-        date.setHours(12, 0, 0, 0);
+        date.setHours(9, 0, 0, 0); // 9 AM - sensible default for pickup
       }
       onChange(date);
     }
   };
 
   const handleTimeChange = (hour12: number, minute: number, ampm: 'AM' | 'PM') => {
-    const newDate = selectedDate ? new Date(selectedDate) : new Date(minDate);
+    // If no date selected yet, create a new date starting from minDate but with 9 AM default
+    let newDate: Date;
+    if (selectedDate) {
+      newDate = new Date(selectedDate);
+    } else {
+      // Use minDate for the date portion but default to 9 AM (not system time)
+      newDate = new Date(minDate);
+      newDate.setHours(9, 0, 0, 0); // Start with 9 AM, user's selection will override
+    }
 
     // Convert 12-hour to 24-hour
     let hour24 = hour12;
