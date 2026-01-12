@@ -469,6 +469,7 @@ function CorporateQuotePageContent() {
               quote={quote}
               contactDetails={contactDetails}
               bookingId={bookingId}
+              specialRequests={specialRequests}
               returnUrl="/corporate/dashboard"
             />
             {isPayOnAccount && (
@@ -617,6 +618,7 @@ function CorporateQuotePageContent() {
                 quote={quote}
                 onNewQuote={handleNewQuote}
                 onConfirmBooking={handleConfirmBooking}
+                specialRequests={specialRequests}
               />
 
               {/* Save as Favourite button - only show if not already loaded from a favourite */}
