@@ -14,6 +14,7 @@ interface ShareQuoteModalProps {
   onClose: () => void;
   quoteData: QuoteResponse | MultiVehicleQuoteResponse;
   selectedVehicle?: string;
+  savedToken?: string;
 }
 
 interface SaveQuoteResponse {
@@ -28,6 +29,7 @@ export default function ShareQuoteModal({
   onClose,
   quoteData,
   selectedVehicle = 'standard',
+  savedToken,
 }: ShareQuoteModalProps) {
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
@@ -112,12 +114,29 @@ export default function ShareQuoteModal({
   }, [prepareQuoteForSave]);
 
   // Auto-generate share link when modal opens (only once per open)
+  // If quote was already saved (has quoteId and savedToken), use existing data
   useEffect(() => {
     if (isOpen && !saveInitiatedRef.current) {
       saveInitiatedRef.current = true;
-      handleSaveQuote();
+
+      // Check if quote already has a valid quoteId and token (was saved earlier)
+      const existingQuoteId = 'quoteId' in quoteData ? quoteData.quoteId : null;
+      const hasValidExistingQuote = existingQuoteId &&
+        !existingQuoteId.startsWith('temp-') &&
+        savedToken;
+
+      if (hasValidExistingQuote) {
+        // Use existing quote data - construct shareUrl directly
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        setShareUrl(`${baseUrl}/quote/${existingQuoteId}?token=${savedToken}`);
+        setQuoteId(existingQuoteId);
+        setToken(savedToken);
+      } else {
+        // No existing quote, need to save
+        handleSaveQuote();
+      }
     }
-  }, [isOpen, handleSaveQuote]);
+  }, [isOpen, handleSaveQuote, quoteData, savedToken]);
 
   // Reset state when modal closes
   useEffect(() => {

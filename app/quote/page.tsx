@@ -447,6 +447,7 @@ function QuotePageContent() {
             returnTrainNumber: returnTrainNumber || undefined,
           }}
           specialRequests={specialRequests}
+          magicToken={magicToken || undefined}
         />
 
         <Footer />

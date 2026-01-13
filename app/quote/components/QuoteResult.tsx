@@ -27,9 +27,10 @@ interface QuoteResultProps {
   onConfirmBooking?: () => void;
   transportDetails?: TransportDetails;
   specialRequests?: string;
+  magicToken?: string;
 }
 
-export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails, specialRequests }: QuoteResultProps) {
+export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails, specialRequests, magicToken }: QuoteResultProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -520,6 +521,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         quoteData={quote}
+        savedToken={magicToken}
       />
     </section>
   );
