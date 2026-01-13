@@ -14,6 +14,7 @@ import QuoteResult from '../components/QuoteResult';
 import { getQuoteByToken } from '../lib/api';
 import { QuoteResponse } from '../lib/types';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
+import { getTenantHeaders } from '@/lib/config/tenant';
 
 type BookingStage = 'quote' | 'contact' | 'payment' | 'confirmation';
 
@@ -84,33 +85,25 @@ function SharedQuoteContent() {
         throw new Error('Missing quote or contact details');
       }
 
+      if (!token) {
+        throw new Error('Quote session expired. Please request a new quote.');
+      }
+
       const bookingData = {
         quoteId: quote.quoteId,
+        magicToken: token,
         customerName: contactDetails.name,
         customerEmail: contactDetails.email,
         customerPhone: contactDetails.phone,
-        pickupLocation: quote.pickupLocation,
-        dropoffLocation: quote.dropoffLocation,
-        waypoints: quote.waypoints,
-        pickupTime: quote.pickupTime,
-        passengers: quote.passengers,
-        luggage: quote.luggage,
-        vehicleType: quote.vehicleType,
-        pricing: quote.pricing,
-        journey: quote.journey,
-        returnJourney: quote.returnJourney,
-        journeyType: quote.journeyType,
-        durationHours: quote.durationHours,
-        extras: quote.extras,
-        paymentMethod: 'card',
-        paymentStatus: 'pending',
         specialRequests: '',
+        paymentMethod: 'card',
       };
 
       const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.bookings}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getTenantHeaders(),
         },
         body: JSON.stringify(bookingData),
       });
