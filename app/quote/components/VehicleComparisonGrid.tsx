@@ -219,6 +219,36 @@ export default function VehicleComparisonGrid({
                 </div>
               </div>
 
+              {/* Return Journey */}
+              <div>
+                <div className="text-slate-400 mb-1 flex items-center gap-2">
+                  <Percent className="w-3 h-3" />
+                  4. Return Journey
+                </div>
+                <div className="bg-slate-900 p-2 rounded">
+                  {debugInfo.returnJourney?.applied ? (
+                    <div className="text-green-400">
+                      <div>Applied: Yes</div>
+                      {debugInfo.returnJourney.pickupTime && (
+                        <div className="text-sm">
+                          Return pickup: {new Date(debugInfo.returnJourney.pickupTime).toLocaleDateString('en-GB', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })} {new Date(debugInfo.returnJourney.pickupTime).toLocaleTimeString('en-GB', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-slate-500">No return journey (one-way trip)</div>
+                  )}
+                </div>
+              </div>
+
               {/* Zone/Destination Details (collapsible) */}
               <details className="pt-2 border-t border-slate-600">
                 <summary className="text-slate-400 cursor-pointer hover:text-slate-300">
