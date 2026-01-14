@@ -86,28 +86,29 @@ export default function LocationInput({
             locationType: p.locationType
           })));
 
-          // If this input is for a drop-off, consolidate airport results
-          if (isDropoff) {
-            const preds: Prediction[] = data.predictions;
-            const consolidated = consolidateAirportResults(preds, true);
+          // Consolidate airport results for both pickup and drop-off
+          const preds: Prediction[] = data.predictions;
+          const consolidated = consolidateAirportResults(preds, isDropoff);
 
-            // If consolidation reduced the number of airport items, use consolidated list by default
-            if (consolidated.length < preds.length) {
+          // Check if consolidation changed the results
+          if (consolidated.length < preds.length || (consolidated.length === preds.length && isDropoff)) {
+            // For drop-off: save original to show toggle
+            if (isDropoff) {
               setOriginalSuggestions(preds);
               setSuggestions(consolidated);
               setIsConsolidated(true);
               setShowAllLocations(false);
-              setShowSuggestions(true);
             } else {
-              // Nothing to consolidate
+              // For pickup: no toggle needed, just show consolidated list (main airports first, then terminals)
               setOriginalSuggestions(null);
-              setSuggestions(preds);
+              setSuggestions(consolidated);
               setIsConsolidated(false);
-              setShowSuggestions(true);
             }
+            setShowSuggestions(true);
           } else {
+            // No consolidation needed
             setOriginalSuggestions(null);
-            setSuggestions(data.predictions);
+            setSuggestions(preds);
             setIsConsolidated(false);
             setShowSuggestions(true);
           }
@@ -385,7 +386,7 @@ export default function LocationInput({
                   onClick={() => {
                     // Re-collapse to consolidated main list
                     if (originalSuggestions) {
-                      const consolidated = consolidateAirportResults(originalSuggestions, true);
+                      const consolidated = consolidateAirportResults(originalSuggestions, isDropoff);
                       setSuggestions(consolidated);
                     }
                     setShowAllLocations(false);

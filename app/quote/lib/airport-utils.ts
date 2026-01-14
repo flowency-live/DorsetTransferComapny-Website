@@ -6,8 +6,6 @@ export interface Prediction {
 }
 
 export function consolidateAirportResults(predictions: Prediction[], isDropoff: boolean): Prediction[] {
-  if (!isDropoff) return predictions;
-
   const airportGroups = new Map<string, Prediction[]>();
   const nonAirport: Prediction[] = [];
 
@@ -38,6 +36,35 @@ export function consolidateAirportResults(predictions: Prediction[], isDropoff: 
     consolidated.push(main);
   });
 
-  // Preserve original relative ordering as much as possible: airports first (by discovery order), then non-airports
-  return [...consolidated, ...nonAirport];
+  // For drop-off: return just the main airport, hiding terminals (user can toggle to see all)
+  // For pickup: return main airport first, then terminals in order (all visible)
+  if (isDropoff) {
+    // Preserve original relative ordering as much as possible: airports first (by discovery order), then non-airports
+    return [...consolidated, ...nonAirport];
+  } else {
+    // For pickup: show main airport first, then any terminals from the same groups
+    const result: Prediction[] = [];
+    const addedPlaceIds = new Set<string>();
+
+    // First add main airports
+    for (const main of consolidated) {
+      result.push(main);
+      addedPlaceIds.add(main.place_id);
+    }
+
+    // Then add terminals from airport groups (ordered by group)
+    airportGroups.forEach((group) => {
+      for (const terminal of group) {
+        if (!addedPlaceIds.has(terminal.place_id)) {
+          result.push(terminal);
+          addedPlaceIds.add(terminal.place_id);
+        }
+      }
+    });
+
+    // Finally add non-airport results
+    result.push(...nonAirport);
+
+    return result;
+  }
 }
