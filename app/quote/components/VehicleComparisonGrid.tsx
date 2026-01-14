@@ -343,7 +343,7 @@ export default function VehicleComparisonGrid({
               </div>
             </div>
           )}
-          {/* Pickup Date & Time */}
+          {/* Outbound Pickup Date & Time */}
           <div className="flex items-center gap-3 pt-2 border-t border-border mt-2">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4 text-sage-dark" />
@@ -354,6 +354,32 @@ export default function VehicleComparisonGrid({
               <span className="text-foreground font-medium">{pickupDateTime.time}</span>
             </div>
           </div>
+          {/* Return Journey Details (if applicable) */}
+          {multiQuote.returnJourney && multiQuote.returnPickupTime && (
+            <div className="flex items-center gap-3 pt-2 border-t border-border mt-2 bg-sage-dark/5 -mx-4 px-4 py-2">
+              <div className="text-xs font-semibold text-sage-dark">Return Journey</div>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-sage-dark" />
+                <span className="text-foreground font-medium">
+                  {new Date(multiQuote.returnPickupTime).toLocaleDateString('en-GB', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-sage-dark" />
+                <span className="text-foreground font-medium">
+                  {new Date(multiQuote.returnPickupTime).toLocaleTimeString('en-GB', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+            </div>
+          )}
           {/* Distance & Duration */}
           <div className="flex items-center gap-4 pt-2 border-t border-border mt-2">
             <div className="flex items-center gap-1.5">

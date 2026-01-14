@@ -307,14 +307,16 @@ export interface MultiVehicleQuoteResponse {
   dropoffLocation?: Location;
   durationHours?: number;
   pickupTime: string;
+  returnJourney?: boolean;
+  returnPickupTime?: string; // ISO 8601 format - return journey pickup time
   passengers: number;
   luggage?: number;
   extras?: Extras;
   createdAt: string;
+  expiresAt?: string;
   // Optional fields (not in backend response but may be needed by frontend)
   quoteId?: string;
   status?: 'valid' | 'expired';
-  expiresAt?: string;
   waypoints?: Waypoint[];
   totalWaitTime?: number; // Total wait time in minutes across all waypoints
   // Zone pricing info
