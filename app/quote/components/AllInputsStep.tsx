@@ -87,6 +87,7 @@ export default function AllInputsStep({
   const isHourly = journeyType === 'hourly';
   const isRoundTrip = journeyType === 'round-trip';
   const isJourneyPlan = journeyType === 'one-way' || journeyType === 'round-trip';
+  const isOneWay = journeyType === 'one-way';
 
   // Refs for focus management
   const pickupInputRef = useRef<HTMLInputElement>(null);
@@ -99,6 +100,15 @@ export default function AllInputsStep({
 
   const handleDropoffSelect = (address: string, placeId: string, locationType?: LocationType, lat?: number, lng?: number, postcode?: string) => {
     onDropoffChange({ address, placeId, locationType, lat, lng, postcode });
+  };
+
+  // Handle journey type change - clear waypoints if switching to round-trip
+  const handleJourneyTypeChange = (type: JourneyType) => {
+    onJourneyTypeChange(type);
+    // Clear waypoints if switching to round-trip (waypoints only allowed for one-way)
+    if (type === 'round-trip' && waypoints.length > 0) {
+      onWaypointsChange([]);
+    }
   };
 
   // Focus management callbacks
@@ -143,7 +153,7 @@ export default function AllInputsStep({
       <div className="bg-card rounded-2xl p-4 shadow-mobile border-2 border-sage-light">
         <JourneyTypeTabs
           selected={journeyType}
-          onChange={onJourneyTypeChange}
+          onChange={handleJourneyTypeChange}
         />
       </div>
 
@@ -173,7 +183,7 @@ export default function AllInputsStep({
           <div className="mb-4">
             <JourneyDirectionToggle
               selected={journeyType}
-              onChange={onJourneyTypeChange}
+              onChange={handleJourneyTypeChange}
             />
           </div>
         )}
@@ -239,8 +249,8 @@ export default function AllInputsStep({
             <>
               {pickup && <div className="border-b border-border my-2"></div>}
 
-              {/* Waypoints */}
-              {pickup && waypoints.length > 0 && (
+              {/* Waypoints - Only available for one-way transfers */}
+              {pickup && isOneWay && waypoints.length > 0 && (
                 <>
                   <div className="space-y-3 py-2">
                     {waypoints.map((waypoint, index) => (
@@ -275,8 +285,8 @@ export default function AllInputsStep({
           )}
         </div>
 
-        {/* Add Waypoint Button - Journey plan only */}
-        {isJourneyPlan && pickup && dropoff && waypoints.length < 3 && (
+        {/* Add Waypoint Button - One-way transfers only */}
+        {isOneWay && pickup && dropoff && waypoints.length < 3 && (
           <>
             {waypoints.length > 0 && <div className="border-b border-border my-2"></div>}
             <button
@@ -290,9 +300,16 @@ export default function AllInputsStep({
           </>
         )}
 
-        {isJourneyPlan && waypoints.length === 3 && (
+        {isOneWay && waypoints.length === 3 && (
           <p className="mt-2 text-xs text-muted-foreground">
             Maximum 3 stops allowed
+          </p>
+        )}
+
+        {/* Waypoints not available for return journeys */}
+        {isRoundTrip && pickup && dropoff && (
+          <p className="mt-2 text-xs text-muted-foreground text-amber-600">
+            Waypoints are not available for return journeys
           </p>
         )}
       </div>
