@@ -313,6 +313,27 @@ export default function VehicleComparisonGrid({
               <p className="text-foreground truncate">{multiQuote.pickupLocation.address}</p>
             </div>
           </div>
+          {/* Waypoints */}
+          {multiQuote.waypoints && multiQuote.waypoints.length > 0 && (
+            <>
+              {multiQuote.waypoints.map((waypoint, index) => (
+                <div key={index} className="flex items-start gap-2 pl-2 border-l-2 border-sage-light ml-1.5">
+                  <MapPin className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-muted-foreground text-xs">
+                      Stop {index + 1}
+                      {waypoint.waitTime && waypoint.waitTime > 0 && (
+                        <span className="ml-1 text-amber-600">
+                          (Wait: {waypoint.waitTime >= 60 ? `${Math.floor(waypoint.waitTime / 60)}h ${waypoint.waitTime % 60}m` : `${waypoint.waitTime}m`})
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-foreground truncate">{waypoint.address}</p>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
           {multiQuote.dropoffLocation && (
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-navy-dark mt-0.5 flex-shrink-0" />

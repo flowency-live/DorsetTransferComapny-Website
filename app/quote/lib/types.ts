@@ -315,6 +315,7 @@ export interface MultiVehicleQuoteResponse {
   status?: 'valid' | 'expired';
   expiresAt?: string;
   waypoints?: Waypoint[];
+  totalWaitTime?: number; // Total wait time in minutes across all waypoints
   // Zone pricing info
   isZonePricing?: boolean;
   zoneName?: string;
