@@ -50,12 +50,12 @@ describe('LocationInput (drop-off consolidation)', () => {
     });
 
     // Wait for consolidation banner (suggestions rendered)
-    const banner = await screen.findByText(/Showing main airport result only/i, { timeout: 3000 });
+    const banner = await screen.findByText(/Showing main airport result only/i, undefined, { timeout: 3000 });
     expect(banner).toBeTruthy();
 
 
 
-    const mainAirport = await screen.findByText(/London Heathrow Airport/i, { timeout: 2000 });
+    const mainAirport = await screen.findByText(/London Heathrow Airport/i, undefined, { timeout: 2000 });
     expect(mainAirport).toBeTruthy();
 
     // Terminal entries should not be visible initially
@@ -65,8 +65,8 @@ describe('LocationInput (drop-off consolidation)', () => {
     fireEvent.click(await screen.findByText(/Show other locations/i));
 
     // Now terminals should be visible
-    expect(await screen.findByText(/Terminal 5/i, { timeout: 2000 })).toBeTruthy();
-    expect(await screen.findByText(/Heathrow Long Stay/i, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByText(/Terminal 5/i, undefined, { timeout: 2000 })).toBeTruthy();
+    expect(await screen.findByText(/Heathrow Long Stay/i, undefined, { timeout: 2000 })).toBeTruthy();
 
     // Click one of the expanded suggestions
     fireEvent.click(await screen.findByText(/Heathrow Terminal 5/i));

@@ -32,11 +32,11 @@ export function consolidateAirportResults(predictions: Prediction[], isDropoff: 
 
   const consolidated: Prediction[] = [];
 
-  for (const [code, group] of airportGroups) {
+  airportGroups.forEach((group, code) => {
     // Prefer the item that explicitly contains the word 'airport' in the description
-    const main = group.find((p) => (p.description || '').toLowerCase().includes('airport')) || group[0];
+    const main = group.find((p: Prediction) => (p.description || '').toLowerCase().includes('airport')) || group[0];
     consolidated.push(main);
-  }
+  });
 
   // Preserve original relative ordering as much as possible: airports first (by discovery order), then non-airports
   return [...consolidated, ...nonAirport];
