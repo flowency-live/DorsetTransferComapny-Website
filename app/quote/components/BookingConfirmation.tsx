@@ -241,12 +241,55 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
             </h2>
 
             <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-base text-muted-foreground">Base Fare</span>
-                <span className="text-base font-semibold text-foreground">
-                  {formatCurrency(quote.pricing.breakdown.baseFare / 100)}
-                </span>
-              </div>
+              {/* Show outbound leg for return trips */}
+              {quote.pricing.breakdown.outboundLegPrice !== undefined && (
+                <div className="flex justify-between items-center">
+                  <span className="text-base text-muted-foreground">Outbound Leg</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {formatCurrency(quote.pricing.breakdown.outboundLegPrice / 100)}
+                  </span>
+                </div>
+              )}
+
+              {/* Show return leg for return trips */}
+              {quote.pricing.breakdown.returnLegPrice !== undefined && (
+                <div className="flex justify-between items-center">
+                  <span className="text-base text-muted-foreground">Return Leg</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {formatCurrency(quote.pricing.breakdown.returnLegPrice / 100)}
+                  </span>
+                </div>
+              )}
+
+              {/* Show return discount if applicable */}
+              {quote.pricing.breakdown.returnDiscount !== undefined && quote.pricing.breakdown.returnDiscount > 0 && (
+                <div className="flex justify-between items-center text-green-700">
+                  <span className="text-base text-muted-foreground">Return Discount (15%)</span>
+                  <span className="text-base font-semibold">
+                    -{formatCurrency(quote.pricing.breakdown.returnDiscount / 100)}
+                  </span>
+                </div>
+              )}
+
+              {/* Show corporate discount if applicable */}
+              {quote.pricing.breakdown.corporateDiscount !== undefined && quote.pricing.breakdown.corporateDiscount > 0 && (
+                <div className="flex justify-between items-center text-blue-700">
+                  <span className="text-base text-muted-foreground">Corporate Discount</span>
+                  <span className="text-base font-semibold">
+                    -{formatCurrency(quote.pricing.breakdown.corporateDiscount / 100)}
+                  </span>
+                </div>
+              )}
+
+              {/* Show standard one-way base fare if not a return trip */}
+              {quote.pricing.breakdown.outboundLegPrice === undefined && (
+                <div className="flex justify-between items-center">
+                  <span className="text-base text-muted-foreground">Base Fare</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {formatCurrency(quote.pricing.breakdown.baseFare / 100)}
+                  </span>
+                </div>
+              )}
 
               {quote.pricing.breakdown.distanceCharge > 0 && (
                 <div className="flex justify-between items-center">

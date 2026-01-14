@@ -97,6 +97,11 @@ export interface QuoteResponse {
       subtotal: number;
       tax: number;
       total: number;
+      // Return journey fields (optional)
+      outboundLegPrice?: number; // Outbound leg price (for return trips)
+      returnLegPrice?: number; // Return leg price (for return trips)
+      returnDiscount?: number; // Return discount amount (pence)
+      corporateDiscount?: number; // Corporate discount amount (pence)
     };
     displayTotal: string; // "£18.61"
   };

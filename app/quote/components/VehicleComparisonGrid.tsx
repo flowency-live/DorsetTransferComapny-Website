@@ -537,7 +537,7 @@ export default function VehicleComparisonGrid({
                   )}
                   <span className="text-xs text-muted-foreground mb-1">Return Journey</span>
                   <span className="text-2xl font-bold text-sage-dark">
-                    {pricing.return.displayPrice}
+                    {`£${((pricing.oneWay.price + pricing.return.price) / 100).toFixed(2)}`}
                   </span>
                   {/* Show original price if discounted */}
                   {pricing.return.discount.percentage > 0 && (
