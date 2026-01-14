@@ -283,6 +283,11 @@ export interface PricingEngineDebugInfo {
     multiplier: number;
     rules: { name: string; multiplier: number }[];
   };
+  // Return journey info
+  returnJourney?: {
+    applied: boolean;
+    pickupTime?: string; // ISO 8601 format
+  };
   // Corporate discount info
   corporateDiscount?: {
     applied: boolean;

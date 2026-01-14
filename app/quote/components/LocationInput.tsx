@@ -124,7 +124,7 @@ export default function LocationInput({
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [input]);
+  }, [input, isDropoff]);
 
   // Click outside to close
   useEffect(() => {
