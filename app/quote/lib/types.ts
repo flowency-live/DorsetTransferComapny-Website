@@ -199,6 +199,7 @@ export interface VehiclePricing {
   name: string;
   description: string;
   capacity: number;
+  luggageCapacity?: number;
   features: string[];
   imageUrl: string;
   // Pricing

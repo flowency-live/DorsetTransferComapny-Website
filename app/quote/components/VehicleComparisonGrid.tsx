@@ -392,9 +392,9 @@ export default function VehicleComparisonGrid({
             >
               {/* Vehicle Header with Image */}
               <div className="flex items-start gap-3 mb-4">
-                {/* Vehicle Image */}
+                {/* Vehicle Image - larger size for better visibility */}
                 {pricing.imageUrl ? (
-                  <div className="relative w-20 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
+                  <div className="relative w-40 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
                     <Image
                       src={pricing.imageUrl}
                       alt={pricing.name}
@@ -404,13 +404,16 @@ export default function VehicleComparisonGrid({
                     />
                   </div>
                 ) : (
-                  <div className="w-20 h-16 rounded-xl bg-sage-dark/10 flex items-center justify-center flex-shrink-0">
-                    <Car className="w-8 h-8 text-sage-dark" />
+                  <div className="w-40 h-28 rounded-xl bg-sage-dark/10 flex items-center justify-center flex-shrink-0">
+                    <Car className="w-12 h-12 text-sage-dark" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <h4 className="text-lg font-semibold text-foreground">{pricing.name}</h4>
                   <p className="text-sm text-muted-foreground">Up to {pricing.capacity} passengers</p>
+                  {pricing.luggageCapacity !== undefined && pricing.luggageCapacity > 0 && (
+                    <p className="text-sm text-muted-foreground">Up to {pricing.luggageCapacity} bags</p>
+                  )}
                 </div>
               </div>
 

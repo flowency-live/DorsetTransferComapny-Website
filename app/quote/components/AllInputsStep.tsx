@@ -226,6 +226,7 @@ export default function AllInputsStep({
                       hideCurrentLocation={!!(pickup && dropoff)}
                       inputRef={dropoffInputRef}
                       onSelectionComplete={focusDateSection}
+                      isDropoff={true}
                     />
                   </div>
                 )}
@@ -266,6 +267,7 @@ export default function AllInputsStep({
                     hideCurrentLocation={!!(pickup && dropoff)}
                     inputRef={dropoffInputRef}
                     onSelectionComplete={focusDateSection}
+                    isDropoff={true}
                   />
                 </div>
               )}

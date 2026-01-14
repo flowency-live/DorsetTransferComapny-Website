@@ -2,6 +2,7 @@
 
 import { MapPin, Loader2, Crosshair } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { consolidateAirportResults } from '../lib/airport-utils';
 
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { LocationType } from '../lib/types';
@@ -16,12 +17,14 @@ interface LocationInputProps {
   hideCurrentLocation?: boolean;
   onSelectionComplete?: () => void; // Called after a selection is made (for focus management)
   inputRef?: React.RefObject<HTMLInputElement>;
+  isDropoff?: boolean; // If true, consolidate airport results for drop-off searches
 }
 
 interface Prediction {
   description: string;
   place_id: string;
   locationType?: LocationType;
+  airportCode?: string | null;
 }
 
 export default function LocationInput({
@@ -33,12 +36,17 @@ export default function LocationInput({
   autoFocus = false,
   hideCurrentLocation = false,
   onSelectionComplete,
-  inputRef: externalInputRef
+  inputRef: externalInputRef,
+  isDropoff = false
 }: LocationInputProps) {
   const [input, setInput] = useState(value);
   const [suggestions, setSuggestions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  // Consolidation state for drop-off searches
+  const [originalSuggestions, setOriginalSuggestions] = useState<Prediction[] | null>(null);
+  const [isConsolidated, setIsConsolidated] = useState(false);
+  const [showAllLocations, setShowAllLocations] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -77,8 +85,32 @@ export default function LocationInput({
             description: p.description,
             locationType: p.locationType
           })));
-          setSuggestions(data.predictions);
-          setShowSuggestions(true);
+
+          // If this input is for a drop-off, consolidate airport results
+          if (isDropoff) {
+            const preds: Prediction[] = data.predictions;
+            const consolidated = consolidateAirportResults(preds, true);
+
+            // If consolidation reduced the number of airport items, use consolidated list by default
+            if (consolidated.length < preds.length) {
+              setOriginalSuggestions(preds);
+              setSuggestions(consolidated);
+              setIsConsolidated(true);
+              setShowAllLocations(false);
+              setShowSuggestions(true);
+            } else {
+              // Nothing to consolidate
+              setOriginalSuggestions(null);
+              setSuggestions(preds);
+              setIsConsolidated(false);
+              setShowSuggestions(true);
+            }
+          } else {
+            setOriginalSuggestions(null);
+            setSuggestions(data.predictions);
+            setIsConsolidated(false);
+            setShowSuggestions(true);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch suggestions:', err);
@@ -122,6 +154,8 @@ export default function LocationInput({
       }
     }
   }, [highlightedIndex]);
+
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -180,6 +214,10 @@ export default function LocationInput({
     setShowSuggestions(false);
     setSuggestions([]);
     setHighlightedIndex(-1);
+    // Reset consolidation state when a selection is made
+    setOriginalSuggestions(null);
+    setIsConsolidated(false);
+    setShowAllLocations(false);
 
     // Fetch coordinates and postcode for the selected place
     let lat: number | undefined;
@@ -322,6 +360,43 @@ export default function LocationInput({
             role="listbox"
             className="absolute z-50 w-full mt-2 bg-card border border-border rounded-xl shadow-xl max-h-60 overflow-y-auto"
           >
+            {/* Show consolidation banner when dropoff results were consolidated */}
+            {isConsolidated && !showAllLocations && (
+              <div className="flex items-center justify-between px-4 py-2 text-sm text-muted-foreground border-b border-border">
+                <span>Showing main airport result only</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (originalSuggestions) setSuggestions(originalSuggestions);
+                    setShowAllLocations(true);
+                  }}
+                  className="text-xs text-sage-accessible hover:underline"
+                >
+                  Show other locations
+                </button>
+              </div>
+            )}
+
+            {isConsolidated && showAllLocations && (
+              <div className="flex items-center justify-between px-4 py-2 text-sm text-muted-foreground border-b border-border">
+                <span>Showing all airport locations</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Re-collapse to consolidated main list
+                    if (originalSuggestions) {
+                      const consolidated = consolidateAirportResults(originalSuggestions, true);
+                      setSuggestions(consolidated);
+                    }
+                    setShowAllLocations(false);
+                  }}
+                  className="text-xs text-sage-accessible hover:underline"
+                >
+                  Hide other locations
+                </button>
+              </div>
+            )}
+
             {suggestions.map((prediction, index) => (
               <button
                 key={prediction.place_id}
