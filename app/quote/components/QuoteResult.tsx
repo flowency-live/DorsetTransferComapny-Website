@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { generatePdf } from '@/lib/pdf';
 
 import { QuoteResponse } from '../lib/types';
+import { formatTime12Hour } from '../lib/format-utils';
 import MapPreview from './MapPreview';
 import ShareQuoteModal from './ShareQuoteModal';
 
@@ -267,10 +268,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                     {quote.returnJourney ? 'Outbound Time' : 'Pickup Time'}
                   </p>
                   <p className="text-sm font-medium text-foreground">
-                    {pickupDate.toLocaleTimeString('en-GB', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {formatTime12Hour(pickupDate)}
                   </p>
                 </div>
               </div>
@@ -318,10 +316,7 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                     <div>
                       <p className="text-xs text-muted-foreground">Return Time</p>
                       <p className="text-sm font-medium text-foreground">
-                        {returnPickupDate.toLocaleTimeString('en-GB', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {formatTime12Hour(returnPickupDate)}
                       </p>
                     </div>
                   </div>

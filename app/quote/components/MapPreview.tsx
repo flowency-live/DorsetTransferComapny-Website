@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { Location, Waypoint } from '../lib/types';
+import { formatTime12Hour } from '../lib/format-utils';
 import 'leaflet/dist/leaflet.css';
 
 interface Coordinates {
@@ -243,10 +244,7 @@ export default function MapPreview({ pickup, dropoff, waypoints = [], pickupTime
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric'
-                })} at {pickupTime.toLocaleTimeString('en-GB', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                })} at {formatTime12Hour(pickupTime)}
               </span>
             </div>
           )}

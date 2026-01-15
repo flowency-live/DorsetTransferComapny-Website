@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 import { JourneyType, MultiVehicleQuoteResponse } from '../lib/types';
+import { formatTime12Hour } from '../lib/format-utils';
 import ShareQuoteModal from './ShareQuoteModal';
 
 interface VehicleComparisonGridProps {
@@ -58,10 +59,7 @@ export default function VehicleComparisonGrid({
         month: 'short',
         year: 'numeric',
       }),
-      time: date.toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      time: formatTime12Hour(date),
     };
   };
 
@@ -89,9 +87,16 @@ export default function VehicleComparisonGrid({
       if (journeyType === 'hourly') return 'Hourly';
       return 'One-Way';
     };
+    // For return journeys, show both legs combined
+    let price: string;
+    if (selectedIsReturn) {
+      price = `£${((vehicle.oneWay.price + vehicle.return.price) / 100).toFixed(2)}`;
+    } else {
+      price = vehicle.oneWay.displayPrice;
+    }
     return {
       name: vehicle.name,
-      price: selectedIsReturn ? vehicle.return.displayPrice : vehicle.oneWay.displayPrice,
+      price,
       journeyType: getJourneyLabel(),
     };
   };
@@ -402,10 +407,7 @@ export default function VehicleComparisonGrid({
               <div className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-sage-dark" />
                 <span className="text-foreground font-medium">
-                  {new Date(multiQuote.returnPickupTime).toLocaleTimeString('en-GB', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {formatTime12Hour(multiQuote.returnPickupTime)}
                 </span>
               </div>
             </div>
