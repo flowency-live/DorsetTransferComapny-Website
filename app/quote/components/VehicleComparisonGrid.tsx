@@ -87,21 +87,18 @@ export default function VehicleComparisonGrid({
       if (journeyType === 'hourly') return 'Hourly';
       return 'One-Way';
     };
-    // Show price excluding VAT on comparison grid
+    // Show price excluding VAT on comparison grid (always Exc. VAT)
     let price: string;
-    let vatApplied: boolean;
     if (selectedIsReturn) {
-      vatApplied = vehicle.return.vatApplied || false;
-      // Show price excluding VAT when VAT is applied
-      if (vatApplied && vehicle.return.breakdown.vatAmount) {
+      // Show price excluding VAT when VAT is present, otherwise show display price
+      if (vehicle.return.breakdown.vatAmount) {
         price = `£${((vehicle.return.price - vehicle.return.breakdown.vatAmount) / 100).toFixed(2)}`;
       } else {
         price = vehicle.return.displayPrice;
       }
     } else {
-      vatApplied = vehicle.oneWay.vatApplied || false;
-      // Show price excluding VAT when VAT is applied
-      if (vatApplied && vehicle.oneWay.breakdown.vatAmount) {
+      // Show price excluding VAT when VAT is present, otherwise show display price
+      if (vehicle.oneWay.breakdown.vatAmount) {
         price = `£${((vehicle.oneWay.price - vehicle.oneWay.breakdown.vatAmount) / 100).toFixed(2)}`;
       } else {
         price = vehicle.oneWay.displayPrice;
@@ -111,7 +108,6 @@ export default function VehicleComparisonGrid({
       name: vehicle.name,
       price,
       journeyType: getJourneyLabel(),
-      vatApplied,
     };
   };
 
@@ -520,12 +516,11 @@ export default function VehicleComparisonGrid({
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground mb-1">
-                    {journeyType === 'hourly' ? 'Hourly Rate' : 'One-Way'}
-                    {pricing.oneWay.vatApplied && <span className="ml-1">(Exc. VAT)</span>}
+                    {journeyType === 'hourly' ? 'Hourly Rate' : 'One-Way'} (Exc. VAT)
                   </span>
                   <span className="text-2xl font-bold text-foreground">
-                    {/* Show price excluding VAT when VAT is applied */}
-                    {pricing.oneWay.vatApplied && pricing.oneWay.breakdown.vatAmount
+                    {/* Show price excluding VAT when VAT is applied, otherwise show display price */}
+                    {pricing.oneWay.breakdown.vatAmount
                       ? `£${((pricing.oneWay.price - pricing.oneWay.breakdown.vatAmount) / 100).toFixed(2)}`
                       : pricing.oneWay.displayPrice}
                   </span>
@@ -556,12 +551,11 @@ export default function VehicleComparisonGrid({
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground mb-1">
-                    Return Journey
-                    {pricing.return.vatApplied && <span className="ml-1">(Exc. VAT)</span>}
+                    Return Journey (Exc. VAT)
                   </span>
                   <span className="text-2xl font-bold text-sage-dark">
-                    {/* Show price excluding VAT when VAT is applied */}
-                    {pricing.return.vatApplied && pricing.return.breakdown.vatAmount
+                    {/* Show price excluding VAT when VAT is applied, otherwise show display price */}
+                    {pricing.return.breakdown.vatAmount
                       ? `£${((pricing.return.price - pricing.return.breakdown.vatAmount) / 100).toFixed(2)}`
                       : pricing.return.displayPrice}
                   </span>
@@ -603,9 +597,7 @@ export default function VehicleComparisonGrid({
               <p className="text-2xl font-bold text-sage-dark">
                 {getSelectedPricing()?.price}
               </p>
-              {getSelectedPricing()?.vatApplied && (
-                <p className="text-xs text-muted-foreground">(Exc. VAT)</p>
-              )}
+              <p className="text-xs text-muted-foreground">(Exc. VAT)</p>
             </div>
           </div>
 
