@@ -104,10 +104,15 @@ export default function VehicleComparisonGrid({
         price = vehicle.oneWay.displayPrice;
       }
     }
+    // Check if there's an airport fee for the selected journey type
+    const hasAirportFee = selectedIsReturn
+      ? !!vehicle.return.breakdown.airportDropFee
+      : !!vehicle.oneWay.breakdown.airportDropFee;
     return {
       name: vehicle.name,
       price,
       journeyType: getJourneyLabel(),
+      hasAirportFee,
     };
   };
 
@@ -516,7 +521,7 @@ export default function VehicleComparisonGrid({
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground mb-1">
-                    {journeyType === 'hourly' ? 'Hourly Rate' : 'One-Way'} (Exc. VAT)
+                    {journeyType === 'hourly' ? 'Hourly Rate' : 'One-Way'} (Exc. VAT{pricing.oneWay.breakdown.airportDropFee ? ' & Fees' : ''})
                   </span>
                   <span className="text-2xl font-bold text-foreground">
                     {/* Show price excluding VAT when VAT is applied, otherwise show display price */}
@@ -551,7 +556,7 @@ export default function VehicleComparisonGrid({
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground mb-1">
-                    Return Journey (Exc. VAT)
+                    Return Journey (Exc. VAT{pricing.return.breakdown.airportDropFee ? ' & Fees' : ''})
                   </span>
                   <span className="text-2xl font-bold text-sage-dark">
                     {/* Show price excluding VAT when VAT is applied, otherwise show display price */}
@@ -597,7 +602,7 @@ export default function VehicleComparisonGrid({
               <p className="text-2xl font-bold text-sage-dark">
                 {getSelectedPricing()?.price}
               </p>
-              <p className="text-xs text-muted-foreground">(Exc. VAT)</p>
+              <p className="text-xs text-muted-foreground">(Exc. VAT{getSelectedPricing()?.hasAirportFee ? ' & Fees' : ''})</p>
             </div>
           </div>
 

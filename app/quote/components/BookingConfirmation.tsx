@@ -242,14 +242,24 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
             </h2>
 
             <div className="space-y-3">
-              {/* Transfer Charges - the subtotal before VAT */}
+              {/* Transfer Charges - the subtotal before VAT and airport fee */}
               <div className="flex justify-between items-center">
                 <span className="text-base text-muted-foreground">Transfer Charges</span>
                 <span className="text-base font-semibold text-foreground">
                   {formatCurrency((quote.pricing.breakdown.vatableAmount ||
-                    (quote.pricing.breakdown.total - (quote.pricing.breakdown.vatAmount || 0))) / 100)}
+                    (quote.pricing.breakdown.total - (quote.pricing.breakdown.vatAmount || 0) - (quote.pricing.breakdown.airportDropFee || 0))) / 100)}
                 </span>
               </div>
+
+              {/* Airport Drop Fee - only show if present */}
+              {quote.pricing.breakdown.airportDropFee && quote.pricing.breakdown.airportDropFee > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-base text-muted-foreground">Airport Drop Fee</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {formatCurrency(quote.pricing.breakdown.airportDropFee / 100)}
+                  </span>
+                </div>
+              )}
 
               {/* VAT - only show if VAT was applied */}
               {quote.pricing.breakdown.vatAmount && quote.pricing.breakdown.vatAmount > 0 && (

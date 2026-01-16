@@ -401,9 +401,18 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                   <span className="text-muted-foreground">Transfer Charges</span>
                   <span className="font-medium text-foreground">
                     £{((quote.pricing.breakdown.vatableAmount ||
-                        (quote.pricing.breakdown.total - (quote.pricing.breakdown.vatAmount || 0))) / 100).toFixed(2)}
+                        (quote.pricing.breakdown.total - (quote.pricing.breakdown.vatAmount || 0) - (quote.pricing.breakdown.airportDropFee || 0))) / 100).toFixed(2)}
                   </span>
                 </div>
+                {/* Airport Drop Fee - only show if present */}
+                {quote.pricing.breakdown.airportDropFee && quote.pricing.breakdown.airportDropFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Airport Drop Fee</span>
+                    <span className="font-medium text-foreground">
+                      £{(quote.pricing.breakdown.airportDropFee / 100).toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 {/* VAT - only show if VAT was applied */}
                 {quote.pricing.breakdown.vatAmount && quote.pricing.breakdown.vatAmount > 0 && (
                   <div className="flex justify-between text-sm">
