@@ -272,9 +272,23 @@ export interface VehiclePricing {
       tax: number;
       total: number;
       hourlyCharge?: number;
+      // Return journey breakdown fields (from API)
+      outboundLeg?: number;
+      outboundBreakdown?: {
+        baseFare: number;
+        distanceCharge: number;
+        waitTimeCharge: number;
+        hourlyCharge?: number;
+      };
+      returnLegBeforeDiscount?: number;
+      returnDiscountPercent?: number;
+      returnDiscountAmount?: number;
+      returnLegAfterDiscount?: number;
+      journeyTotal?: number;
       // Surge pricing fields
       basePriceBeforeSurge?: number;
       surgeMultiplier?: number;
+      journeyTotalAfterSurge?: number;
       // Corp discount fields
       corpDiscountPercent?: number;
       corpDiscountAmount?: number;

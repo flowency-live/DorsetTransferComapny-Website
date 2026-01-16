@@ -198,32 +198,26 @@ function QuotePageContent() {
     const vehiclePricing = multiQuote.vehicles[vehicleId as keyof typeof multiQuote.vehicles];
     if (!vehiclePricing) return;
 
-    // For return journeys, total is outbound leg + return leg (both already have discounts applied)
-    // For one-way journeys, total is just the one-way leg
-    const priceInPence = isReturn 
-      ? vehiclePricing.oneWay.price + vehiclePricing.return.price
+    // Use the API's pre-calculated prices directly - no UI-side calculations
+    // return.price already includes: outbound + discounted return + airport fee
+    const priceInPence = isReturn
+      ? vehiclePricing.return.price
       : vehiclePricing.oneWay.price;
-    
+
     const displayPrice = isReturn
-      ? `£${((vehiclePricing.oneWay.price + vehiclePricing.return.price) / 100).toFixed(2)}`
+      ? vehiclePricing.return.displayPrice
       : vehiclePricing.oneWay.displayPrice;
 
-    // Build breakdown with return journey details if applicable
-    const breakdown: any = {
-      baseFare: priceInPence,
-      distanceCharge: 0,
-      waitTimeCharge: 0,
-      subtotal: priceInPence,
-      tax: 0,
+    // Use the actual breakdown from the API - don't construct our own
+    const apiBreakdown = isReturn
+      ? vehiclePricing.return.breakdown
+      : vehiclePricing.oneWay.breakdown;
+
+    // Pass through the API breakdown with the correct total
+    const breakdown = {
+      ...apiBreakdown,
       total: priceInPence,
     };
-
-    // For return trips, add detailed breakdown showing both legs and discounts
-    if (isReturn) {
-      breakdown.outboundLegPrice = vehiclePricing.oneWay.price;
-      breakdown.returnLegPrice = vehiclePricing.return.price;
-      breakdown.returnDiscount = vehiclePricing.return.discount.amount;
-    }
 
     // Create the quote response for the booking flow
     const quoteData: QuoteResponse = {

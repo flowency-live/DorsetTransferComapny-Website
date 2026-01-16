@@ -396,50 +396,20 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                 Price Breakdown
               </h3>
               <div className="space-y-3">
+                {/* Transfer Charges - the subtotal before VAT (vatableAmount if available, otherwise calculate) */}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Base fare</span>
+                  <span className="text-muted-foreground">Transfer Charges</span>
                   <span className="font-medium text-foreground">
-                    £{(quote.pricing.breakdown.baseFare / 100).toFixed(2)}
+                    £{((quote.pricing.breakdown.vatableAmount ||
+                        (quote.pricing.breakdown.total - (quote.pricing.breakdown.vatAmount || 0))) / 100).toFixed(2)}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Distance charge</span>
-                  <span className="font-medium text-foreground">
-                    £{(quote.pricing.breakdown.distanceCharge / 100).toFixed(2)}
-                  </span>
-                </div>
-                {quote.pricing.breakdown.waitTimeCharge > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Wait time charge</span>
-                    <span className="font-medium text-foreground">
-                      £{(quote.pricing.breakdown.waitTimeCharge / 100).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {/* Legacy support for old quotes with timeCharge */}
-                {quote.pricing.breakdown.timeCharge !== undefined && quote.pricing.breakdown.timeCharge > 0 && !quote.pricing.breakdown.waitTimeCharge && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Time charge</span>
-                    <span className="font-medium text-foreground">
-                      £{(quote.pricing.breakdown.timeCharge / 100).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {/* VAT */}
+                {/* VAT - only show if VAT was applied */}
                 {quote.pricing.breakdown.vatAmount && quote.pricing.breakdown.vatAmount > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">VAT ({quote.pricing.breakdown.vatRate}%)</span>
+                    <span className="text-muted-foreground">VAT @ {quote.pricing.breakdown.vatRate}%</span>
                     <span className="font-medium text-foreground">
                       £{(quote.pricing.breakdown.vatAmount / 100).toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {/* Airport Drop Fee */}
-                {quote.pricing.breakdown.airportDropFee && quote.pricing.breakdown.airportDropFee > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Airport drop fee</span>
-                    <span className="font-medium text-foreground">
-                      £{(quote.pricing.breakdown.airportDropFee / 100).toFixed(2)}
                     </span>
                   </div>
                 )}
