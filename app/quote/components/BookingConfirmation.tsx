@@ -312,6 +312,26 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
                 </div>
               )}
 
+              {/* VAT */}
+              {quote.pricing.breakdown.vatAmount && quote.pricing.breakdown.vatAmount > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-base text-muted-foreground">VAT ({quote.pricing.breakdown.vatRate}%)</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {formatCurrency(quote.pricing.breakdown.vatAmount / 100)}
+                  </span>
+                </div>
+              )}
+
+              {/* Airport Drop Fee */}
+              {quote.pricing.breakdown.airportDropFee && quote.pricing.breakdown.airportDropFee > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-base text-muted-foreground">Airport Drop Fee</span>
+                  <span className="text-base font-semibold text-foreground">
+                    {formatCurrency(quote.pricing.breakdown.airportDropFee / 100)}
+                  </span>
+                </div>
+              )}
+
               <div className="border-t border-border pt-3 mt-3">
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-foreground">Total</span>

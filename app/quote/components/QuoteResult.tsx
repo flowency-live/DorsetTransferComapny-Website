@@ -425,6 +425,24 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                     </span>
                   </div>
                 )}
+                {/* VAT */}
+                {quote.pricing.breakdown.vatAmount && quote.pricing.breakdown.vatAmount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">VAT ({quote.pricing.breakdown.vatRate}%)</span>
+                    <span className="font-medium text-foreground">
+                      £{(quote.pricing.breakdown.vatAmount / 100).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {/* Airport Drop Fee */}
+                {quote.pricing.breakdown.airportDropFee && quote.pricing.breakdown.airportDropFee > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Airport drop fee</span>
+                    <span className="font-medium text-foreground">
+                      £{(quote.pricing.breakdown.airportDropFee / 100).toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t border-border pt-3 flex justify-between items-center">
                   <span className="text-lg font-bold text-foreground">Total</span>
                   <span className="text-3xl font-bold text-sage-dark">

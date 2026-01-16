@@ -102,6 +102,12 @@ export interface QuoteResponse {
       returnLegPrice?: number; // Return leg price (for return trips)
       returnDiscount?: number; // Return discount amount (pence)
       corporateDiscount?: number; // Corporate discount amount (pence)
+      // VAT fields
+      vatRate?: number; // e.g., 20 for 20%
+      vatableAmount?: number; // Amount VAT was calculated on (pence)
+      vatAmount?: number; // VAT amount (pence)
+      // Airport fee
+      airportDropFee?: number; // Airport drop fee (pence)
     };
     displayTotal: string; // "£18.61"
   };
@@ -223,11 +229,32 @@ export interface VehiclePricing {
       // Surge pricing fields
       basePriceBeforeSurge?: number;
       surgeMultiplier?: number;
+      // Corp discount fields
+      corpDiscountPercent?: number;
+      corpDiscountAmount?: number;
+      subtotalAfterCorpDiscount?: number;
+      // VAT fields
+      vatRate?: number;
+      vatableAmount?: number;
+      vatAmount?: number;
+      // Airport fee fields
+      airportDropFee?: number;
+      airportCode?: string;
     };
     // Surge pricing indicators
     isPeakPricing?: boolean;
     surgeMultiplier?: number;
     appliedSurgeRules?: { name: string; multiplier: number }[];
+    // VAT indicator
+    vatApplied?: boolean;
+    vatRate?: number;
+    vatNumber?: string | null;
+    // Airport fee indicator
+    airportFee?: {
+      amount: number;
+      airportName: string;
+      airportCode: string;
+    };
   };
   return: {
     price: number;          // pence
@@ -248,11 +275,32 @@ export interface VehiclePricing {
       // Surge pricing fields
       basePriceBeforeSurge?: number;
       surgeMultiplier?: number;
+      // Corp discount fields
+      corpDiscountPercent?: number;
+      corpDiscountAmount?: number;
+      journeyTotalAfterCorpDiscount?: number;
+      // VAT fields
+      vatRate?: number;
+      vatableAmount?: number;
+      vatAmount?: number;
+      // Airport fee fields
+      airportDropFee?: number;
+      airportCode?: string;
     };
     // Surge pricing indicators
     isPeakPricing?: boolean;
     surgeMultiplier?: number;
     appliedSurgeRules?: { name: string; multiplier: number }[];
+    // VAT indicator
+    vatApplied?: boolean;
+    vatRate?: number;
+    vatNumber?: string | null;
+    // Airport fee indicator
+    airportFee?: {
+      amount: number;
+      airportName: string;
+      airportCode: string;
+    };
   };
 }
 
