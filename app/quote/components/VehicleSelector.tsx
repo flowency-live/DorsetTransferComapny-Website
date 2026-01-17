@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Zap } from 'lucide-react';
+import { Car } from 'lucide-react';
 import Image from 'next/image';
 
 import { VehiclePricing } from '../lib/types';
@@ -67,8 +67,7 @@ export default function VehicleSelector({
           const pricing = vehiclePrices[type];
           const isSelected = selected === type;
           const priceData = returnJourney ? pricing.return : pricing.oneWay;
-          const displayPrice = priceData.displayPrice;
-          const hasSurge = priceData.isPeakPricing && priceData.surgeMultiplier && priceData.surgeMultiplier > 1;
+          const displayPrice = priceData.displayTransferPrice;
 
           return (
             <button
@@ -121,14 +120,6 @@ export default function VehicleSelector({
               <p className="text-lg font-bold text-sage-dark">
                 {displayPrice}
               </p>
-
-              {/* Surge Pricing Indicator */}
-              {hasSurge && (
-                <div className="mt-1 flex items-center gap-1 text-xs text-orange-600">
-                  <Zap className="w-3 h-3" />
-                  <span>Peak {priceData.surgeMultiplier}x</span>
-                </div>
-              )}
             </button>
           );
         })}

@@ -87,33 +87,15 @@ export default function VehicleComparisonGrid({
       if (journeyType === 'hourly') return 'Hourly';
       return 'One-Way';
     };
-    // Show price excluding VAT and fees on comparison grid
-    // Use vatableAmount which is the transfer price before VAT and airport fee
-    let price: string;
-    if (selectedIsReturn) {
-      const breakdown = vehicle.return.breakdown;
-      if (breakdown.vatableAmount) {
-        price = `£${(breakdown.vatableAmount / 100).toFixed(2)}`;
-      } else {
-        price = vehicle.return.displayPrice;
-      }
-    } else {
-      const breakdown = vehicle.oneWay.breakdown;
-      if (breakdown.vatableAmount) {
-        price = `£${(breakdown.vatableAmount / 100).toFixed(2)}`;
-      } else {
-        price = vehicle.oneWay.displayPrice;
-      }
-    }
-    // Check if there's an airport fee for the selected journey type
-    const hasAirportFee = selectedIsReturn
-      ? !!vehicle.return.breakdown.airportDropFee
-      : !!vehicle.oneWay.breakdown.airportDropFee;
+
+    // Use simplified v2 fields - displayTransferPrice is transfer charges only (no VAT, no airport fee)
+    const pricing = selectedIsReturn ? vehicle.return : vehicle.oneWay;
+
     return {
       name: vehicle.name,
-      price,
+      price: pricing.displayTransferPrice,
       journeyType: getJourneyLabel(),
-      hasAirportFee,
+      hasAirportFee: pricing.fees.airportDrop > 0,
     };
   };
 
@@ -522,13 +504,10 @@ export default function VehicleComparisonGrid({
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground mb-1">
-                    {journeyType === 'hourly' ? 'Hourly Rate' : 'One-Way'} (Exc. VAT{pricing.oneWay.breakdown.airportDropFee ? ' & Fees' : ''})
+                    {journeyType === 'hourly' ? 'Hourly Rate' : 'One-Way'} (Exc. VAT{pricing.oneWay.fees.airportDrop > 0 ? ' & Fees' : ''})
                   </span>
                   <span className="text-2xl font-bold text-foreground">
-                    {/* Use vatableAmount for price excluding VAT and fees */}
-                    {pricing.oneWay.breakdown.vatableAmount
-                      ? `£${(pricing.oneWay.breakdown.vatableAmount / 100).toFixed(2)}`
-                      : pricing.oneWay.displayPrice}
+                    {pricing.oneWay.displayTransferPrice}
                   </span>
                 </button>
               )}
@@ -557,18 +536,15 @@ export default function VehicleComparisonGrid({
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground mb-1">
-                    Return Journey (Exc. VAT{pricing.return.breakdown.airportDropFee ? ' & Fees' : ''})
+                    Return Journey (Exc. VAT{pricing.return.fees.airportDrop > 0 ? ' & Fees' : ''})
                   </span>
                   <span className="text-2xl font-bold text-sage-dark">
-                    {/* Use vatableAmount for price excluding VAT and fees */}
-                    {pricing.return.breakdown.vatableAmount
-                      ? `£${(pricing.return.breakdown.vatableAmount / 100).toFixed(2)}`
-                      : pricing.return.displayPrice}
+                    {pricing.return.displayTransferPrice}
                   </span>
-                  {/* Show original price if discounted - use breakdown.outboundLeg doubled */}
-                  {pricing.return.discount.percentage > 0 && pricing.return.breakdown.outboundLeg && (
+                  {/* Show original price if discounted - use displayOriginalPrice */}
+                  {pricing.return.discount.percentage > 0 && (
                     <span className="text-xs text-muted-foreground line-through">
-                      {`£${((pricing.return.breakdown.outboundLeg * 2) / 100).toFixed(2)}`}
+                      {pricing.return.displayOriginalPrice}
                     </span>
                   )}
                 </button>

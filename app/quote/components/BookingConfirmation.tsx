@@ -242,31 +242,30 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
             </h2>
 
             <div className="space-y-3">
-              {/* Transfer Charges - the subtotal before VAT and airport fee */}
+              {/* Transfer Charges */}
               <div className="flex justify-between items-center">
                 <span className="text-base text-muted-foreground">Transfer Charges</span>
                 <span className="text-base font-semibold text-foreground">
-                  {formatCurrency((quote.pricing.breakdown.vatableAmount ||
-                    (quote.pricing.breakdown.total - (quote.pricing.breakdown.vatAmount || 0) - (quote.pricing.breakdown.airportDropFee || 0))) / 100)}
+                  {quote.pricing.displayTransferPrice}
                 </span>
               </div>
 
               {/* Airport Drop Fee - only show if present */}
-              {quote.pricing.breakdown.airportDropFee && quote.pricing.breakdown.airportDropFee > 0 && (
+              {quote.pricing.fees.airportDrop > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-base text-muted-foreground">Airport Drop Fee</span>
                   <span className="text-base font-semibold text-foreground">
-                    {formatCurrency(quote.pricing.breakdown.airportDropFee / 100)}
+                    {formatCurrency(quote.pricing.fees.airportDrop / 100)}
                   </span>
                 </div>
               )}
 
               {/* VAT - only show if VAT was applied */}
-              {quote.pricing.breakdown.vatAmount && quote.pricing.breakdown.vatAmount > 0 && (
+              {quote.pricing.fees.vat > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className="text-base text-muted-foreground">VAT @ {quote.pricing.breakdown.vatRate}%</span>
+                  <span className="text-base text-muted-foreground">VAT @ {quote.pricing.fees.vatRate}%</span>
                   <span className="text-base font-semibold text-foreground">
-                    {formatCurrency(quote.pricing.breakdown.vatAmount / 100)}
+                    {formatCurrency(quote.pricing.fees.vat / 100)}
                   </span>
                 </div>
               )}

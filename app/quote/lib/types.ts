@@ -48,26 +48,46 @@ export interface Waypoint extends Location {
 // Quote Request (POST /v1/quotes)
 export interface QuoteRequest {
   pickupLocation: Location;
-  dropoffLocation?: Location; // Optional for hourly journeys
-  waypoints?: Waypoint[]; // Changed from Location[] to support wait times
-  pickupTime: string; // ISO 8601 format
-  passengers: number; // 1-8
-  luggage?: number; // Number of bags
+  dropoffLocation?: Location;
+  waypoints?: Waypoint[];
+  pickupTime: string;
+  passengers: number;
+  luggage?: number;
   vehicleType: string;
   returnJourney?: boolean;
-  returnPickupTime?: string; // ISO 8601 format - return journey pickup time
-  journeyType?: JourneyType; // 'one-way' | 'hourly'
-  durationHours?: number; // Required for hourly journeys (2-6)
-  extras?: Extras; // Baby seats, child seats
+  returnPickupTime?: string;
+  journeyType?: JourneyType;
+  durationHours?: number;
+  extras?: Extras;
   contactDetails?: {
     name: string;
     email: string;
     phone: string;
   };
-  corpAccountId?: string; // Corporate account ID for discount application
+  corpAccountId?: string;
 }
 
-// Quote Response (from POST /v1/quotes)
+// ============================================
+// SIMPLIFIED PRICING TYPES
+// Frontend just displays pre-calculated values, no calculations needed
+// ============================================
+
+// Itemized fees for breakdown display
+export interface VehicleFees {
+  airportDrop: number;  // Pence (0 if not applicable)
+  vat: number;          // Pence (0 if VAT disabled)
+  vatRate: number;      // Percentage (0 if VAT disabled)
+}
+
+// Return journey discount info
+export interface ReturnDiscount {
+  percentage: number;
+  savings: number;
+  displaySavings: string;
+}
+
+// Quote Response (for single-vehicle quote after selection)
+// Used by QuoteResult and BookingConfirmation components
 export interface QuoteResponse {
   quoteId: string;
   status: 'valid' | 'expired';
@@ -87,29 +107,15 @@ export interface QuoteResponse {
       polyline: string | null;
     };
   };
+  // Simplified pricing structure
   pricing: {
     currency: 'GBP';
-    breakdown: {
-      baseFare: number; // pence
-      distanceCharge: number;
-      timeCharge?: number; // Legacy field (deprecated)
-      waitTimeCharge: number; // Wait time charge (v2.0)
-      subtotal: number;
-      tax: number;
-      total: number;
-      // Return journey fields (optional)
-      outboundLegPrice?: number; // Outbound leg price (for return trips)
-      returnLegPrice?: number; // Return leg price (for return trips)
-      returnDiscount?: number; // Return discount amount (pence)
-      corporateDiscount?: number; // Corporate discount amount (pence)
-      // VAT fields
-      vatRate?: number; // e.g., 20 for 20%
-      vatableAmount?: number; // Amount VAT was calculated on (pence)
-      vatAmount?: number; // VAT amount (pence)
-      // Airport fee
-      airportDropFee?: number; // Airport drop fee (pence)
-    };
-    displayTotal: string; // "£18.61"
+    transferPrice: number;        // Transfer charges only (pence)
+    displayTransferPrice: string; // Formatted
+    totalPrice: number;           // Everything included (pence)
+    displayTotal: string;         // Formatted
+    fees: VehicleFees;
+    discount?: ReturnDiscount;
   };
   vehicleType: string;
   vehicleDetails?: {
@@ -121,12 +127,12 @@ export interface QuoteResponse {
   };
   pickupLocation: Location;
   dropoffLocation: Location;
-  waypoints?: Waypoint[]; // Include waypoints in response
+  waypoints?: Waypoint[];
   pickupTime: string;
   passengers: number;
   luggage?: number;
   returnJourney: boolean;
-  returnPickupTime?: string; // ISO 8601 format - return journey pickup time
+  returnPickupTime?: string;
   journeyType?: JourneyType;
   durationHours?: number;
   extras?: Extras;
@@ -204,118 +210,77 @@ export interface ZonePricingResponse {
   count: number;
 }
 
+// Simplified pricing for one-way journeys
+export interface SimplifiedOneWayPricing {
+  transferPrice: number;        // Pence - transfer charges only
+  displayTransferPrice: string; // Formatted, e.g., "£99.20"
+  totalPrice: number;           // Pence - everything included
+  displayTotalPrice: string;    // Formatted, e.g., "£126.04"
+  fees: VehicleFees;
+}
+
+// Simplified pricing for return journeys (extends one-way)
+export interface SimplifiedReturnPricing extends SimplifiedOneWayPricing {
+  discount: ReturnDiscount;
+  originalTransferPrice: number;  // Pence - for strikethrough display
+  displayOriginalPrice: string;   // Formatted, e.g., "£198.40"
+}
+
+// ============================================
+// JOURNEY-LEVEL MODIFIERS
+// ============================================
+
+export interface SurgeModifier {
+  active: boolean;
+  multiplier: number;
+  rules: { name: string; multiplier: number }[];
+}
+
+export interface CorporateDiscountModifier {
+  active: boolean;
+  percentage: number;
+  accountName: string | null;
+}
+
+export interface VatModifier {
+  active: boolean;
+  rate: number;
+  vatNumber: string | null;
+}
+
+export interface AirportFeeModifier {
+  active: boolean;
+  amount: number;
+  airport: string | null;
+  code: string | null;
+}
+
+export interface PricingModifiers {
+  surge: SurgeModifier;
+  corporateDiscount: CorporateDiscountModifier;
+  vat: VatModifier;
+  airportFee: AirportFeeModifier;
+}
+
+// ============================================
+// VEHICLE PRICING (simplified structure)
+// ============================================
+
 // Vehicle pricing from compareMode response (matches backend response)
 export interface VehiclePricing {
-  // Vehicle info (flat, not nested)
+  // Vehicle metadata
   name: string;
   description: string;
   capacity: number;
   luggageCapacity?: number;
   features: string[];
   imageUrl: string;
-  // Pricing
-  oneWay: {
-    price: number;          // pence
-    displayPrice: string;   // "£35.00"
-    breakdown: {
-      baseFare: number;
-      distanceCharge: number;
-      waitTimeCharge: number;
-      subtotal: number;
-      tax: number;
-      total: number;
-      hourlyCharge?: number;
-      durationHours?: number;
-      // Surge pricing fields
-      basePriceBeforeSurge?: number;
-      surgeMultiplier?: number;
-      // Corp discount fields
-      corpDiscountPercent?: number;
-      corpDiscountAmount?: number;
-      subtotalAfterCorpDiscount?: number;
-      // VAT fields
-      vatRate?: number;
-      vatableAmount?: number;
-      vatAmount?: number;
-      // Airport fee fields
-      airportDropFee?: number;
-      airportCode?: string;
-    };
-    // Surge pricing indicators
-    isPeakPricing?: boolean;
-    surgeMultiplier?: number;
-    appliedSurgeRules?: { name: string; multiplier: number }[];
-    // VAT indicator
-    vatApplied?: boolean;
-    vatRate?: number;
-    vatNumber?: string | null;
-    // Airport fee indicator
-    airportFee?: {
-      amount: number;
-      airportName: string;
-      airportCode: string;
-    };
-  };
-  return: {
-    price: number;          // pence
-    displayPrice: string;   // "£70.00"
-    discount: {
-      percentage: number;
-      amount: number;
-    };
-    breakdown: {
-      baseFare: number;
-      distanceCharge: number;
-      waitTimeCharge: number;
-      subtotal: number;
-      discount: number;
-      tax: number;
-      total: number;
-      hourlyCharge?: number;
-      // Return journey breakdown fields (from API)
-      outboundLeg?: number;
-      outboundBreakdown?: {
-        baseFare: number;
-        distanceCharge: number;
-        waitTimeCharge: number;
-        hourlyCharge?: number;
-      };
-      returnLegBeforeDiscount?: number;
-      returnDiscountPercent?: number;
-      returnDiscountAmount?: number;
-      returnLegAfterDiscount?: number;
-      journeyTotal?: number;
-      // Surge pricing fields
-      basePriceBeforeSurge?: number;
-      surgeMultiplier?: number;
-      journeyTotalAfterSurge?: number;
-      // Corp discount fields
-      corpDiscountPercent?: number;
-      corpDiscountAmount?: number;
-      journeyTotalAfterCorpDiscount?: number;
-      // VAT fields
-      vatRate?: number;
-      vatableAmount?: number;
-      vatAmount?: number;
-      // Airport fee fields
-      airportDropFee?: number;
-      airportCode?: string;
-    };
-    // Surge pricing indicators
-    isPeakPricing?: boolean;
-    surgeMultiplier?: number;
-    appliedSurgeRules?: { name: string; multiplier: number }[];
-    // VAT indicator
-    vatApplied?: boolean;
-    vatRate?: number;
-    vatNumber?: string | null;
-    // Airport fee indicator
-    airportFee?: {
-      amount: number;
-      airportName: string;
-      airportCode: string;
-    };
-  };
+
+  // One-way pricing
+  oneWay: SimplifiedOneWayPricing;
+
+  // Return pricing
+  return: SimplifiedReturnPricing;
 }
 
 // Debug info for pricing engine
@@ -380,24 +345,31 @@ export interface MultiVehicleQuoteResponse {
   durationHours?: number;
   pickupTime: string;
   returnJourney?: boolean;
-  returnPickupTime?: string; // ISO 8601 format - return journey pickup time
+  returnPickupTime?: string;
   passengers: number;
   luggage?: number;
   extras?: Extras;
   createdAt: string;
   expiresAt?: string;
-  // Optional fields (not in backend response but may be needed by frontend)
+
+  // Journey-level modifiers (surge, VAT, airport fee, etc.)
+  modifiers: PricingModifiers;
+
+  // Optional fields
   quoteId?: string;
   status?: 'valid' | 'expired';
   waypoints?: Waypoint[];
-  totalWaitTime?: number; // Total wait time in minutes across all waypoints
+  totalWaitTime?: number;
+
   // Zone pricing info
   isZonePricing?: boolean;
   zoneName?: string;
   destinationName?: string;
-  // Service area flags - when true, booking should be blocked
+
+  // Service area flags
   outOfServiceArea?: boolean;
   outOfServiceAreaMessage?: string;
-  // Debug info for zone pricing testing (development only)
-  _debug?: ZonePricingDebugInfo;
+
+  // Debug info (development only)
+  _debug?: PricingEngineDebugInfo;
 }

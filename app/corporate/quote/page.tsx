@@ -271,8 +271,8 @@ function CorporateQuotePageContent() {
     const vehiclePricing = multiQuote.vehicles[vehicleId as keyof typeof multiQuote.vehicles];
     if (!vehiclePricing) return;
 
-    const priceInPence = isReturn ? vehiclePricing.return.price : vehiclePricing.oneWay.price;
-    const displayPrice = isReturn ? vehiclePricing.return.displayPrice : vehiclePricing.oneWay.displayPrice;
+    // Use simplified pricing structure
+    const pricing = isReturn ? vehiclePricing.return : vehiclePricing.oneWay;
 
     const finalQuote: QuoteResponse = {
       quoteId: multiQuote.quoteId || `quote-${Date.now()}`,
@@ -284,15 +284,12 @@ function CorporateQuotePageContent() {
       },
       pricing: {
         currency: 'GBP',
-        breakdown: {
-          baseFare: priceInPence,
-          distanceCharge: 0,
-          waitTimeCharge: 0,
-          subtotal: priceInPence,
-          tax: 0,
-          total: priceInPence,
-        },
-        displayTotal: displayPrice,
+        transferPrice: pricing.transferPrice,
+        displayTransferPrice: pricing.displayTransferPrice,
+        totalPrice: pricing.totalPrice,
+        displayTotal: pricing.displayTotalPrice,
+        fees: pricing.fees,
+        ...(isReturn && { discount: vehiclePricing.return.discount }),
       },
       vehicleType: vehicleId,
       vehicleDetails: {

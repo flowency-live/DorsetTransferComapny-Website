@@ -198,40 +198,26 @@ function QuotePageContent() {
     const vehiclePricing = multiQuote.vehicles[vehicleId as keyof typeof multiQuote.vehicles];
     if (!vehiclePricing) return;
 
-    // Use the API's pre-calculated prices directly - no UI-side calculations
-    // return.price already includes: outbound + discounted return + airport fee
-    const priceInPence = isReturn
-      ? vehiclePricing.return.price
-      : vehiclePricing.oneWay.price;
+    // Use the API's pre-calculated prices directly - simplified structure
+    const pricing = isReturn ? vehiclePricing.return : vehiclePricing.oneWay;
 
-    const displayPrice = isReturn
-      ? vehiclePricing.return.displayPrice
-      : vehiclePricing.oneWay.displayPrice;
-
-    // Use the actual breakdown from the API - don't construct our own
-    const apiBreakdown = isReturn
-      ? vehiclePricing.return.breakdown
-      : vehiclePricing.oneWay.breakdown;
-
-    // Pass through the API breakdown with the correct total
-    const breakdown = {
-      ...apiBreakdown,
-      total: priceInPence,
-    };
-
-    // Create the quote response for the booking flow
+    // Create the quote response for the booking flow using simplified pricing
     const quoteData: QuoteResponse = {
-      quoteId: '', // Will be assigned by backend
+      quoteId: '',
       status: 'valid',
-      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // 48 hours
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
       journey: {
         ...multiQuote.journey,
         route: { polyline: null },
       },
       pricing: {
         currency: 'GBP',
-        breakdown,
-        displayTotal: displayPrice,
+        transferPrice: pricing.transferPrice,
+        displayTransferPrice: pricing.displayTransferPrice,
+        totalPrice: pricing.totalPrice,
+        displayTotal: pricing.displayTotalPrice,
+        fees: pricing.fees,
+        ...(isReturn && { discount: vehiclePricing.return.discount }),
       },
       vehicleType: vehicleId,
       // Include vehicle details for display in QuoteResult
