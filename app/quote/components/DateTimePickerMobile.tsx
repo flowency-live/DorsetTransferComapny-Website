@@ -135,6 +135,7 @@ export default function DateTimePickerMobile({
             } focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground text-base cursor-pointer`}
             wrapperClassName="w-full"
             calendarClassName="shadow-2xl"
+            calendarStartDay={1}
             withPortal
             portalId="date-picker-portal"
           />

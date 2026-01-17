@@ -78,6 +78,7 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
           } focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground`}
           wrapperClassName="w-full"
           calendarClassName="shadow-2xl"
+          calendarStartDay={1}
           withPortal
           portalId="date-picker-portal"
         />
