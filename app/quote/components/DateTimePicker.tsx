@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
@@ -13,6 +13,8 @@ interface DateTimePickerProps {
 
 export default function DateTimePicker({ selectedDate, onChange, error }: DateTimePickerProps) {
   const inputRef = useRef<DatePicker>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const minDate = new Date();
   minDate.setHours(minDate.getHours() + 24); // Minimum 24 hours from now
@@ -20,15 +22,45 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
   const maxDate = new Date();
   maxDate.setMonth(maxDate.getMonth() + 6); // Maximum 6 months in advance
 
-  // Set inputMode to none on mount to prevent Android keyboard
+  // Detect mobile device
   useEffect(() => {
-    if (inputRef.current) {
+    const checkMobile = () => {
+      setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    };
+    checkMobile();
+  }, []);
+
+  // Set inputMode to none on mount to prevent Android keyboard (mobile only)
+  useEffect(() => {
+    if (inputRef.current && isMobile) {
       const input = (inputRef.current as unknown as { input: HTMLInputElement }).input;
       if (input) {
         input.setAttribute('inputmode', 'none');
       }
     }
-  }, []);
+  }, [isMobile]);
+
+  // Focus the calendar when it opens for keyboard navigation
+  useEffect(() => {
+    if (isOpen) {
+      // Give the portal time to render, then focus the calendar
+      const timer = setTimeout(() => {
+        const calendar = document.querySelector('.react-datepicker__month-container');
+        const selectedDay = document.querySelector('.react-datepicker__day--selected') as HTMLElement;
+        const todayDay = document.querySelector('.react-datepicker__day--today') as HTMLElement;
+        const firstSelectableDay = document.querySelector('.react-datepicker__day:not(.react-datepicker__day--disabled)') as HTMLElement;
+
+        // Focus the selected day, or today, or the first available day
+        const dayToFocus = selectedDay || todayDay || firstSelectableDay;
+        if (dayToFocus) {
+          dayToFocus.focus();
+        } else if (calendar) {
+          (calendar as HTMLElement).focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   const handleChange = (date: Date | null) => {
     if (date) {
@@ -44,11 +76,13 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
   };
 
   // Prevent mobile keyboard from appearing while still allowing picker to open
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    e.target.blur();
-    // Extra prevention for Android - set inputMode to none
-    e.target.setAttribute('inputmode', 'none');
-  };
+  // Only blur on mobile devices to preserve keyboard navigation on desktop
+  const handleFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
+    if (isMobile) {
+      e.target.blur();
+      e.target.setAttribute('inputmode', 'none');
+    }
+  }, [isMobile]);
 
   return (
     <div className="space-y-2">
@@ -72,6 +106,8 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
           filterTime={filterPassedTime}
           placeholderText="Select pickup date and time"
           onFocus={handleFocus}
+          onCalendarOpen={() => setIsOpen(true)}
+          onCalendarClose={() => setIsOpen(false)}
           autoComplete="off"
           className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
             error ? 'border-error' : 'border-border'
