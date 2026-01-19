@@ -40,26 +40,76 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
     }
   }, [isMobile]);
 
-  // Focus the calendar when it opens for keyboard navigation
+  // Focus trap and keyboard navigation when calendar opens
   useEffect(() => {
-    if (isOpen) {
-      // Give the portal time to render, then focus the calendar
-      const timer = setTimeout(() => {
-        const calendar = document.querySelector('.react-datepicker__month-container');
-        const selectedDay = document.querySelector('.react-datepicker__day--selected') as HTMLElement;
-        const todayDay = document.querySelector('.react-datepicker__day--today') as HTMLElement;
-        const firstSelectableDay = document.querySelector('.react-datepicker__day:not(.react-datepicker__day--disabled)') as HTMLElement;
+    if (!isOpen) return;
 
-        // Focus the selected day, or today, or the first available day
-        const dayToFocus = selectedDay || todayDay || firstSelectableDay;
-        if (dayToFocus) {
-          dayToFocus.focus();
-        } else if (calendar) {
-          (calendar as HTMLElement).focus();
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+    const setupFocusTrap = () => {
+      const portal = document.getElementById('date-picker-portal');
+      if (!portal) return;
+
+      // Find the calendar container within the portal
+      const calendarContainer = portal.querySelector('.react-datepicker') as HTMLElement;
+      if (!calendarContainer) return;
+
+      // Make the calendar container focusable and focus it
+      calendarContainer.setAttribute('tabindex', '-1');
+      calendarContainer.focus();
+
+      // Add tabindex to all day buttons so they're focusable
+      const dayButtons = portal.querySelectorAll('.react-datepicker__day:not(.react-datepicker__day--disabled)');
+      dayButtons.forEach((day) => {
+        day.setAttribute('tabindex', '0');
+      });
+
+      // Add tabindex to time list items
+      const timeItems = portal.querySelectorAll('.react-datepicker__time-list-item:not(.react-datepicker__time-list-item--disabled)');
+      timeItems.forEach((item) => {
+        item.setAttribute('tabindex', '0');
+      });
+
+      // Add tabindex to navigation buttons
+      const navButtons = portal.querySelectorAll('.react-datepicker__navigation');
+      navButtons.forEach((btn) => {
+        btn.setAttribute('tabindex', '0');
+      });
+
+      // Focus the selected day, today, or first available day
+      const selectedDay = portal.querySelector('.react-datepicker__day--selected') as HTMLElement;
+      const todayDay = portal.querySelector('.react-datepicker__day--today:not(.react-datepicker__day--disabled)') as HTMLElement;
+      const firstDay = portal.querySelector('.react-datepicker__day:not(.react-datepicker__day--disabled)') as HTMLElement;
+
+      const dayToFocus = selectedDay || todayDay || firstDay;
+      if (dayToFocus) {
+        dayToFocus.focus();
+      }
+    };
+
+    // Wait for portal to render
+    const timer = setTimeout(setupFocusTrap, 50);
+
+    // Also set up a mutation observer to handle month changes
+    const portal = document.getElementById('date-picker-portal');
+    let observer: MutationObserver | null = null;
+
+    if (portal) {
+      observer = new MutationObserver(() => {
+        // Re-apply tabindex when calendar content changes (e.g., month navigation)
+        const dayButtons = portal.querySelectorAll('.react-datepicker__day:not(.react-datepicker__day--disabled)');
+        dayButtons.forEach((day) => {
+          if (!day.hasAttribute('tabindex')) {
+            day.setAttribute('tabindex', '0');
+          }
+        });
+      });
+
+      observer.observe(portal, { childList: true, subtree: true });
     }
+
+    return () => {
+      clearTimeout(timer);
+      if (observer) observer.disconnect();
+    };
   }, [isOpen]);
 
   const handleChange = (date: Date | null) => {
