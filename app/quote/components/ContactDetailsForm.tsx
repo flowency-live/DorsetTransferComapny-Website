@@ -15,9 +15,10 @@ interface ContactDetailsFormProps {
   onSubmit: (details: ContactDetails) => void;
   onBack: () => void;
   initialValues?: ContactDetails;
+  submitLabel?: string;
 }
 
-export default function ContactDetailsForm({ onSubmit, onBack, initialValues }: ContactDetailsFormProps) {
+export default function ContactDetailsForm({ onSubmit, onBack, initialValues, submitLabel = 'Continue to Payment' }: ContactDetailsFormProps) {
   const [name, setName] = useState(initialValues?.name || '');
   const [email, setEmail] = useState(initialValues?.email || '');
   const [phone, setPhone] = useState(initialValues?.phone || '');
@@ -222,7 +223,7 @@ export default function ContactDetailsForm({ onSubmit, onBack, initialValues }: 
               onClick={handleSubmit}
               className="flex-1"
             >
-              Continue to Payment
+              {submitLabel}
             </Button>
           </div>
         </div>

@@ -567,6 +567,7 @@ function CorporateQuotePageContent() {
               onSubmit={handleContactSubmit}
               onBack={handleContactBack}
               initialValues={contactDetails || undefined}
+              submitLabel={isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
             />
 
             {isPayOnAccount && (
