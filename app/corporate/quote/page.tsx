@@ -20,7 +20,7 @@ import LoadingState from '../../quote/components/LoadingState';
 import PaymentForm, { PaymentDetails } from '../../quote/components/PaymentForm';
 import QuoteResult from '../../quote/components/QuoteResult';
 import VehicleComparisonGrid from '../../quote/components/VehicleComparisonGrid';
-import { calculateMultiVehicleQuote } from '../../quote/lib/api';
+import { calculateMultiVehicleQuote, saveQuote } from '../../quote/lib/api';
 import { Extras, JourneyType, QuoteResponse, Location, Waypoint, MultiVehicleQuoteResponse } from '../../quote/lib/types';
 
 type Step = 1 | 2;
@@ -95,6 +95,7 @@ function CorporateQuotePageContent() {
   const [bookingId, setBookingId] = useState<string>('');
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [magicToken, setMagicToken] = useState<string | null>(null);
 
   // Fetch company data on mount
   useEffect(() => {
@@ -265,7 +266,7 @@ function CorporateQuotePageContent() {
     setCurrentStep(1);
   };
 
-  const handleVehicleSelect = (vehicleId: string, isReturn: boolean) => {
+  const handleVehicleSelect = async (vehicleId: string, isReturn: boolean) => {
     if (!multiQuote) return;
 
     const vehiclePricing = multiQuote.vehicles[vehicleId as keyof typeof multiQuote.vehicles];
@@ -274,7 +275,7 @@ function CorporateQuotePageContent() {
     // Use simplified pricing structure
     const pricing = isReturn ? vehiclePricing.return : vehiclePricing.oneWay;
 
-    const finalQuote: QuoteResponse = {
+    const quoteData: QuoteResponse = {
       quoteId: multiQuote.quoteId || `quote-${Date.now()}`,
       status: multiQuote.status || 'valid',
       expiresAt: multiQuote.expiresAt || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // 48 hours
@@ -312,7 +313,22 @@ function CorporateQuotePageContent() {
       createdAt: multiQuote.createdAt,
     };
 
-    setQuote(finalQuote);
+    // Save the quote to get a magicToken for booking
+    try {
+      const savedQuote = await saveQuote(quoteData);
+      const finalQuote: QuoteResponse = {
+        ...quoteData,
+        quoteId: savedQuote.quoteId,
+      };
+      setQuote(finalQuote);
+      setMagicToken(savedQuote.token);
+    } catch (err) {
+      // If save fails, still allow user to see quote but booking won't work
+      console.error('Failed to save quote:', err);
+      setQuote(quoteData);
+      setMagicToken(null);
+      setError('Quote could not be saved. Please try again.');
+    }
   };
 
   const handleNewQuote = () => {
@@ -338,6 +354,7 @@ function CorporateQuotePageContent() {
     setBookingStage('quote');
     setPaymentDetails(null);
     setBookingId('');
+    setMagicToken(null);
   };
 
   // Booking flow handlers
@@ -353,7 +370,7 @@ function CorporateQuotePageContent() {
 
     if (isPayOnAccount) {
       // Skip payment, go straight to creating the booking
-      handleCreateBooking(details, null);
+      handleCreateBooking(details);
     } else {
       setBookingStage('payment');
     }
@@ -365,16 +382,21 @@ function CorporateQuotePageContent() {
 
   const handlePaymentSubmit = async (details: PaymentDetails) => {
     setPaymentDetails(details);
-    await handleCreateBooking(contactDetails!, details);
+    await handleCreateBooking(contactDetails!);
   };
 
-  const handleCreateBooking = async (contact: ContactDetails, payment: PaymentDetails | null) => {
+  const handleCreateBooking = async (contact: ContactDetails) => {
     setBookingLoading(true);
     setBookingError(null);
 
     try {
       if (!quote) {
         throw new Error('Missing quote');
+      }
+
+      // CRITICAL: Ensure magicToken is available for booking
+      if (!magicToken || !quote.quoteId) {
+        throw new Error('Quote session expired. Please start a new quote.');
       }
 
       // CRITICAL: Ensure corporate account ID is available
@@ -386,7 +408,8 @@ function CorporateQuotePageContent() {
       const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
 
       const bookingData = {
-        ...(quote.quoteId && { quoteId: quote.quoteId }),
+        quoteId: quote.quoteId,
+        magicToken: magicToken,
         customerName: contact.name,
         customerEmail: contact.email,
         customerPhone: contact.phone,
@@ -394,21 +417,8 @@ function CorporateQuotePageContent() {
         corporateAccountId: user.corpAccountId,
         passengerName: passengerName || contact.name,
         bookedBy: user?.email,
-        // Journey details
-        pickupLocation: quote.pickupLocation,
-        dropoffLocation: quote.dropoffLocation,
-        waypoints: quote.waypoints,
-        pickupTime: quote.pickupTime,
-        passengers: quote.passengers,
-        luggage: quote.luggage,
-        vehicleType: quote.vehicleType,
-        pricing: quote.pricing,
-        journey: quote.journey,
-        returnJourney: quote.returnJourney,
         // Payment
         paymentMethod: isPayOnAccount ? 'invoice' : 'card',
-        paymentStatus: isPayOnAccount ? 'on_account' : 'pending',
-        paymentTerms: company?.paymentTerms,
         specialRequests: specialRequests || '',
       };
 
