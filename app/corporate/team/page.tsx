@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, AlertTriangle, CheckCircle, Copy } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getTeamMembers,
@@ -44,6 +46,13 @@ export default function CorporateTeamPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successResult, setSuccessResult] = useState<AddMemberResult | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; userId: string; name: string } | null>(null);
+  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     if (user && !isAdmin) {
@@ -93,21 +102,27 @@ export default function CorporateTeamPage() {
     try {
       await updateTeamMember(userId, { role: newRole });
       setMembers(members.map((m) => (m.userId === userId ? { ...m, role: newRole } : m)));
+      showToast('Role updated successfully');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update role');
+      showToast(err instanceof Error ? err.message : 'Failed to update role', 'error');
     }
   };
 
-  const handleRemoveMember = async (userId: string, name: string) => {
-    if (!confirm(`Are you sure you want to remove ${name} from the team?`)) {
-      return;
-    }
+  const handleRemoveClick = (userId: string, name: string) => {
+    setConfirmDialog({ show: true, userId, name });
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!confirmDialog) return;
 
     try {
-      await removeTeamMember(userId);
-      setMembers(members.filter((m) => m.userId !== userId));
+      await removeTeamMember(confirmDialog.userId);
+      setMembers(members.filter((m) => m.userId !== confirmDialog.userId));
+      showToast('Team member removed successfully');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to remove team member');
+      showToast(err instanceof Error ? err.message : 'Failed to remove team member', 'error');
+    } finally {
+      setConfirmDialog(null);
     }
   };
 
@@ -121,10 +136,10 @@ export default function CorporateTeamPage() {
           message: result.message,
         });
       } else {
-        alert(result.message || 'Failed to resend invite');
+        showToast(result.message || 'Failed to resend invite', 'error');
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to resend invite');
+      showToast(err instanceof Error ? err.message : 'Failed to resend invite', 'error');
     }
   };
 
@@ -151,6 +166,13 @@ export default function CorporateTeamPage() {
         <div className="container mx-auto px-4 md:px-6">
           {/* Page Header */}
           <div className="mb-8">
+            <Link
+              href="/corporate/dashboard"
+              className="inline-flex items-center text-sm text-navy-light/70 hover:text-sage transition-colors mb-3"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back to Dashboard
+            </Link>
             <h1 className="text-2xl font-bold text-navy">Team Members</h1>
             <p className="text-navy-light/70 mt-1">
               Manage who can book transfers on behalf of your company
@@ -255,7 +277,7 @@ export default function CorporateTeamPage() {
                                 </button>
                               )}
                               <button
-                                onClick={() => handleRemoveMember(member.userId, member.name)}
+                                onClick={() => handleRemoveClick(member.userId, member.name)}
                                 className="text-red-600 hover:text-red-800 font-medium"
                               >
                                 Remove
@@ -393,9 +415,7 @@ export default function CorporateTeamPage() {
             <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
               <div className="text-center mb-4">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-sage/20 mb-4">
-                  <svg className="h-6 w-6 text-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <CheckCircle className="h-6 w-6 text-sage" />
                 </div>
                 <h3 className="text-lg font-semibold text-navy">Team Member Added!</h3>
                 <p className="text-sm text-navy-light/70 mt-2">
@@ -419,10 +439,11 @@ export default function CorporateTeamPage() {
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(successResult.magicLink!);
-                        alert('Link copied to clipboard!');
+                        showToast('Link copied to clipboard!');
                       }}
-                      className="px-3 py-1.5 text-xs font-medium text-sage border border-sage rounded hover:bg-sage/10 transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium text-sage border border-sage rounded hover:bg-sage/10 transition-colors flex items-center gap-1"
                     >
+                      <Copy className="w-3 h-3" />
                       Copy
                     </button>
                   </div>
@@ -439,6 +460,59 @@ export default function CorporateTeamPage() {
                 Done
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog?.show && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-navy/50 transition-opacity"
+              onClick={() => setConfirmDialog(null)}
+            />
+            <div className="relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+              <div className="text-center mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-navy">Remove Team Member?</h3>
+                <p className="text-sm text-navy-light/70 mt-2">
+                  Are you sure you want to remove <strong>{confirmDialog.name}</strong> from the team? They will no longer be able to book transfers.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmDialog(null)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-navy bg-white border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmRemove}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-full hover:bg-red-700 transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast?.show && (
+        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${
+            toast.type === 'success' ? 'bg-sage text-white' : 'bg-red-600 text-white'
+          }`}>
+            {toast.type === 'success' ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5" />
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
           </div>
         </div>
       )}
