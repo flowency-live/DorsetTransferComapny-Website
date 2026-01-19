@@ -514,6 +514,7 @@ function VehiclesTab({
   const [vehicleType, setVehicleType] = useState<'standard' | 'executive' | 'minibus'>('standard');
   const [isAdding, setIsAdding] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; action: 'removeVehicle' | 'removePhoto'; vehicleId?: string; photoUrl?: string } | null>(null);
 
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -536,8 +537,14 @@ function VehiclesTab({
     }
   };
 
-  const handleRemoveVehicle = async (vrn: string) => {
-    if (!confirm('Are you sure you want to remove this vehicle?')) return;
+  const handleRemoveVehicleClick = (vrn: string) => {
+    setConfirmDialog({ show: true, action: 'removeVehicle', vehicleId: vrn });
+  };
+
+  const handleConfirmRemoveVehicle = async () => {
+    if (!confirmDialog?.vehicleId) return;
+    const vrn = confirmDialog.vehicleId;
+    setConfirmDialog(null);
 
     try {
       const result = await removeVehicle(vrn);
@@ -609,8 +616,15 @@ function VehiclesTab({
     }
   };
 
-  const handleRemovePhoto = async (vrn: string, photoUrl: string) => {
-    if (!confirm('Remove this photo?')) return;
+  const handleRemovePhotoClick = (vrn: string, photoUrl: string) => {
+    setConfirmDialog({ show: true, action: 'removePhoto', vehicleId: vrn, photoUrl });
+  };
+
+  const handleConfirmRemovePhoto = async () => {
+    if (!confirmDialog?.vehicleId || !confirmDialog?.photoUrl) return;
+    const vrn = confirmDialog.vehicleId;
+    const photoUrl = confirmDialog.photoUrl;
+    setConfirmDialog(null);
 
     try {
       setUploadingPhoto(vrn);
@@ -784,7 +798,7 @@ function VehiclesTab({
                           className="w-16 h-16 object-cover rounded-lg border border-gray-200"
                         />
                         <button
-                          onClick={() => handleRemovePhoto(vehicle.vrn, photo)}
+                          onClick={() => handleRemovePhotoClick(vehicle.vrn, photo)}
                           className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           &times;
@@ -807,7 +821,7 @@ function VehiclesTab({
 
               <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
                 <button
-                  onClick={() => handleRemoveVehicle(vehicle.vrn)}
+                  onClick={() => handleRemoveVehicleClick(vehicle.vrn)}
                   className="text-sm text-red-600 hover:text-red-800"
                 >
                   Remove vehicle
@@ -825,6 +839,43 @@ function VehiclesTab({
             </p>
           </div>
         )
+      )}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog?.show && (
+        <div className="fixed inset-0 bg-navy/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <div className="text-center mb-4">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-navy mb-2">
+                {confirmDialog.action === 'removeVehicle' ? 'Remove Vehicle?' : 'Remove Photo?'}
+              </h3>
+              <p className="text-sm text-navy-light/70">
+                {confirmDialog.action === 'removeVehicle'
+                  ? 'Are you sure you want to remove this vehicle? This action cannot be undone.'
+                  : 'Are you sure you want to remove this photo?'}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-navy bg-white border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDialog.action === 'removeVehicle' ? handleConfirmRemoveVehicle : handleConfirmRemovePhoto}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-full hover:bg-red-700 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1361,6 +1412,7 @@ function DocumentsTab({
   setError: (e: string) => void;
 }) {
   const [uploading, setUploading] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; documentId: string } | null>(null);
 
   const documentTypes: { type: DriverDocument['documentType']; label: string; description: string }[] = [
     {
@@ -1461,8 +1513,14 @@ function DocumentsTab({
     }
   };
 
-  const handleDelete = async (documentId: string) => {
-    if (!confirm('Are you sure you want to delete this document?')) return;
+  const handleDeleteClick = (documentId: string) => {
+    setConfirmDialog({ show: true, documentId });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDialog?.documentId) return;
+    const documentId = confirmDialog.documentId;
+    setConfirmDialog(null);
 
     try {
       const result = await deleteDocument(documentId);
@@ -1535,7 +1593,7 @@ function DocumentsTab({
                     {isUploading ? 'Uploading...' : 'Replace document'}
                   </label>
                   <button
-                    onClick={() => handleDelete(doc.documentId)}
+                    onClick={() => handleDeleteClick(doc.documentId)}
                     className="text-sm text-red-600 hover:text-red-800"
                   >
                     Delete
@@ -1569,6 +1627,37 @@ function DocumentsTab({
           </div>
         );
       })}
+
+      {/* Confirmation Dialog */}
+      {confirmDialog?.show && (
+        <div className="fixed inset-0 bg-navy/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <div className="text-center mb-4">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-navy mb-2">Delete Document?</h3>
+              <p className="text-sm text-navy-light/70">Are you sure you want to delete this document? This action cannot be undone.</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDialog(null)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-navy bg-white border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-full hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

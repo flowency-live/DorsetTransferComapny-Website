@@ -49,6 +49,7 @@ export default function LocationInput({
   const [showAllLocations, setShowAllLocations] = useState(false);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [locationError, setLocationError] = useState<string>('');
   const timeoutRef = useRef<NodeJS.Timeout>();
   const containerRef = useRef<HTMLDivElement>(null);
   const internalInputRef = useRef<HTMLInputElement>(null);
@@ -254,11 +255,13 @@ export default function LocationInput({
 
   const handleUseCurrentLocation = async () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
+      setLocationError('Geolocation is not supported by your browser');
+      setTimeout(() => setLocationError(''), 5000);
       return;
     }
 
     setGettingLocation(true);
+    setLocationError('');
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -284,7 +287,8 @@ export default function LocationInput({
           }
         } catch (err) {
           console.error('Geocoding error:', err);
-          alert(err instanceof Error ? err.message : 'Failed to get address from your location');
+          setLocationError(err instanceof Error ? err.message : 'Failed to get address from your location');
+          setTimeout(() => setLocationError(''), 5000);
         } finally {
           setGettingLocation(false);
         }
@@ -305,7 +309,8 @@ export default function LocationInput({
             break;
         }
 
-        alert(message);
+        setLocationError(message);
+        setTimeout(() => setLocationError(''), 5000);
         setGettingLocation(false);
       },
       {
@@ -448,6 +453,12 @@ export default function LocationInput({
 
       {error && (
         <p className="text-sm text-error">{error}</p>
+      )}
+
+      {locationError && (
+        <div className="rounded-md bg-red-50 border border-red-200 p-3">
+          <p className="text-sm text-red-800">{locationError}</p>
+        </div>
       )}
     </div>
   );
