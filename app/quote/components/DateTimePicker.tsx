@@ -13,7 +13,6 @@ interface DateTimePickerProps {
 
 export default function DateTimePicker({ selectedDate, onChange, error }: DateTimePickerProps) {
   const inputRef = useRef<DatePicker>(null);
-  const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const minDate = new Date();
@@ -39,78 +38,6 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
       }
     }
   }, [isMobile]);
-
-  // Focus trap and keyboard navigation when calendar opens
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const setupFocusTrap = () => {
-      const portal = document.getElementById('date-picker-portal');
-      if (!portal) return;
-
-      // Find the calendar container within the portal
-      const calendarContainer = portal.querySelector('.react-datepicker') as HTMLElement;
-      if (!calendarContainer) return;
-
-      // Make the calendar container focusable and focus it
-      calendarContainer.setAttribute('tabindex', '-1');
-      calendarContainer.focus();
-
-      // Add tabindex to all day buttons so they're focusable
-      const dayButtons = portal.querySelectorAll('.react-datepicker__day:not(.react-datepicker__day--disabled)');
-      dayButtons.forEach((day) => {
-        day.setAttribute('tabindex', '0');
-      });
-
-      // Add tabindex to time list items
-      const timeItems = portal.querySelectorAll('.react-datepicker__time-list-item:not(.react-datepicker__time-list-item--disabled)');
-      timeItems.forEach((item) => {
-        item.setAttribute('tabindex', '0');
-      });
-
-      // Add tabindex to navigation buttons
-      const navButtons = portal.querySelectorAll('.react-datepicker__navigation');
-      navButtons.forEach((btn) => {
-        btn.setAttribute('tabindex', '0');
-      });
-
-      // Focus the selected day, today, or first available day
-      const selectedDay = portal.querySelector('.react-datepicker__day--selected') as HTMLElement;
-      const todayDay = portal.querySelector('.react-datepicker__day--today:not(.react-datepicker__day--disabled)') as HTMLElement;
-      const firstDay = portal.querySelector('.react-datepicker__day:not(.react-datepicker__day--disabled)') as HTMLElement;
-
-      const dayToFocus = selectedDay || todayDay || firstDay;
-      if (dayToFocus) {
-        dayToFocus.focus();
-      }
-    };
-
-    // Wait for portal to render
-    const timer = setTimeout(setupFocusTrap, 50);
-
-    // Also set up a mutation observer to handle month changes
-    const portal = document.getElementById('date-picker-portal');
-    let observer: MutationObserver | null = null;
-
-    if (portal) {
-      observer = new MutationObserver(() => {
-        // Re-apply tabindex when calendar content changes (e.g., month navigation)
-        const dayButtons = portal.querySelectorAll('.react-datepicker__day:not(.react-datepicker__day--disabled)');
-        dayButtons.forEach((day) => {
-          if (!day.hasAttribute('tabindex')) {
-            day.setAttribute('tabindex', '0');
-          }
-        });
-      });
-
-      observer.observe(portal, { childList: true, subtree: true });
-    }
-
-    return () => {
-      clearTimeout(timer);
-      if (observer) observer.disconnect();
-    };
-  }, [isOpen]);
 
   const handleChange = (date: Date | null) => {
     if (date) {
@@ -156,17 +83,13 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
           filterTime={filterPassedTime}
           placeholderText="Select pickup date and time"
           onFocus={handleFocus}
-          onCalendarOpen={() => setIsOpen(true)}
-          onCalendarClose={() => setIsOpen(false)}
           autoComplete="off"
           className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
             error ? 'border-error' : 'border-border'
           } focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground`}
           wrapperClassName="w-full"
-          calendarClassName="shadow-2xl"
+          popperClassName="z-50 shadow-2xl"
           calendarStartDay={1}
-          withPortal
-          portalId="date-picker-portal"
         />
       </div>
       {error && (
