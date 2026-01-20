@@ -9,6 +9,8 @@ interface DateTimePickerProps {
   selectedDate: Date | null;
   onChange: (date: Date) => void;
   error?: string;
+  label?: string;
+  minDate?: Date;
 }
 
 // Generate hour options (1-12)
@@ -17,13 +19,23 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 // Generate minute options in 30-minute intervals
 const MINUTES = [0, 30];
 
-export default function DateTimePicker({ selectedDate, onChange, error }: DateTimePickerProps) {
+export default function DateTimePicker({
+  selectedDate,
+  onChange,
+  error,
+  label = 'Pickup Date & Time',
+  minDate: propMinDate,
+}: DateTimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const minDate = new Date();
-  minDate.setHours(minDate.getHours() + 24); // Minimum 24 hours from now
+  // Default minimum is 24 hours from now
+  const defaultMinDate = new Date();
+  defaultMinDate.setHours(defaultMinDate.getHours() + 24);
+
+  // Use prop minDate if provided, otherwise use default (24h from now)
+  const minDate = propMinDate || defaultMinDate;
 
   const maxDate = addMonths(new Date(), 6); // Maximum 6 months in advance
 
@@ -141,7 +153,7 @@ export default function DateTimePicker({ selectedDate, onChange, error }: DateTi
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-foreground">
-        Pickup Date & Time *
+        {label} *
       </label>
 
       {/* Trigger Button */}
