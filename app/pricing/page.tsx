@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, ArrowRight, Car, Crown, Users, Bus } from 'lucide-react';
+import { MapPin, ArrowRight, Car, Crown, Users, Bus, Bike, Truck, Plane, Ship } from 'lucide-react';
 import Link from 'next/link';
 import { ReactNode, useEffect, useState } from 'react';
 
@@ -15,8 +15,29 @@ function formatPrice(pence: number): string {
   return `£${(pence / 100).toFixed(0)}`;
 }
 
-// Vehicle icon mapping based on vehicle ID
-function getVehicleIcon(vehicleId: string): ReactNode {
+// Icon mapping based on iconType from API
+// Supported: car, crown, users, bus, bike, truck, plane, ship
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  car: Car,
+  crown: Crown,
+  users: Users,
+  bus: Bus,
+  bike: Bike,
+  truck: Truck,
+  plane: Plane,
+  ship: Ship,
+};
+
+// Vehicle icon based on iconType from API (with vehicleId fallback for backwards compatibility)
+function getVehicleIcon(iconType?: string, vehicleId?: string): ReactNode {
+  // Use iconType from API if available
+  if (iconType && ICON_MAP[iconType]) {
+    const IconComponent = ICON_MAP[iconType];
+    const colorClass = getIconColorClass(iconType);
+    return <IconComponent className={`w-5 h-5 mx-auto ${colorClass} mb-1`} />;
+  }
+
+  // Fallback to vehicleId-based mapping for backwards compatibility
   switch (vehicleId) {
     case 'executive':
       return <Crown className="w-5 h-5 mx-auto text-gold mb-1" />;
@@ -28,6 +49,20 @@ function getVehicleIcon(vehicleId: string): ReactNode {
       return <Bus className="w-5 h-5 mx-auto text-navy mb-1" />;
     default:
       return <Car className="w-5 h-5 mx-auto text-muted-foreground mb-1" />;
+  }
+}
+
+// Color class based on icon type
+function getIconColorClass(iconType: string): string {
+  switch (iconType) {
+    case 'crown':
+      return 'text-gold';
+    case 'bus':
+    case 'plane':
+    case 'ship':
+      return 'text-navy';
+    default:
+      return 'text-sage-dark';
   }
 }
 
@@ -204,7 +239,7 @@ export default function PricingPage() {
                           key={vehicle.vehicleTypeId}
                           className={`text-center p-3 ${getVehicleBgColor(vehicle.vehicleTypeId)} rounded-lg`}
                         >
-                          {getVehicleIcon(vehicle.vehicleTypeId)}
+                          {getVehicleIcon(vehicle.iconType, vehicle.vehicleTypeId)}
                           <p className="text-xs text-muted-foreground mb-1">{vehicle.name}</p>
                           <p className={`text-lg font-bold ${getVehicleTextColor(vehicle.vehicleTypeId)}`}>
                             {route.prices[vehicle.vehicleTypeId]

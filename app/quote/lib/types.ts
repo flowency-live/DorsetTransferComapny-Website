@@ -37,6 +37,7 @@ export interface VehicleType {
   features: string[];
   imageUrl: string;
   sortOrder?: number;
+  iconType?: string;  // Lucide icon type: car, crown, users, bus, bike, truck, plane, ship
 }
 
 export interface VehicleTypesResponse {
