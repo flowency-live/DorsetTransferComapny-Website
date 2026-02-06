@@ -1,7 +1,7 @@
 // Quote Wizard API Client
 // Based on QUOTE_WIZARD_IMPLEMENTATION_SPEC.md
 
-import { QuoteRequest, QuoteResponse, Vehicle, ApiError, FixedRoute, FixedRoutesResponse, MultiVehicleQuoteResponse, ZonePricingRoute, ZonePricingResponse } from './types';
+import { QuoteRequest, QuoteResponse, Vehicle, ApiError, FixedRoute, FixedRoutesResponse, MultiVehicleQuoteResponse, ZonePricingRoute, ZonePricingResponse, VehicleType, VehicleTypesResponse } from './types';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
 import { getTenantHeaders } from '@/lib/config/tenant';
@@ -41,6 +41,7 @@ export async function calculateQuote(request: QuoteRequest): Promise<QuoteRespon
 /**
  * Get list of available vehicles
  * @returns Array of active vehicles with images and pricing
+ * @deprecated Use getVehicleTypes() instead
  */
 export async function getVehicles(): Promise<Vehicle[]> {
   const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.vehicleTypes}`, {
@@ -57,6 +58,33 @@ export async function getVehicles(): Promise<Vehicle[]> {
 
   const data = await response.json();
   return data.vehicles;
+}
+
+/**
+ * Get list of vehicle types for tenant
+ * @returns Array of active vehicle types sorted by sortOrder
+ */
+export async function getVehicleTypes(): Promise<VehicleType[]> {
+  const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.vehicleTypes}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json', ...getTenantHeaders(),
+    },
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch vehicle types';
+    try {
+      const error: ApiError = await response.json();
+      errorMessage = error.error?.message || errorMessage;
+    } catch {
+      errorMessage = `Server error (${response.status}): ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data: VehicleTypesResponse = await response.json();
+  return data.vehicleTypes;
 }
 
 /**

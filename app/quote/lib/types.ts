@@ -28,6 +28,22 @@ export interface Vehicle {
   active: boolean;
 }
 
+// Vehicle Type from /v2/vehicle-types endpoint
+export interface VehicleType {
+  vehicleTypeId: string;
+  name: string;
+  description: string;
+  capacity: number;
+  features: string[];
+  imageUrl: string;
+  sortOrder?: number;
+}
+
+export interface VehicleTypesResponse {
+  vehicleTypes: VehicleType[];
+  count: number;
+}
+
 // Location Type
 export type LocationType = 'airport' | 'train_station' | 'standard';
 

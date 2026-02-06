@@ -1,30 +1,83 @@
 'use client';
 
-import { MapPin, ArrowRight, Car, Crown, Users } from 'lucide-react';
+import { MapPin, ArrowRight, Car, Crown, Users, Bus } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 import Header from '@/components/shared/Header';
 import { buttonVariants } from '@/components/ui/button';
 
-import { getZonePricing } from '../quote/lib/api';
-import { ZonePricingRoute } from '../quote/lib/types';
+import { getZonePricing, getVehicleTypes } from '../quote/lib/api';
+import { ZonePricingRoute, VehicleType } from '../quote/lib/types';
 
 // Format price from pence to pounds
 function formatPrice(pence: number): string {
   return `£${(pence / 100).toFixed(0)}`;
 }
 
+// Vehicle icon mapping based on vehicle ID
+function getVehicleIcon(vehicleId: string): ReactNode {
+  switch (vehicleId) {
+    case 'executive':
+      return <Crown className="w-5 h-5 mx-auto text-gold mb-1" />;
+    case 'standard':
+      return <Car className="w-5 h-5 mx-auto text-sage-dark mb-1" />;
+    case 'people-carrier':
+      return <Users className="w-5 h-5 mx-auto text-sage-dark mb-1" />;
+    case 'minibus':
+      return <Bus className="w-5 h-5 mx-auto text-navy mb-1" />;
+    default:
+      return <Car className="w-5 h-5 mx-auto text-muted-foreground mb-1" />;
+  }
+}
+
+// Vehicle background color mapping
+function getVehicleBgColor(vehicleId: string): string {
+  switch (vehicleId) {
+    case 'executive':
+      return 'bg-gold/10';
+    case 'standard':
+      return 'bg-sage-light/20';
+    case 'people-carrier':
+      return 'bg-sage-light/20';
+    case 'minibus':
+      return 'bg-navy/10';
+    default:
+      return 'bg-muted/20';
+  }
+}
+
+// Vehicle text color mapping
+function getVehicleTextColor(vehicleId: string): string {
+  switch (vehicleId) {
+    case 'executive':
+      return 'text-gold';
+    case 'standard':
+      return 'text-sage-dark';
+    case 'people-carrier':
+      return 'text-sage-dark';
+    case 'minibus':
+      return 'text-navy';
+    default:
+      return 'text-foreground';
+  }
+}
+
 export default function PricingPage() {
   const [routes, setRoutes] = useState<ZonePricingRoute[]>([]);
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadRoutes() {
+    async function loadData() {
       try {
-        const data = await getZonePricing();
-        setRoutes(data);
+        const [routesData, vehiclesData] = await Promise.all([
+          getZonePricing(),
+          getVehicleTypes(),
+        ]);
+        setRoutes(routesData);
+        setVehicleTypes(vehiclesData);
         setLoading(false);
       } catch {
         setError('Failed to load pricing information');
@@ -32,7 +85,7 @@ export default function PricingPage() {
       }
     }
 
-    loadRoutes();
+    loadData();
   }, []);
 
   // Group routes by zone name
@@ -144,32 +197,22 @@ export default function PricingPage() {
                       </div>
                     </div>
 
-                    {/* Vehicle Prices Grid */}
-                    <div className="grid grid-cols-3 gap-3 mb-5">
-                      {/* Standard */}
-                      <div className="text-center p-3 bg-sage-light/20 rounded-lg">
-                        <Car className="w-5 h-5 mx-auto text-sage-dark mb-1" />
-                        <p className="text-xs text-muted-foreground mb-1">Standard</p>
-                        <p className="text-lg font-bold text-sage-dark">
-                          {formatPrice(route.prices.standard.outbound)}
-                        </p>
-                      </div>
-                      {/* Executive */}
-                      <div className="text-center p-3 bg-gold/10 rounded-lg">
-                        <Crown className="w-5 h-5 mx-auto text-gold mb-1" />
-                        <p className="text-xs text-muted-foreground mb-1">Executive</p>
-                        <p className="text-lg font-bold text-gold">
-                          {formatPrice(route.prices.executive.outbound)}
-                        </p>
-                      </div>
-                      {/* Minibus */}
-                      <div className="text-center p-3 bg-navy/10 rounded-lg">
-                        <Users className="w-5 h-5 mx-auto text-navy mb-1" />
-                        <p className="text-xs text-muted-foreground mb-1">Minibus</p>
-                        <p className="text-lg font-bold text-navy">
-                          {formatPrice(route.prices.minibus.outbound)}
-                        </p>
-                      </div>
+                    {/* Vehicle Prices Grid - Dynamic based on tenant vehicle types */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                      {vehicleTypes.map((vehicle) => (
+                        <div
+                          key={vehicle.vehicleTypeId}
+                          className={`text-center p-3 ${getVehicleBgColor(vehicle.vehicleTypeId)} rounded-lg`}
+                        >
+                          {getVehicleIcon(vehicle.vehicleTypeId)}
+                          <p className="text-xs text-muted-foreground mb-1">{vehicle.name}</p>
+                          <p className={`text-lg font-bold ${getVehicleTextColor(vehicle.vehicleTypeId)}`}>
+                            {route.prices[vehicle.vehicleTypeId]
+                              ? formatPrice(route.prices[vehicle.vehicleTypeId].outbound)
+                              : '-'}
+                          </p>
+                        </div>
+                      ))}
                     </div>
 
                     <p className="text-xs text-muted-foreground text-center mb-4">
