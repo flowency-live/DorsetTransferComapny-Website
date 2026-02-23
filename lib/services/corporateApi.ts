@@ -478,7 +478,7 @@ interface LogoConfirmResponse {
  * Get account preferences
  */
 export async function getPreferences(): Promise<PreferencesResponse> {
-  return authenticatedFetch('/v2/corporate/preferences');
+  return authenticatedFetch(API_ENDPOINTS.corporatePreferences);
 }
 
 /**
@@ -488,7 +488,7 @@ export async function updatePreferences(data: {
   nameBoardFormat?: NameBoardFormat;
   nameBoardCustomText?: string;
 }): Promise<{ success: boolean; message: string; preferences: Partial<AccountPreferences> }> {
-  return authenticatedFetch('/v2/corporate/preferences', {
+  return authenticatedFetch(API_ENDPOINTS.corporatePreferences, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
@@ -502,7 +502,7 @@ export async function getLogoUploadUrl(data: {
   fileName: string;
   fileSize: number;
 }): Promise<LogoUploadUrlResponse> {
-  return authenticatedFetch('/v2/corporate/preferences/logo/upload-url', {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePreferences}/logo/upload-url`, {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -530,7 +530,7 @@ export async function uploadLogoToS3(uploadUrl: string, file: File): Promise<voi
  * Confirm logo upload after successful S3 upload
  */
 export async function confirmLogoUpload(logoKey: string): Promise<LogoConfirmResponse> {
-  return authenticatedFetch('/v2/corporate/preferences/logo/confirm', {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePreferences}/logo/confirm`, {
     method: 'POST',
     body: JSON.stringify({ logoKey }),
   });
@@ -540,7 +540,7 @@ export async function confirmLogoUpload(logoKey: string): Promise<LogoConfirmRes
  * Delete logo
  */
 export async function deleteLogo(): Promise<{ success: boolean; message: string }> {
-  return authenticatedFetch('/v2/corporate/preferences/logo', {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePreferences}/logo`, {
     method: 'DELETE',
   });
 }
@@ -651,8 +651,8 @@ export interface JourneyHistoryResponse {
  */
 export async function getPassengers(search?: string): Promise<PassengerListResponse> {
   const endpoint = search
-    ? `/v2/corporate/passengers?search=${encodeURIComponent(search)}`
-    : '/v2/corporate/passengers';
+    ? `${API_ENDPOINTS.corporatePassengers}?search=${encodeURIComponent(search)}`
+    : API_ENDPOINTS.corporatePassengers;
   return authenticatedFetch(endpoint);
 }
 
@@ -660,7 +660,7 @@ export async function getPassengers(search?: string): Promise<PassengerListRespo
  * Get passenger details
  */
 export async function getPassenger(passengerId: string): Promise<{ passenger: Passenger }> {
-  return authenticatedFetch(`/v2/corporate/passengers/${passengerId}`);
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePassengers}/${passengerId}`);
 }
 
 /**
@@ -669,7 +669,7 @@ export async function getPassenger(passengerId: string): Promise<{ passenger: Pa
 export async function createPassenger(
   data: CreatePassengerData
 ): Promise<{ success: boolean; message: string; passenger: Passenger }> {
-  return authenticatedFetch('/v2/corporate/passengers', {
+  return authenticatedFetch(API_ENDPOINTS.corporatePassengers, {
     method: 'POST',
     body: JSON.stringify(data),
   });
@@ -682,7 +682,7 @@ export async function updatePassenger(
   passengerId: string,
   data: UpdatePassengerData
 ): Promise<{ success: boolean; message: string; passenger: Passenger }> {
-  return authenticatedFetch(`/v2/corporate/passengers/${passengerId}`, {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePassengers}/${passengerId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
@@ -694,7 +694,7 @@ export async function updatePassenger(
 export async function deletePassenger(
   passengerId: string
 ): Promise<{ success: boolean; message: string }> {
-  return authenticatedFetch(`/v2/corporate/passengers/${passengerId}`, {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePassengers}/${passengerId}`, {
     method: 'DELETE',
   });
 }
@@ -707,7 +707,7 @@ export async function getPassengerJourneys(
   limit?: number
 ): Promise<JourneyHistoryResponse> {
   const endpoint = limit
-    ? `/v2/corporate/passengers/${passengerId}/journeys?limit=${limit}`
-    : `/v2/corporate/passengers/${passengerId}/journeys`;
+    ? `${API_ENDPOINTS.corporatePassengers}/${passengerId}/journeys?limit=${limit}`
+    : `${API_ENDPOINTS.corporatePassengers}/${passengerId}/journeys`;
   return authenticatedFetch(endpoint);
 }

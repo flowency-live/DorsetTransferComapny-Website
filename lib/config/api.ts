@@ -41,6 +41,8 @@ export const API_ENDPOINTS = {
   corporateDashboard: '/corporate/dashboard',
   corporateCompany: '/corporate/company',
   corporateUsers: '/corporate/users',
+  corporatePreferences: '/corporate/preferences',
+  corporatePassengers: '/corporate/passengers',
 
   // Driver Portal Authentication (served from /driver API, not /v2)
   driverRegister: '/driver/auth/register',

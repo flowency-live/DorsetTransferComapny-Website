@@ -1,6 +1,6 @@
 'use client';
 
-import { Heart, Plus } from 'lucide-react';
+import { Heart, Plus, Users, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -142,7 +142,7 @@ export default function CorporateDashboardPage() {
             <div className="p-6 border-b border-sage/20">
               <h2 className="text-lg font-semibold text-navy">Quick Actions</h2>
             </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Link
                 href="/corporate/quote"
                 className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
@@ -155,6 +155,19 @@ export default function CorporateDashboardPage() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-navy">Book a Transfer</p>
                   <p className="text-sm text-navy-light/70">Get your corporate rate</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/corporate/passengers"
+                className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
+              >
+                <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-sage" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-navy">Passengers</p>
+                  <p className="text-sm text-navy-light/70">Manage frequent travellers</p>
                 </div>
               </Link>
 
@@ -171,6 +184,21 @@ export default function CorporateDashboardPage() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-navy">Manage Team</p>
                     <p className="text-sm text-navy-light/70">Add or remove users</p>
+                  </div>
+                </Link>
+              )}
+
+              {isAdmin && (
+                <Link
+                  href="/corporate/settings/preferences"
+                  className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
+                >
+                  <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-lg flex items-center justify-center">
+                    <Settings className="h-6 w-6 text-sage" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-navy">Preferences</p>
+                    <p className="text-sm text-navy-light/70">Name boards &amp; branding</p>
                   </div>
                 </Link>
               )}
