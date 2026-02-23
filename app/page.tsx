@@ -1,11 +1,10 @@
 'use client';
 
-import { Plane, Clock, Briefcase, Globe, ArrowRight, KeyRound, Users, Luggage, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Plane, Clock, Briefcase, Globe, ArrowRight, Users, Luggage, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
-import { TENANT_CONFIG } from '@/lib/config/tenant';
 
 // Vehicles data
 const vehicles = [
@@ -214,15 +213,12 @@ export default function Home() {
             </nav>
 
             {/* Desktop Actions */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-4">
               <a
-                href={TENANT_CONFIG.adminPortalUrl}
-                className="p-2 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-110"
-                title="Admin Login"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/corporate/login"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <KeyRound className="w-5 h-5" />
+                Client Login
               </a>
               <a href="/quote" className={buttonVariants({ variant: "hero-golden", size: "default" })}>
                 Get a Quote
@@ -291,17 +287,15 @@ export default function Home() {
                   Contact
                 </a>
                 <div className="border-t border-border pt-4 mt-2 flex flex-col gap-3">
+                  <a
+                    href="/corporate/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  >
+                    Client Login
+                  </a>
                   <a href="/quote" className={buttonVariants({ variant: "hero-golden", size: "xl", className: "w-full" })}>
                     Get a Quote
-                  </a>
-                  <a
-                    href={TENANT_CONFIG.adminPortalUrl}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-br from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white shadow-lg transition-all"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <KeyRound className="w-5 h-5" />
-                    <span className="font-medium">Admin Login</span>
                   </a>
                 </div>
               </nav>
