@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
+import CorporateDiscountBadge from '@/components/corporate/CorporateDiscountBadge';
 
 import { JourneyType, MultiVehicleQuoteResponse } from '../lib/types';
 import { formatTime12Hour } from '../lib/format-utils';
@@ -15,6 +16,7 @@ interface VehicleComparisonGridProps {
   passengers: number;
   journeyType: JourneyType;
   onSelect: (vehicleId: string, isReturn: boolean) => void;
+  preferredVehicle?: string | null; // Pre-select this vehicle (e.g., from favourite trip)
 }
 
 export default function VehicleComparisonGrid({
@@ -22,12 +24,23 @@ export default function VehicleComparisonGrid({
   passengers,
   journeyType,
   onSelect,
+  preferredVehicle,
 }: VehicleComparisonGridProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   // For round-trip, default to return pricing; for one-way/hourly, default to one-way
   const [selectedIsReturn, setSelectedIsReturn] = useState<boolean>(journeyType === 'round-trip');
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+
+  // Pre-select preferred vehicle if available and valid for passenger count
+  useEffect(() => {
+    if (preferredVehicle && multiQuote.vehicles[preferredVehicle]) {
+      const vehiclePricing = multiQuote.vehicles[preferredVehicle];
+      if (vehiclePricing.capacity >= passengers) {
+        setSelectedVehicle(preferredVehicle);
+      }
+    }
+  }, [preferredVehicle, multiQuote.vehicles, passengers]);
 
   // Scroll to top when vehicle comparison grid appears
   useEffect(() => {
@@ -114,6 +127,14 @@ export default function VehicleComparisonGrid({
             )}
           </div>
         </div>
+      )}
+
+      {/* Corporate Discount Badge - Prominent display for corporate users */}
+      {multiQuote.modifiers?.corporateDiscount?.active && (
+        <CorporateDiscountBadge
+          percentage={multiQuote.modifiers.corporateDiscount.percentage}
+          accountName={multiQuote.modifiers.corporateDiscount.accountName}
+        />
       )}
 
       {/* Out of Service Area Banner */}
@@ -498,6 +519,14 @@ export default function VehicleComparisonGrid({
                       : 'border-border hover:border-sage-dark hover:bg-sage-dark/5'
                   }`}
                 >
+                  {/* Corporate Discount Badge on vehicle card */}
+                  {pricing.oneWay.corporateDiscountAmount && pricing.oneWay.corporateDiscountAmount > 0 && (
+                    <span className={`absolute -top-2 px-2 py-0.5 bg-purple-600 text-white text-xs font-semibold rounded-full ${
+                      selectedVehicle === type ? '-left-2' : '-right-2'
+                    }`}>
+                      Corporate Rate
+                    </span>
+                  )}
                   {selectedVehicle === type && (
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-sage-dark rounded-full flex items-center justify-center">
                       <Check className="w-4 h-4 text-white" />
@@ -509,6 +538,17 @@ export default function VehicleComparisonGrid({
                   <span className="text-2xl font-bold text-foreground">
                     {pricing.oneWay.displayTransferPrice}
                   </span>
+                  {/* Show original price and savings if corporate discount applied */}
+                  {pricing.oneWay.corporateDiscountAmount && pricing.oneWay.corporateDiscountAmount > 0 && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground line-through">
+                        {pricing.oneWay.displayTransferPriceBeforeDiscount}
+                      </span>
+                      <span className="text-xs text-purple-600 font-medium">
+                        Save {pricing.oneWay.displayCorporateDiscount}
+                      </span>
+                    </div>
+                  )}
                 </button>
               )}
 
@@ -522,10 +562,16 @@ export default function VehicleComparisonGrid({
                       : 'border-sage-dark bg-sage-dark/5 hover:bg-sage-dark/10'
                   }`}
                 >
-                  {/* Discount Badge - only show if there's a discount */}
+                  {/* Corporate Rate Badge - show if corporate discount applied */}
+                  {pricing.return.corporateDiscountAmount && pricing.return.corporateDiscountAmount > 0 && (
+                    <span className="absolute -top-2 -left-2 px-2 py-0.5 bg-purple-600 text-white text-xs font-semibold rounded-full">
+                      Corporate Rate
+                    </span>
+                  )}
+                  {/* Return Discount Badge - only show if there's a return discount */}
                   {pricing.return.discount.percentage > 0 && (
                     <span className={`absolute -top-2 px-2 py-0.5 bg-sage-dark text-white text-xs font-semibold rounded-full ${
-                      selectedVehicle === type ? '-left-2' : '-right-2'
+                      pricing.return.corporateDiscountAmount && pricing.return.corporateDiscountAmount > 0 ? 'left-24' : '-right-2'
                     }`}>
                       Save {pricing.return.discount.percentage}%
                     </span>
@@ -545,6 +591,12 @@ export default function VehicleComparisonGrid({
                   {pricing.return.discount.percentage > 0 && (
                     <span className="text-xs text-muted-foreground line-through">
                       {pricing.return.displayOriginalPrice}
+                    </span>
+                  )}
+                  {/* Show corporate savings if applied */}
+                  {pricing.return.corporateDiscountAmount && pricing.return.corporateDiscountAmount > 0 && (
+                    <span className="text-xs text-purple-600 font-medium">
+                      Corp. discount: {pricing.return.displayCorporateDiscount}
                     </span>
                   )}
                 </button>

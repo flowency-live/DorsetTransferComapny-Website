@@ -11,7 +11,7 @@ import PassengerLuggageRow from './PassengerLuggageRow';
 import WaypointInput from './WaypointInput';
 import { Extras, JourneyType, Location, LocationType, Waypoint } from '../lib/types';
 
-import DateTimePicker from './DateTimePicker';
+import DateTimePickerMobile from './DateTimePickerMobile';
 import HourlyTimeSelector from './HourlyTimeSelector';
 import TransportDetails, { locationTypeToTransportType } from './TransportDetails';
 
@@ -322,7 +322,7 @@ export default function AllInputsStep({
               {isRoundTrip ? 'Outbound Journey' : 'When do you need pickup?'}
             </h3>
           </div>
-          <DateTimePicker
+          <DateTimePickerMobile
             selectedDate={pickupDate}
             onChange={onDateChange}
             label="Pickup Date & Time"
@@ -332,7 +332,7 @@ export default function AllInputsStep({
           {isRoundTrip && (
             <div className="mt-4 pt-4 border-t border-border animate-fade-up">
               <h3 className="text-sm font-semibold text-foreground mb-3">Return Journey</h3>
-              <DateTimePicker
+              <DateTimePickerMobile
                 selectedDate={returnDate}
                 onChange={onReturnDateChange}
                 label="Return Date & Time"

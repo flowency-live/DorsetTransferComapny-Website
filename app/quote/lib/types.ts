@@ -234,6 +234,11 @@ export interface SimplifiedOneWayPricing {
   totalPrice: number;           // Pence - everything included
   displayTotalPrice: string;    // Formatted, e.g., "£126.04"
   fees: VehicleFees;
+  // Corporate discount fields (only present when discount applied)
+  transferPriceBeforeDiscount?: number;      // Pence - price before corporate discount
+  displayTransferPriceBeforeDiscount?: string; // Formatted, e.g., "£110.00"
+  corporateDiscountAmount?: number;          // Pence - discount amount
+  displayCorporateDiscount?: string;         // Formatted, e.g., "£10.80"
 }
 
 // Simplified pricing for return journeys (extends one-way)
