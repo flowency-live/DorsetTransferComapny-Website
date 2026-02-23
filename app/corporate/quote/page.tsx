@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback } from 'react';
 
 import CorporateHeader from '@/components/corporate/CorporateHeader';
+import PassengerSelector, { SelectedPassenger } from '@/components/corporate/PassengerSelector';
+import SavePassengerModal from '@/components/corporate/SavePassengerModal';
 import SaveTripModal from '@/components/corporate/SaveTripModal';
 import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
@@ -45,7 +47,8 @@ function CorporateQuotePageContent() {
   // Favourite trip state
   const [loadedTrip, setLoadedTrip] = useState<FavouriteTrip | null>(null);
   const [tripLoading, setTripLoading] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showSaveTripModal, setShowSaveTripModal] = useState(false);
+  const [showSavePassengerModal, setShowSavePassengerModal] = useState(false);
 
   // Form state (same as public quote)
   const [currentStep, setCurrentStep] = useState<Step>(1);
@@ -77,8 +80,9 @@ function CorporateQuotePageContent() {
   const [returnTrainNumber, setReturnTrainNumber] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
-  // Corporate-specific: Passenger name (booking for someone else)
-  const [passengerName, setPassengerName] = useState('');
+  // Corporate-specific: Passenger selection (booking for someone else)
+  const [selectedPassenger, setSelectedPassenger] = useState<SelectedPassenger | null>(null);
+  const [manualPassengerName, setManualPassengerName] = useState('');
 
   // Step 2 state
   const [multiQuote, setMultiQuote] = useState<MultiVehicleQuoteResponse | null>(null);
@@ -348,7 +352,8 @@ function CorporateQuotePageContent() {
     setFlightNumber('');
     setTrainNumber('');
     setSpecialRequests('');
-    setPassengerName('');
+    setSelectedPassenger(null);
+    setManualPassengerName('');
     setMultiQuote(null);
     setError(null);
     setBookingStage('quote');
@@ -415,7 +420,8 @@ function CorporateQuotePageContent() {
         customerPhone: contact.phone,
         // Corporate-specific fields
         corporateAccountId: user.corpAccountId,
-        passengerName: passengerName || contact.name,
+        passengerName: selectedPassenger?.displayName || manualPassengerName || contact.name,
+        passengerId: selectedPassenger?.passengerId || undefined,
         bookedBy: user?.email,
         // Payment
         paymentMethod: isPayOnAccount ? 'invoice' : 'card',
@@ -486,9 +492,43 @@ function CorporateQuotePageContent() {
                 </p>
               </div>
             )}
+
+            {/* Save Passenger Option - only show if passenger was entered manually (not from directory) */}
+            {!selectedPassenger && (manualPassengerName || contactDetails.name !== user?.name) && (
+              <div className="mt-4 p-4 bg-white border border-sage/20 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-navy">Save passenger for future bookings?</p>
+                    <p className="text-xs text-navy-light/70 mt-0.5">
+                      Add {manualPassengerName || contactDetails.name} to your passenger directory
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowSavePassengerModal(true)}
+                    className="px-4 py-2 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
+                  >
+                    Save Passenger
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
         <Footer />
+
+        {/* Save Passenger Modal */}
+        <SavePassengerModal
+          isOpen={showSavePassengerModal}
+          onClose={() => setShowSavePassengerModal(false)}
+          onSaved={() => {
+            console.log('Passenger saved to directory');
+          }}
+          initialData={{
+            name: manualPassengerName || contactDetails.name,
+            email: contactDetails.email,
+            phone: contactDetails.phone,
+          }}
+        />
       </div>
     );
   }
@@ -546,21 +586,17 @@ function CorporateQuotePageContent() {
         />
         <main className="flex-1 pt-28 pb-16">
           <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            {/* Passenger Name Field (booking for someone else) */}
+            {/* Passenger Selection (booking for someone else) */}
             <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
-              <label className="block text-sm font-medium text-navy mb-2">
-                Passenger Name (if booking for someone else)
-              </label>
-              <input
-                type="text"
-                value={passengerName}
-                onChange={(e) => setPassengerName(e.target.value)}
-                placeholder="Leave blank if booking for yourself"
-                className="w-full px-4 py-2 border border-sage/30 rounded-lg focus:ring-2 focus:ring-sage focus:border-transparent"
+              <PassengerSelector
+                selectedPassenger={selectedPassenger}
+                onSelect={setSelectedPassenger}
+                manualName={manualPassengerName}
+                onManualNameChange={setManualPassengerName}
+                label="Passenger (if booking for someone else)"
+                placeholder="Search passengers or enter name..."
+                helpText="Leave blank if booking for yourself"
               />
-              <p className="mt-1 text-xs text-navy-light/70">
-                The passenger will be contacted with journey details
-              </p>
             </div>
 
             <ContactDetailsForm
@@ -633,7 +669,7 @@ function CorporateQuotePageContent() {
               {!loadedTrip && (
                 <div className="mt-4 text-center">
                   <button
-                    onClick={() => setShowSaveModal(true)}
+                    onClick={() => setShowSaveTripModal(true)}
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
                   >
                     <Heart className="h-4 w-4" />
@@ -659,6 +695,7 @@ function CorporateQuotePageContent() {
                 passengers={passengers}
                 onSelect={handleVehicleSelect}
                 journeyType={journeyType}
+                preferredVehicle={loadedTrip?.vehicleType}
               />
             </div>
           ) : (
@@ -719,8 +756,8 @@ function CorporateQuotePageContent() {
       {/* Save Trip Modal */}
       {quote && pickupLocation && dropoffLocation && (
         <SaveTripModal
-          isOpen={showSaveModal}
-          onClose={() => setShowSaveModal(false)}
+          isOpen={showSaveTripModal}
+          onClose={() => setShowSaveTripModal(false)}
           onSaved={() => {
             // Could show a toast notification here
             console.log('Trip saved successfully');

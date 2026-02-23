@@ -434,3 +434,280 @@ export async function markTripUsed(
     method: 'PUT',
   });
 }
+
+// ============================================================================
+// ACCOUNT PREFERENCES (WI-6.1, WI-6.2)
+// ============================================================================
+
+export type NameBoardFormat =
+  | 'title-initial-surname'
+  | 'firstname-lastname'
+  | 'company-only'
+  | 'passenger-alias'
+  | 'title-initial-surname-company'
+  | 'custom';
+
+export interface AccountPreferences {
+  nameBoardFormat: NameBoardFormat;
+  nameBoardCustomText: string | null;
+  logoUrl: string | null;
+  logoS3Key: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+
+interface PreferencesResponse {
+  preferences: AccountPreferences;
+  corpAccountId: string;
+}
+
+interface LogoUploadUrlResponse {
+  uploadUrl: string;
+  logoKey: string;
+  contentType: string;
+  expiresIn: number;
+}
+
+interface LogoConfirmResponse {
+  success: boolean;
+  logoKey: string;
+  logoUrl: string;
+}
+
+/**
+ * Get account preferences
+ */
+export async function getPreferences(): Promise<PreferencesResponse> {
+  return authenticatedFetch('/v2/corporate/preferences');
+}
+
+/**
+ * Update account preferences
+ */
+export async function updatePreferences(data: {
+  nameBoardFormat?: NameBoardFormat;
+  nameBoardCustomText?: string;
+}): Promise<{ success: boolean; message: string; preferences: Partial<AccountPreferences> }> {
+  return authenticatedFetch('/v2/corporate/preferences', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Get presigned URL for logo upload
+ */
+export async function getLogoUploadUrl(data: {
+  contentType: string;
+  fileName: string;
+  fileSize: number;
+}): Promise<LogoUploadUrlResponse> {
+  return authenticatedFetch('/v2/corporate/preferences/logo/upload-url', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Upload logo to S3 using presigned URL
+ * This is a direct upload to S3, not through our API
+ */
+export async function uploadLogoToS3(uploadUrl: string, file: File): Promise<void> {
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': file.type,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to upload logo to storage');
+  }
+}
+
+/**
+ * Confirm logo upload after successful S3 upload
+ */
+export async function confirmLogoUpload(logoKey: string): Promise<LogoConfirmResponse> {
+  return authenticatedFetch('/v2/corporate/preferences/logo/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ logoKey }),
+  });
+}
+
+/**
+ * Delete logo
+ */
+export async function deleteLogo(): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch('/v2/corporate/preferences/logo', {
+    method: 'DELETE',
+  });
+}
+
+// ============================================================================
+// PASSENGER DIRECTORY (WI-6.3, WI-6.4)
+// ============================================================================
+
+export type PassengerTitle = 'Mr' | 'Mrs' | 'Ms' | 'Miss' | 'Dr' | 'Prof' | 'Lord' | 'Lady' | 'Sir' | 'Dame';
+
+export interface RefreshmentPreferences {
+  stillWater?: boolean;
+  sparklingWater?: boolean;
+  tea?: boolean;
+  coffee?: boolean;
+  other?: string;
+}
+
+export interface Passenger {
+  passengerId: string;
+  title: PassengerTitle | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  alias: string | null;
+  referToAs: string | null;
+  email: string | null;
+  phone: string | null;
+  refreshments: RefreshmentPreferences | null;
+  driverInstructions: string | null;
+  bookerNotes: string | null;
+  createdAt: string;
+  createdBy: string;
+  updatedAt: string | null;
+  updatedBy: string | null;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+export interface PassengerListItem {
+  passengerId: string;
+  title: PassengerTitle | null;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  alias: string | null;
+  email: string | null;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+interface PassengerListResponse {
+  passengers: PassengerListItem[];
+  total: number;
+}
+
+export interface CreatePassengerData {
+  firstName: string;
+  lastName: string;
+  title?: PassengerTitle;
+  alias?: string;
+  referToAs?: string;
+  email?: string;
+  phone?: string;
+  refreshments?: RefreshmentPreferences;
+  driverInstructions?: string;
+  bookerNotes?: string;
+}
+
+export interface UpdatePassengerData {
+  firstName?: string;
+  lastName?: string;
+  title?: PassengerTitle | null;
+  alias?: string | null;
+  referToAs?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  refreshments?: RefreshmentPreferences | null;
+  driverInstructions?: string | null;
+  bookerNotes?: string | null;
+}
+
+export interface Journey {
+  bookingId: string;
+  date: string;
+  pickup: string;
+  dropoff: string;
+  vehicleType: string | null;
+  vehicleName: string | null;
+  pricePence: number | null;
+  status: string;
+}
+
+export interface JourneyHistoryResponse {
+  passengerId: string;
+  passengerName: string;
+  journeys: Journey[];
+  totalJourneys: number;
+  mostFrequentRoute: {
+    pickup: string;
+    dropoff: string;
+    count: number;
+  } | null;
+}
+
+/**
+ * Get list of passengers
+ */
+export async function getPassengers(search?: string): Promise<PassengerListResponse> {
+  const endpoint = search
+    ? `/v2/corporate/passengers?search=${encodeURIComponent(search)}`
+    : '/v2/corporate/passengers';
+  return authenticatedFetch(endpoint);
+}
+
+/**
+ * Get passenger details
+ */
+export async function getPassenger(passengerId: string): Promise<{ passenger: Passenger }> {
+  return authenticatedFetch(`/v2/corporate/passengers/${passengerId}`);
+}
+
+/**
+ * Create a new passenger
+ */
+export async function createPassenger(
+  data: CreatePassengerData
+): Promise<{ success: boolean; message: string; passenger: Passenger }> {
+  return authenticatedFetch('/v2/corporate/passengers', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a passenger
+ */
+export async function updatePassenger(
+  passengerId: string,
+  data: UpdatePassengerData
+): Promise<{ success: boolean; message: string; passenger: Passenger }> {
+  return authenticatedFetch(`/v2/corporate/passengers/${passengerId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a passenger
+ */
+export async function deletePassenger(
+  passengerId: string
+): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch(`/v2/corporate/passengers/${passengerId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Get passenger journey history
+ */
+export async function getPassengerJourneys(
+  passengerId: string,
+  limit?: number
+): Promise<JourneyHistoryResponse> {
+  const endpoint = limit
+    ? `/v2/corporate/passengers/${passengerId}/journeys?limit=${limit}`
+    : `/v2/corporate/passengers/${passengerId}/journeys`;
+  return authenticatedFetch(endpoint);
+}
