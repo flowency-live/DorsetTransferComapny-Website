@@ -25,37 +25,37 @@ export const API_ENDPOINTS = {
   tenantContact: '/v2/tenant/contact',
   customerUploads: '/v2/uploads/presigned',
 
-  // Corporate Portal Authentication
-  corporateMagicLink: '/v2/corporate/auth/magic-link',
-  corporateVerify: '/v2/corporate/auth/verify',
-  corporateSession: '/v2/corporate/auth/session',
-  corporateLogin: '/v2/corporate/auth/login',
-  corporateSetPassword: '/v2/corporate/auth/set-password',
-  corporateForgotPassword: '/v2/corporate/auth/forgot-password',
-  corporateLogout: '/v2/corporate/auth/logout',
+  // Corporate Portal Authentication (served from /corporate API, not /v2)
+  corporateMagicLink: '/corporate/auth/magic-link',
+  corporateVerify: '/corporate/auth/verify',
+  corporateSession: '/corporate/auth/session',
+  corporateLogin: '/corporate/auth/login',
+  corporateSetPassword: '/corporate/auth/set-password',
+  corporateForgotPassword: '/corporate/auth/forgot-password',
+  corporateLogout: '/corporate/auth/logout',
 
-  // Corporate Portal API
-  corporateMe: '/v2/corporate/me',
-  corporateNotifications: '/v2/corporate/me/notifications',
-  corporateTrips: '/v2/corporate/me/trips',
-  corporateDashboard: '/v2/corporate/dashboard',
-  corporateCompany: '/v2/corporate/company',
-  corporateUsers: '/v2/corporate/users',
+  // Corporate Portal API (served from /corporate API, not /v2)
+  corporateMe: '/corporate/me',
+  corporateNotifications: '/corporate/me/notifications',
+  corporateTrips: '/corporate/me/trips',
+  corporateDashboard: '/corporate/dashboard',
+  corporateCompany: '/corporate/company',
+  corporateUsers: '/corporate/users',
 
-  // Driver Portal Authentication
-  driverRegister: '/v2/driver/auth/register',
-  driverLogin: '/v2/driver/auth/login',
-  driverMagicLink: '/v2/driver/auth/magic-link',
-  driverVerify: '/v2/driver/auth/verify',
-  driverSession: '/v2/driver/auth/session',
-  driverLogout: '/v2/driver/auth/logout',
+  // Driver Portal Authentication (served from /driver API, not /v2)
+  driverRegister: '/driver/auth/register',
+  driverLogin: '/driver/auth/login',
+  driverMagicLink: '/driver/auth/magic-link',
+  driverVerify: '/driver/auth/verify',
+  driverSession: '/driver/auth/session',
+  driverLogout: '/driver/auth/logout',
 
-  // Driver Portal API
-  driverProfile: '/v2/driver/profile',
-  driverVehicles: '/v2/driver/vehicles',
-  driverDocuments: '/v2/driver/documents',
-  driverAvailability: '/v2/driver/availability',
-  driverLicenseCheck: '/v2/driver/license-check',
+  // Driver Portal API (served from /driver API, not /v2)
+  driverProfile: '/driver/profile',
+  driverVehicles: '/driver/vehicles',
+  driverDocuments: '/driver/documents',
+  driverAvailability: '/driver/availability',
+  driverLicenseCheck: '/driver/license-check',
 
   // Chat Widget (AI Booking Assistant)
   chatSession: '/v2/chat/session',
