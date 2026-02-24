@@ -4,6 +4,7 @@ import { Heart, Plus, Users, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
+import CreateTripModal from '@/components/corporate/CreateTripModal';
 import FavouriteTripCard from '@/components/corporate/FavouriteTripCard';
 import CorporateHeader from '@/components/corporate/CorporateHeader';
 import Footer from '@/components/shared/Footer';
@@ -57,6 +58,7 @@ export default function CorporateDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [tripsLoading, setTripsLoading] = useState(true);
   const [passengersLoading, setPassengersLoading] = useState(true);
+  const [isCreateTripModalOpen, setIsCreateTripModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -230,13 +232,14 @@ export default function CorporateDashboardPage() {
                 <Heart className="h-5 w-5 text-sage" />
                 <h2 className="text-lg font-semibold text-navy">Favourite Trips</h2>
               </div>
-              <Link
-                href="/corporate/quote"
+              <button
+                type="button"
+                onClick={() => setIsCreateTripModalOpen(true)}
                 className="inline-flex items-center gap-1 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 New Trip
-              </Link>
+              </button>
             </div>
             <div className="p-6">
               {tripsLoading ? (
@@ -454,6 +457,20 @@ export default function CorporateDashboardPage() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Create Trip Modal */}
+      <CreateTripModal
+        isOpen={isCreateTripModalOpen}
+        onClose={() => setIsCreateTripModalOpen(false)}
+        onSaved={() => {
+          // Refresh trips list
+          setTripsLoading(true);
+          getFavouriteTrips()
+            .then((data) => setFavouriteTrips(data.trips || []))
+            .catch(console.error)
+            .finally(() => setTripsLoading(false));
+        }}
+      />
     </div>
   );
 }
