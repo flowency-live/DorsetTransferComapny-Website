@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Calendar, MapPin, Users, Car, Mail, Phone, Download, Loader2, Printer } from 'lucide-react';
+import { CheckCircle, Calendar, MapPin, Users, Car, Mail, Phone, Download, Loader2, Printer, User, Coffee, Droplet, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -11,15 +11,35 @@ import { QuoteResponse } from '../lib/types';
 
 import { ContactDetails } from './ContactDetailsForm';
 
+// Corporate-specific: Passenger preferences
+interface RefreshmentPreferences {
+  stillWater?: boolean;
+  sparklingWater?: boolean;
+  tea?: boolean;
+  coffee?: boolean;
+  other?: string;
+}
+
+// Corporate-specific: Passenger info (distinct from booking contact)
+interface PassengerInfo {
+  name: string;
+  alias?: string | null;
+  driverInstructions?: string | null;
+  refreshments?: RefreshmentPreferences | null;
+}
+
 interface BookingConfirmationProps {
   quote: QuoteResponse;
   contactDetails: ContactDetails;
   bookingId: string;
   specialRequests?: string;
   returnUrl?: string;
+  // Corporate-specific: When passenger is different from booking contact
+  passengerInfo?: PassengerInfo;
+  isCorporate?: boolean;
 }
 
-export default function BookingConfirmation({ quote, contactDetails, bookingId, specialRequests, returnUrl = '/' }: BookingConfirmationProps) {
+export default function BookingConfirmation({ quote, contactDetails, bookingId, specialRequests, returnUrl = '/', passengerInfo, isCorporate = false }: BookingConfirmationProps) {
   const [downloading, setDownloading] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -204,10 +224,77 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
             </div>
           )}
 
-          {/* Contact Details */}
+          {/* Corporate: Passenger Info (when different from booking contact) */}
+          {isCorporate && passengerInfo && (
+            <div className="bg-card rounded-3xl shadow-deep p-6 md:p-8">
+              <h2 className="font-playfair text-xl md:text-2xl font-semibold text-foreground mb-6">
+                Passenger
+              </h2>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Name</p>
+                    <p className="text-base font-semibold text-foreground">{passengerInfo.name}</p>
+                    {passengerInfo.alias && (
+                      <p className="text-sm text-muted-foreground italic">&ldquo;{passengerInfo.alias}&rdquo;</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Passenger Preferences */}
+                {passengerInfo.refreshments && (
+                  <div className="flex items-start gap-3">
+                    <Coffee className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Refreshment Preferences</p>
+                      <div className="flex flex-wrap gap-2">
+                        {passengerInfo.refreshments.stillWater && (
+                          <span className="inline-flex items-center gap-1 text-sm bg-sage-light/30 text-sage-dark px-2 py-1 rounded">
+                            <Droplet className="w-3 h-3" /> Still Water
+                          </span>
+                        )}
+                        {passengerInfo.refreshments.sparklingWater && (
+                          <span className="inline-flex items-center gap-1 text-sm bg-sage-light/30 text-sage-dark px-2 py-1 rounded">
+                            <Droplet className="w-3 h-3" /> Sparkling Water
+                          </span>
+                        )}
+                        {passengerInfo.refreshments.tea && (
+                          <span className="inline-flex items-center gap-1 text-sm bg-sage-light/30 text-sage-dark px-2 py-1 rounded">
+                            Tea
+                          </span>
+                        )}
+                        {passengerInfo.refreshments.coffee && (
+                          <span className="inline-flex items-center gap-1 text-sm bg-sage-light/30 text-sage-dark px-2 py-1 rounded">
+                            <Coffee className="w-3 h-3" /> Coffee
+                          </span>
+                        )}
+                        {passengerInfo.refreshments.other && (
+                          <span className="text-sm text-foreground">{passengerInfo.refreshments.other}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {passengerInfo.driverInstructions && (
+                  <div className="flex items-start gap-3">
+                    <MessageSquare className="w-5 h-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Driver Instructions</p>
+                      <p className="text-sm text-foreground">{passengerInfo.driverInstructions}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Booking Contact (Corporate) / Lead Passenger (Public) */}
           <div className="bg-card rounded-3xl shadow-deep p-6 md:p-8">
             <h2 className="font-playfair text-xl md:text-2xl font-semibold text-foreground mb-6">
-              Lead Passenger
+              {isCorporate ? 'Booking Contact' : 'Lead Passenger'}
             </h2>
 
             <div className="space-y-3">

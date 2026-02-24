@@ -16,9 +16,12 @@ interface ContactDetailsFormProps {
   onBack: () => void;
   initialValues?: ContactDetails;
   submitLabel?: string;
+  // Corporate context: Different labels when booking for someone else
+  isCorporate?: boolean;
+  passengerName?: string; // The actual traveller's name (for context)
 }
 
-export default function ContactDetailsForm({ onSubmit, onBack, initialValues, submitLabel = 'Continue to Payment' }: ContactDetailsFormProps) {
+export default function ContactDetailsForm({ onSubmit, onBack, initialValues, submitLabel = 'Continue to Payment', isCorporate = false, passengerName }: ContactDetailsFormProps) {
   const [name, setName] = useState(initialValues?.name || '');
   const [email, setEmail] = useState(initialValues?.email || '');
   const [phone, setPhone] = useState(initialValues?.phone || '');
@@ -77,11 +80,19 @@ export default function ContactDetailsForm({ onSubmit, onBack, initialValues, su
             {/* Header */}
             <div className="mb-8">
               <h2 className="font-playfair text-2xl md:text-3xl font-bold text-foreground mb-2">
-                Lead Passenger Details
+                {isCorporate ? 'Booking Contact Details' : 'Lead Passenger Details'}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Please provide contact information for the person responsible for this booking
+                {isCorporate && passengerName
+                  ? `Who should we contact about this booking for ${passengerName}?`
+                  : 'Please provide contact information for the person responsible for this booking'
+                }
               </p>
+              {isCorporate && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  This can be you or another person who should receive booking updates
+                </p>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">

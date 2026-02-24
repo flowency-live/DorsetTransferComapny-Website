@@ -565,6 +565,15 @@ function CorporateQuotePageContent() {
               bookingId={bookingId}
               specialRequests={specialRequests}
               returnUrl="/corporate/dashboard"
+              isCorporate={true}
+              passengerInfo={selectedPassenger ? {
+                name: selectedPassenger.displayName,
+                alias: selectedPassenger.alias,
+                driverInstructions: selectedPassenger.driverInstructions,
+                refreshments: selectedPassenger.refreshments,
+              } : manualPassengerName ? {
+                name: manualPassengerName,
+              } : undefined}
             />
             {isPayOnAccount && (
               <div className="mt-4 p-4 bg-sage/10 border border-sage/30 rounded-lg">
@@ -745,6 +754,8 @@ function CorporateQuotePageContent() {
                   onBack={handleContactBack}
                   initialValues={contactDetails || undefined}
                   submitLabel={isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
+                  isCorporate={true}
+                  passengerName={selectedPassenger?.displayName || manualPassengerName}
                 />
               </>
             )}
