@@ -1,6 +1,7 @@
 'use client';
 
-import { ArrowLeft, Heart } from 'lucide-react';
+import { ArrowLeft, Heart, X, UserPlus } from 'lucide-react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback } from 'react';
 
@@ -653,6 +654,9 @@ function CorporateQuotePageContent() {
   // Render contact details form
   if (bookingStage === 'contact' && quote) {
     const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
+    // Check if passenger has contact info - if so, show simplified view
+    const passengerHasContactInfo = selectedPassenger && selectedPassenger.email && selectedPassenger.phone;
+
     return (
       <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
         <CorporateHeader
@@ -663,25 +667,84 @@ function CorporateQuotePageContent() {
         />
         <main className="flex-1 pt-28 pb-16">
           <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            {/* Show selected passenger summary (selected in Step 1) */}
-            {(selectedPassenger || manualPassengerName) && (
-              <div className="mb-6 p-4 bg-sage/5 border border-sage/20 rounded-lg">
-                <p className="text-sm font-medium text-navy-light/70 mb-1">Booking for:</p>
-                <p className="text-navy font-medium">
-                  {selectedPassenger?.displayName || manualPassengerName}
-                </p>
-                {selectedPassenger?.email && (
-                  <p className="text-sm text-navy-light/70">{selectedPassenger.email}</p>
-                )}
-              </div>
-            )}
+            {/* Simplified view when passenger has full contact info */}
+            {passengerHasContactInfo ? (
+              <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+                <h2 className="text-lg font-semibold text-navy mb-4">Confirm Passenger Details</h2>
 
-            <ContactDetailsForm
-              onSubmit={handleContactSubmit}
-              onBack={handleContactBack}
-              initialValues={contactDetails || undefined}
-              submitLabel={isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
-            />
+                <div className="space-y-4">
+                  <div className="p-4 bg-sage/5 border border-sage/20 rounded-lg">
+                    <p className="text-sm font-medium text-navy-light/70 mb-1">Passenger</p>
+                    <p className="text-navy font-medium text-lg">{selectedPassenger.displayName}</p>
+                    {selectedPassenger.alias && (
+                      <p className="text-sm text-navy-light/70">&ldquo;{selectedPassenger.alias}&rdquo;</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-navy-light/70 mb-1">Email</p>
+                      <p className="text-navy">{selectedPassenger.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-navy-light/70 mb-1">Phone</p>
+                      <p className="text-navy">{selectedPassenger.phone}</p>
+                    </div>
+                  </div>
+
+                  {selectedPassenger.driverInstructions && (
+                    <div>
+                      <p className="text-sm font-medium text-navy-light/70 mb-1">Driver Instructions</p>
+                      <p className="text-sm text-navy">{selectedPassenger.driverInstructions}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleContactBack}
+                    className="flex-1 px-4 py-3 border border-sage/30 rounded-lg text-navy font-medium hover:bg-sage/5 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleContactSubmit({
+                      name: selectedPassenger.displayName,
+                      email: selectedPassenger.email!,
+                      phone: selectedPassenger.phone!,
+                    })}
+                    className="flex-1 px-4 py-3 bg-sage text-white rounded-lg font-medium hover:bg-sage-dark transition-colors"
+                  >
+                    {isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Full form when no passenger selected or passenger missing contact info */
+              <>
+                {/* Show selected passenger summary if present but missing contact info */}
+                {(selectedPassenger || manualPassengerName) && (
+                  <div className="mb-6 p-4 bg-sage/5 border border-sage/20 rounded-lg">
+                    <p className="text-sm font-medium text-navy-light/70 mb-1">Booking for:</p>
+                    <p className="text-navy font-medium">
+                      {selectedPassenger?.displayName || manualPassengerName}
+                    </p>
+                    {selectedPassenger && !selectedPassenger.email && !selectedPassenger.phone && (
+                      <p className="text-xs text-amber-600 mt-1">Please enter contact details below</p>
+                    )}
+                  </div>
+                )}
+
+                <ContactDetailsForm
+                  onSubmit={handleContactSubmit}
+                  onBack={handleContactBack}
+                  initialValues={contactDetails || undefined}
+                  submitLabel={isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
+                />
+              </>
+            )}
 
             {isPayOnAccount && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -708,6 +771,17 @@ function CorporateQuotePageContent() {
 
       <main className="flex-1 pt-28 pb-16">
         <div className="container mx-auto px-4 md:px-6">
+          {/* Cancel / Back to Dashboard */}
+          <div className="mb-4">
+            <Link
+              href="/corporate/dashboard"
+              className="inline-flex items-center text-sm text-navy-light/70 hover:text-sage transition-colors"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Cancel
+            </Link>
+          </div>
+
           {/* Step indicator */}
           <div className="flex items-center justify-center mb-8">
             <div className="flex items-center">
@@ -794,6 +868,20 @@ function CorporateQuotePageContent() {
                   placeholder="Search passengers or enter name..."
                   helpText="Select from your passenger directory or enter a name for a one-time booking"
                 />
+
+                {/* Save to Directory button when manual name entered */}
+                {manualPassengerName && manualPassengerName.trim().length >= 2 && !selectedPassenger && (
+                  <div className="mt-3 pt-3 border-t border-sage/20">
+                    <button
+                      type="button"
+                      onClick={() => setShowSavePassengerModal(true)}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                      Save &ldquo;{manualPassengerName.trim()}&rdquo; to passenger directory
+                    </button>
+                  </div>
+                )}
               </div>
 
               <AllInputsStep
@@ -884,6 +972,29 @@ function CorporateQuotePageContent() {
           }}
         />
       )}
+
+      {/* Save Passenger Modal (during booking flow) */}
+      <SavePassengerModal
+        isOpen={showSavePassengerModal}
+        onClose={() => setShowSavePassengerModal(false)}
+        onSaved={(savedPassenger) => {
+          // Auto-select the newly saved passenger
+          if (savedPassenger) {
+            setSelectedPassenger({
+              passengerId: savedPassenger.passengerId,
+              displayName: savedPassenger.displayName,
+              firstName: savedPassenger.firstName,
+              lastName: savedPassenger.lastName,
+              email: savedPassenger.email || undefined,
+              phone: savedPassenger.phone || undefined,
+            });
+            setManualPassengerName('');
+          }
+        }}
+        initialData={{
+          name: manualPassengerName || '',
+        }}
+      />
     </div>
   );
 }

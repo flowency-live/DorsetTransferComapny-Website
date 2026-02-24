@@ -196,20 +196,18 @@ export default function CorporateDashboardPage() {
                 </Link>
               )}
 
-              {isAdmin && (
-                <Link
-                  href="/corporate/settings/preferences"
-                  className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
-                >
-                  <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-lg flex items-center justify-center">
-                    <Settings className="h-6 w-6 text-sage" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-navy">Preferences</p>
-                    <p className="text-sm text-navy-light/70">Name boards &amp; branding</p>
-                  </div>
-                </Link>
-              )}
+              <Link
+                href="/corporate/settings/preferences"
+                className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
+              >
+                <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-lg flex items-center justify-center">
+                  <Settings className="h-6 w-6 text-sage" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-navy">Preferences</p>
+                  <p className="text-sm text-navy-light/70">Name boards &amp; branding</p>
+                </div>
+              </Link>
 
               <div className="flex items-center p-4 border border-sage/20 rounded-lg bg-sage/5 opacity-50 cursor-not-allowed">
                 <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-lg flex items-center justify-center">

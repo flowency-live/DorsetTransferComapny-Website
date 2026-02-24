@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassenger,
@@ -368,13 +368,22 @@ export default function PassengerDetailPage({ params }: PageProps) {
                 </div>
               </div>
               {!isEditing ? (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center px-4 py-2 border border-sage rounded-full text-sm font-medium text-sage hover:bg-sage/5 transition-colors"
-                >
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Edit Passenger
-                </button>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/corporate/quote?passengerId=${passengerId}`}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-full text-sm font-medium text-white bg-sage hover:bg-sage-dark transition-colors"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Quick Book
+                  </Link>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="inline-flex items-center px-4 py-2 border border-sage rounded-full text-sm font-medium text-sage hover:bg-sage/5 transition-colors"
+                  >
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Edit Passenger
+                  </button>
+                </div>
               ) : (
                 <div className="flex gap-2">
                   <button

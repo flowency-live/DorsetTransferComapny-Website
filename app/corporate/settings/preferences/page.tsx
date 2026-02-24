@@ -43,6 +43,15 @@ export default function PreferencesPage() {
   // Form state
   const [selectedFormat, setSelectedFormat] = useState<NameBoardFormat>('title-initial-surname');
   const [customText, setCustomText] = useState('');
+  // Default preferences state
+  const [defaultRefreshments, setDefaultRefreshments] = useState({
+    stillWater: false,
+    sparklingWater: false,
+    tea: false,
+    coffee: false,
+    other: '',
+  });
+  const [defaultDriverInstructions, setDefaultDriverInstructions] = useState('');
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type });
@@ -60,6 +69,19 @@ export default function PreferencesPage() {
           setSelectedFormat(prefsData.preferences.nameBoardFormat || 'title-initial-surname');
           setCustomText(prefsData.preferences.nameBoardCustomText || '');
           setCompanyName(dashboardData.company?.companyName);
+          // Load default preferences
+          if (prefsData.preferences.defaultRefreshments) {
+            setDefaultRefreshments({
+              stillWater: prefsData.preferences.defaultRefreshments.stillWater || false,
+              sparklingWater: prefsData.preferences.defaultRefreshments.sparklingWater || false,
+              tea: prefsData.preferences.defaultRefreshments.tea || false,
+              coffee: prefsData.preferences.defaultRefreshments.coffee || false,
+              other: prefsData.preferences.defaultRefreshments.other || '',
+            });
+          }
+          if (prefsData.preferences.defaultDriverInstructions) {
+            setDefaultDriverInstructions(prefsData.preferences.defaultDriverInstructions);
+          }
         })
         .catch((err) => {
           console.error('Failed to load preferences:', err);
@@ -72,12 +94,23 @@ export default function PreferencesPage() {
   const handleSaveFormat = async () => {
     setIsSaving(true);
     try {
-      const data: { nameBoardFormat: NameBoardFormat; nameBoardCustomText?: string } = {
+      const data: {
+        nameBoardFormat: NameBoardFormat;
+        nameBoardCustomText?: string;
+        defaultRefreshments?: typeof defaultRefreshments | null;
+        defaultDriverInstructions?: string | null;
+      } = {
         nameBoardFormat: selectedFormat,
       };
       if (selectedFormat === 'custom') {
         data.nameBoardCustomText = customText;
       }
+      // Include default preferences
+      const hasRefreshments = defaultRefreshments.stillWater || defaultRefreshments.sparklingWater ||
+                               defaultRefreshments.tea || defaultRefreshments.coffee || defaultRefreshments.other.trim();
+      data.defaultRefreshments = hasRefreshments ? defaultRefreshments : null;
+      data.defaultDriverInstructions = defaultDriverInstructions.trim() || null;
+
       await updatePreferences(data);
       showToast('Preferences saved successfully');
     } catch (err) {
@@ -190,7 +223,7 @@ export default function PreferencesPage() {
             </Link>
             <h1 className="text-2xl font-bold text-navy">Account Preferences</h1>
             <p className="text-navy-light/70 mt-1">
-              Customise how your company appears on driver name boards
+              Customise name boards, default refreshments, and driver instructions
             </p>
           </div>
 
@@ -327,6 +360,69 @@ export default function PreferencesPage() {
                       <p className="text-sm text-white/60 mt-2">Your logo will also be displayed</p>
                     )}
                   </div>
+                </div>
+              </div>
+
+              {/* Default Booking Preferences Section */}
+              <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6 mt-6">
+                <h2 className="text-lg font-semibold text-navy mb-4">Default Booking Preferences</h2>
+                <p className="text-sm text-navy-light/70 mb-4">
+                  Set default preferences that will be applied to all new bookings. Individual passenger preferences will override these defaults.
+                </p>
+
+                {/* Default Refreshments */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-navy mb-2">Default Refreshments</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                    {[
+                      { key: 'stillWater', label: 'Still Water' },
+                      { key: 'sparklingWater', label: 'Sparkling Water' },
+                      { key: 'tea', label: 'Tea' },
+                      { key: 'coffee', label: 'Coffee' },
+                    ].map(({ key, label }) => (
+                      <label
+                        key={key}
+                        className={`flex items-center justify-center px-3 py-2 border rounded-lg cursor-pointer transition-colors ${
+                          defaultRefreshments[key as keyof typeof defaultRefreshments]
+                            ? 'border-sage bg-sage/10 text-sage-dark'
+                            : 'border-sage/30 hover:border-sage/50'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={defaultRefreshments[key as keyof typeof defaultRefreshments] as boolean}
+                          onChange={(e) => setDefaultRefreshments((prev) => ({ ...prev, [key]: e.target.checked }))}
+                          className="sr-only"
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={defaultRefreshments.other}
+                    onChange={(e) => setDefaultRefreshments((prev) => ({ ...prev, other: e.target.value }))}
+                    maxLength={100}
+                    placeholder="Other refreshment preferences..."
+                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
+                  />
+                </div>
+
+                {/* Default Driver Instructions */}
+                <div className="mb-6">
+                  <label htmlFor="defaultDriverInstructions" className="block text-sm font-medium text-navy mb-1">
+                    Default Driver Instructions
+                  </label>
+                  <textarea
+                    id="defaultDriverInstructions"
+                    value={defaultDriverInstructions}
+                    onChange={(e) => setDefaultDriverInstructions(e.target.value)}
+                    rows={3}
+                    maxLength={500}
+                    placeholder="e.g., Always use the main entrance, call upon arrival..."
+                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
+                  />
+                  <p className="mt-1 text-xs text-navy-light/50">{defaultDriverInstructions.length}/500 characters - Visible to driver on all bookings</p>
                 </div>
 
                 {/* Save Button */}

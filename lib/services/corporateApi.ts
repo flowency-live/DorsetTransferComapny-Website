@@ -452,6 +452,9 @@ export interface AccountPreferences {
   nameBoardCustomText: string | null;
   logoUrl: string | null;
   logoS3Key: string | null;
+  // Default booking preferences
+  defaultRefreshments: RefreshmentPreferences | null;
+  defaultDriverInstructions: string | null;
   updatedAt: string | null;
   updatedBy: string | null;
 }
