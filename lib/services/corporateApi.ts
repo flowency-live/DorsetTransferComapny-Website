@@ -623,15 +623,29 @@ export interface UpdatePassengerData {
   bookerNotes?: string | null;
 }
 
+export interface JourneyLocation {
+  address: string;
+  lat?: number;
+  lng?: number;
+  placeId?: string;
+}
+
 export interface Journey {
   bookingId: string;
   date: string;
+  // Full location objects for Rebook functionality
+  pickupLocation: JourneyLocation | null;
+  dropoffLocation: JourneyLocation | null;
+  // Address strings for display (backwards compatibility)
   pickup: string;
   dropoff: string;
   vehicleType: string | null;
   vehicleName: string | null;
   pricePence: number | null;
   status: string;
+  // Passenger and luggage counts for Rebook
+  passengers: number | null;
+  luggage: number | null;
 }
 
 export interface JourneyHistoryResponse {

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassenger,
@@ -271,6 +271,57 @@ export default function PassengerDetailPage({ params }: PageProps) {
     if (!passenger) return '';
     const parts = [passenger.title, passenger.firstName, passenger.lastName].filter(Boolean);
     return parts.join(' ');
+  };
+
+  /**
+   * Build a URL to rebook a journey with pre-filled data
+   */
+  const buildRebookUrl = (journey: Journey): string => {
+    const params = new URLSearchParams();
+    params.set('passengerId', passengerId);
+
+    // Add pickup location
+    if (journey.pickupLocation) {
+      params.set('pickupAddress', journey.pickupLocation.address);
+      if (journey.pickupLocation.lat !== undefined) {
+        params.set('pickupLat', String(journey.pickupLocation.lat));
+      }
+      if (journey.pickupLocation.lng !== undefined) {
+        params.set('pickupLng', String(journey.pickupLocation.lng));
+      }
+      if (journey.pickupLocation.placeId) {
+        params.set('pickupPlaceId', journey.pickupLocation.placeId);
+      }
+    }
+
+    // Add dropoff location
+    if (journey.dropoffLocation) {
+      params.set('dropoffAddress', journey.dropoffLocation.address);
+      if (journey.dropoffLocation.lat !== undefined) {
+        params.set('dropoffLat', String(journey.dropoffLocation.lat));
+      }
+      if (journey.dropoffLocation.lng !== undefined) {
+        params.set('dropoffLng', String(journey.dropoffLocation.lng));
+      }
+      if (journey.dropoffLocation.placeId) {
+        params.set('dropoffPlaceId', journey.dropoffLocation.placeId);
+      }
+    }
+
+    // Add vehicle type
+    if (journey.vehicleType) {
+      params.set('vehicleType', journey.vehicleType);
+    }
+
+    // Add passenger and luggage counts
+    if (journey.passengers !== null) {
+      params.set('passengers', String(journey.passengers));
+    }
+    if (journey.luggage !== null) {
+      params.set('luggage', String(journey.luggage));
+    }
+
+    return `/corporate/quote?${params.toString()}`;
   };
 
   if (authLoading || !user || isLoading) {
@@ -647,6 +698,16 @@ export default function PassengerDetailPage({ params }: PageProps) {
                         )}
                         {journey.pricePence !== null && (
                           <span className="font-medium text-navy">{formatPrice(journey.pricePence)}</span>
+                        )}
+                        {/* Rebook button - only show for completed/confirmed journeys */}
+                        {(journey.status === 'completed' || journey.status === 'confirmed') && journey.pickupLocation && journey.dropoffLocation && (
+                          <Link
+                            href={buildRebookUrl(journey)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
+                          >
+                            <RotateCw className="h-3.5 w-3.5" />
+                            Rebook
+                          </Link>
                         )}
                       </div>
                     </div>

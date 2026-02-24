@@ -2,16 +2,27 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, User, Plus, X, Check } from 'lucide-react';
-import { getPassengers, type PassengerListItem } from '@/lib/services/corporateApi';
+import { getPassengers, getPassenger, type PassengerListItem } from '@/lib/services/corporateApi';
+
+export interface RefreshmentPreferences {
+  stillWater?: boolean;
+  sparklingWater?: boolean;
+  tea?: boolean;
+  coffee?: boolean;
+  other?: string;
+}
 
 export interface SelectedPassenger {
   passengerId: string;
   displayName: string;
-  firstName: string;
-  lastName: string;
-  title: string | null;
-  alias: string | null;
-  email: string | null;
+  firstName?: string;
+  lastName?: string;
+  title?: string | null;
+  alias?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  driverInstructions?: string | null;
+  refreshments?: RefreshmentPreferences | null;
 }
 
 interface PassengerSelectorProps {
@@ -85,16 +96,35 @@ export default function PassengerSelector({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handlePassengerSelect = (passenger: PassengerListItem) => {
-    onSelect({
-      passengerId: passenger.passengerId,
-      displayName: passenger.displayName,
-      firstName: passenger.firstName,
-      lastName: passenger.lastName,
-      title: passenger.title,
-      alias: passenger.alias,
-      email: passenger.email,
-    });
+  const handlePassengerSelect = async (passenger: PassengerListItem) => {
+    // Fetch full passenger details to get driverInstructions and refreshments
+    try {
+      const { passenger: fullPassenger } = await getPassenger(passenger.passengerId);
+      onSelect({
+        passengerId: fullPassenger.passengerId,
+        displayName: passenger.displayName,
+        firstName: fullPassenger.firstName,
+        lastName: fullPassenger.lastName,
+        title: fullPassenger.title,
+        alias: fullPassenger.alias,
+        email: fullPassenger.email,
+        phone: fullPassenger.phone,
+        driverInstructions: fullPassenger.driverInstructions,
+        refreshments: fullPassenger.refreshments,
+      });
+    } catch (err) {
+      // Fallback to list item data if fetch fails
+      console.error('Failed to fetch full passenger details:', err);
+      onSelect({
+        passengerId: passenger.passengerId,
+        displayName: passenger.displayName,
+        firstName: passenger.firstName,
+        lastName: passenger.lastName,
+        title: passenger.title,
+        alias: passenger.alias,
+        email: passenger.email,
+      });
+    }
     setUseManualEntry(false);
     setIsOpen(false);
     setSearchQuery('');

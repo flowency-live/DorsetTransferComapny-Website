@@ -12,7 +12,7 @@ import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
-import { getCompany, getFavouriteTrips, markTripUsed, FavouriteTrip } from '@/lib/services/corporateApi';
+import { getCompany, getFavouriteTrips, markTripUsed, FavouriteTrip, getPassenger, type Passenger } from '@/lib/services/corporateApi';
 
 // Reuse components from public quote flow
 import AllInputsStep from '../../quote/components/AllInputsStep';
@@ -39,6 +39,20 @@ function CorporateQuotePageContent() {
   const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
   const searchParams = useSearchParams();
   const tripIdParam = searchParams.get('tripId');
+
+  // Rebook params (from passenger journey history)
+  const rebookPassengerId = searchParams.get('passengerId');
+  const rebookPickupAddress = searchParams.get('pickupAddress');
+  const rebookPickupLat = searchParams.get('pickupLat');
+  const rebookPickupLng = searchParams.get('pickupLng');
+  const rebookPickupPlaceId = searchParams.get('pickupPlaceId');
+  const rebookDropoffAddress = searchParams.get('dropoffAddress');
+  const rebookDropoffLat = searchParams.get('dropoffLat');
+  const rebookDropoffLng = searchParams.get('dropoffLng');
+  const rebookDropoffPlaceId = searchParams.get('dropoffPlaceId');
+  const rebookVehicleType = searchParams.get('vehicleType');
+  const rebookPassengers = searchParams.get('passengers');
+  const rebookLuggage = searchParams.get('luggage');
 
   // Company data (for payment terms)
   const [company, setCompany] = useState<CompanyData | null>(null);
@@ -162,6 +176,65 @@ function CorporateQuotePageContent() {
   useEffect(() => {
     loadTrip();
   }, [loadTrip]);
+
+  // Handle rebook params (from passenger journey history)
+  const loadRebook = useCallback(async () => {
+    // Only process if we have rebook params and not loading a favourite trip
+    if (!rebookPickupAddress || tripIdParam || !user) return;
+
+    // Pre-fill pickup location
+    setPickupLocation({
+      address: rebookPickupAddress,
+      placeId: rebookPickupPlaceId || undefined,
+      lat: rebookPickupLat ? parseFloat(rebookPickupLat) : undefined,
+      lng: rebookPickupLng ? parseFloat(rebookPickupLng) : undefined,
+    });
+
+    // Pre-fill dropoff location
+    if (rebookDropoffAddress) {
+      setDropoffLocation({
+        address: rebookDropoffAddress,
+        placeId: rebookDropoffPlaceId || undefined,
+        lat: rebookDropoffLat ? parseFloat(rebookDropoffLat) : undefined,
+        lng: rebookDropoffLng ? parseFloat(rebookDropoffLng) : undefined,
+      });
+    }
+
+    // Pre-fill passenger and luggage counts
+    if (rebookPassengers) setPassengers(parseInt(rebookPassengers, 10) || 2);
+    if (rebookLuggage) setLuggage(parseInt(rebookLuggage, 10) || 0);
+
+    // Load passenger details to auto-select and pre-fill preferences
+    if (rebookPassengerId) {
+      try {
+        const { passenger } = await getPassenger(rebookPassengerId);
+        const nameParts = [passenger.title, passenger.firstName, passenger.lastName].filter(Boolean);
+        const displayName = nameParts.join(' ');
+
+        setSelectedPassenger({
+          passengerId: passenger.passengerId,
+          displayName,
+          email: passenger.email || undefined,
+          phone: passenger.phone || undefined,
+        });
+
+        // Auto-fill special requests with driver instructions
+        if (passenger.driverInstructions) {
+          setSpecialRequests(passenger.driverInstructions);
+        }
+      } catch (err) {
+        console.error('Failed to load passenger for rebook:', err);
+      }
+    }
+  }, [
+    rebookPickupAddress, rebookPickupLat, rebookPickupLng, rebookPickupPlaceId,
+    rebookDropoffAddress, rebookDropoffLat, rebookDropoffLng, rebookDropoffPlaceId,
+    rebookPassengers, rebookLuggage, rebookPassengerId, tripIdParam, user
+  ]);
+
+  useEffect(() => {
+    loadRebook();
+  }, [loadRebook]);
 
   // Pre-fill contact details from user profile
   useEffect(() => {
@@ -423,6 +496,10 @@ function CorporateQuotePageContent() {
         passengerName: selectedPassenger?.displayName || manualPassengerName || contact.name,
         passengerId: selectedPassenger?.passengerId || undefined,
         bookedBy: user?.email,
+        // Passenger preferences (from directory)
+        passengerAlias: selectedPassenger?.alias || undefined,
+        passengerDriverInstructions: selectedPassenger?.driverInstructions || undefined,
+        passengerRefreshments: selectedPassenger?.refreshments || undefined,
         // Payment
         paymentMethod: isPayOnAccount ? 'invoice' : 'card',
         specialRequests: specialRequests || '',
@@ -586,18 +663,18 @@ function CorporateQuotePageContent() {
         />
         <main className="flex-1 pt-28 pb-16">
           <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            {/* Passenger Selection (booking for someone else) */}
-            <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
-              <PassengerSelector
-                selectedPassenger={selectedPassenger}
-                onSelect={setSelectedPassenger}
-                manualName={manualPassengerName}
-                onManualNameChange={setManualPassengerName}
-                label="Passenger (if booking for someone else)"
-                placeholder="Search passengers or enter name..."
-                helpText="Leave blank if booking for yourself"
-              />
-            </div>
+            {/* Show selected passenger summary (selected in Step 1) */}
+            {(selectedPassenger || manualPassengerName) && (
+              <div className="mb-6 p-4 bg-sage/5 border border-sage/20 rounded-lg">
+                <p className="text-sm font-medium text-navy-light/70 mb-1">Booking for:</p>
+                <p className="text-navy font-medium">
+                  {selectedPassenger?.displayName || manualPassengerName}
+                </p>
+                {selectedPassenger?.email && (
+                  <p className="text-sm text-navy-light/70">{selectedPassenger.email}</p>
+                )}
+              </div>
+            )}
 
             <ContactDetailsForm
               onSubmit={handleContactSubmit}
@@ -700,6 +777,25 @@ function CorporateQuotePageContent() {
             </div>
           ) : (
             <div className="max-w-3xl mx-auto">
+              {/* Passenger Selection - first field before journey details */}
+              <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
+                <PassengerSelector
+                  selectedPassenger={selectedPassenger}
+                  onSelect={(passenger) => {
+                    setSelectedPassenger(passenger);
+                    // Auto-fill special requests with driver instructions when passenger selected
+                    if (passenger?.driverInstructions) {
+                      setSpecialRequests(passenger.driverInstructions);
+                    }
+                  }}
+                  manualName={manualPassengerName}
+                  onManualNameChange={setManualPassengerName}
+                  label="Who is travelling?"
+                  placeholder="Search passengers or enter name..."
+                  helpText="Select from your passenger directory or enter a name for a one-time booking"
+                />
+              </div>
+
               <AllInputsStep
                 pickup={pickupLocation}
                 dropoff={dropoffLocation}
