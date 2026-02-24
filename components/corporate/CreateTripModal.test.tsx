@@ -8,6 +8,17 @@ vi.mock('@/lib/services/corporateApi', () => ({
   saveFavouriteTrip: vi.fn(),
 }));
 
+// Mock the quote API for vehicle types
+const mockVehicleTypes = [
+  { vehicleTypeId: 'standard', name: 'Standard Saloon', capacity: 4, description: '', features: [], imageUrl: '' },
+  { vehicleTypeId: 'executive', name: 'Executive', capacity: 4, description: '', features: [], imageUrl: '' },
+  { vehicleTypeId: 'minibus', name: 'Minibus', capacity: 8, description: '', features: [], imageUrl: '' },
+];
+
+vi.mock('@/app/quote/lib/api', () => ({
+  getVehicleTypes: vi.fn(() => Promise.resolve(mockVehicleTypes)),
+}));
+
 // Mock createPortal to render inline for testing
 vi.mock('react-dom', async () => {
   const actual = await vi.importActual('react-dom');
@@ -155,8 +166,13 @@ describe('CreateTripModal', () => {
       expect(tripNameInput.value).toBe('Daily Commute');
     });
 
-    it('updates vehicle type when changed', () => {
+    it('updates vehicle type when changed', async () => {
       render(<CreateTripModal {...defaultProps} />);
+
+      // Wait for vehicle types to load
+      await waitFor(() => {
+        expect(screen.getByText('Standard Saloon')).toBeTruthy();
+      });
 
       const vehicleSelect = screen.getByLabelText(/Vehicle Type/i) as HTMLSelectElement;
       fireEvent.change(vehicleSelect, { target: { value: 'executive' } });

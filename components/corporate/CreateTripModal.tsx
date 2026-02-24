@@ -5,14 +5,9 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import LocationInput from '@/app/quote/components/LocationInput';
+import { getVehicleTypes } from '@/app/quote/lib/api';
+import { VehicleType } from '@/app/quote/lib/types';
 import { saveFavouriteTrip, TripLocation } from '@/lib/services/corporateApi';
-
-const vehicleOptions = [
-  { value: '', label: 'No preference' },
-  { value: 'standard', label: 'Standard Saloon' },
-  { value: 'executive', label: 'Executive Saloon' },
-  { value: 'minibus', label: 'Minibus' },
-];
 
 interface CreateTripModalProps {
   isOpen: boolean;
@@ -37,9 +32,24 @@ export default function CreateTripModal({
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Vehicle types from tenant config
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch vehicle types when modal opens
+  useEffect(() => {
+    if (isOpen && vehicleTypes.length === 0) {
+      setLoadingVehicles(true);
+      getVehicleTypes()
+        .then(types => setVehicleTypes(types))
+        .catch(err => console.error('Failed to load vehicle types:', err))
+        .finally(() => setLoadingVehicles(false));
+    }
+  }, [isOpen, vehicleTypes.length]);
 
   // Reset form when modal closes
   useEffect(() => {
@@ -109,7 +119,7 @@ export default function CreateTripModal({
         label: string;
         pickupLocation: TripLocation;
         dropoffLocation: TripLocation;
-        vehicleType?: 'standard' | 'executive' | 'minibus';
+        vehicleType?: string;
         passengers?: number;
         luggage?: number;
       } = {
@@ -120,7 +130,7 @@ export default function CreateTripModal({
 
       // Only include optional fields if they have values
       if (vehicleType) {
-        saveData.vehicleType = vehicleType as 'standard' | 'executive' | 'minibus';
+        saveData.vehicleType = vehicleType;
       }
       if (passengers !== 2) {
         saveData.passengers = passengers;
@@ -129,7 +139,7 @@ export default function CreateTripModal({
         saveData.luggage = luggage;
       }
 
-      const result = await saveFavouriteTrip(saveData);
+      const result = await saveFavouriteTrip(saveData as Parameters<typeof saveFavouriteTrip>[0]);
 
       if (result.success) {
         onSaved?.();
@@ -238,10 +248,14 @@ export default function CreateTripModal({
                   id="vehicleType"
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage bg-white"
+                  disabled={loadingVehicles}
+                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage bg-white disabled:opacity-50"
                 >
-                  {vehicleOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option value="">
+                    {loadingVehicles ? 'Loading...' : 'No preference'}
+                  </option>
+                  {vehicleTypes.map(vt => (
+                    <option key={vt.vehicleTypeId} value={vt.vehicleTypeId}>{vt.name}</option>
                   ))}
                 </select>
               </div>
