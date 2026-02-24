@@ -6,3 +6,6 @@ export { useApi, useApiMutation } from './useApi';
 export type { UseApiState, UseApiResult } from './useApi';
 
 export { useDebounce } from './useDebounce';
+
+export { useCorporateTheme } from './useCorporateTheme';
+export type { } from './useCorporateTheme';

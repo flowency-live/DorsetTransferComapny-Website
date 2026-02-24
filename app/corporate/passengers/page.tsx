@@ -2,21 +2,18 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye, Calendar } from 'lucide-react';
+import { Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye, Calendar } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassengers,
   deletePassenger,
-  getDashboard,
   type PassengerListItem,
 } from '@/lib/services/corporateApi';
-import CorporateHeader from '@/components/corporate/CorporateHeader';
-import Footer from '@/components/shared/Footer';
+import CorporateLayout from '@/components/corporate/CorporateLayout';
 
 export default function PassengersPage() {
-  const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
+  const { user } = useRequireCorporateAuth();
   const [passengers, setPassengers] = useState<PassengerListItem[]>([]);
-  const [companyName, setCompanyName] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' } | null>(null);
@@ -30,13 +27,9 @@ export default function PassengersPage() {
 
   useEffect(() => {
     if (user) {
-      Promise.all([
-        getPassengers(),
-        getDashboard()
-      ])
-        .then(([passengersData, dashboardData]) => {
+      getPassengers()
+        .then((passengersData) => {
           setPassengers(passengersData.passengers);
-          setCompanyName(dashboardData.company?.companyName);
         })
         .catch((err) => {
           console.error('Failed to load passengers:', err);
@@ -51,7 +44,7 @@ export default function PassengersPage() {
     try {
       const data = await getPassengers(searchQuery || undefined);
       setPassengers(data.passengers);
-    } catch (err) {
+    } catch {
       showToast('Failed to search passengers', 'error');
     } finally {
       setIsLoading(false);
@@ -83,208 +76,180 @@ export default function PassengersPage() {
     return parts.join(' ');
   };
 
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen bg-[#FBF7F0] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-      <CorporateHeader
-        userName={user.name}
-        companyName={companyName}
-        onLogout={logout}
-        isAdmin={isAdmin}
-      />
+    <CorporateLayout>
+      <div className="max-w-6xl mx-auto">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 className="corp-page-title text-2xl font-bold">Passenger Directory</h1>
+            <p className="corp-page-subtitle mt-1">
+              Manage your frequent passengers for faster bookings
+            </p>
+          </div>
+          <Link
+            href="/corporate/passengers/new"
+            className="corp-btn corp-btn-primary inline-flex items-center justify-center px-4 py-2 rounded-full text-sm font-medium"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Passenger
+          </Link>
+        </div>
 
-      <main className="flex-1 pt-28 pb-16">
-        <div className="container mx-auto px-4 md:px-6">
-          {/* Page Header */}
-          <div className="mb-8">
-            <Link
-              href="/corporate/dashboard"
-              className="inline-flex items-center text-sm text-navy-light/70 hover:text-sage transition-colors mb-3"
+        {/* Search Bar */}
+        <div className="corp-card p-4 mb-6 rounded-lg">
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 opacity-50" />
+              <input
+                type="text"
+                placeholder="Search by name, email, or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="corp-input w-full pl-10 pr-4 py-2 rounded-lg"
+              />
+            </div>
+            <button
+              onClick={handleSearch}
+              className="corp-btn corp-btn-secondary px-4 py-2 rounded-lg text-sm font-medium"
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to Dashboard
-            </Link>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-navy">Passenger Directory</h1>
-                <p className="text-navy-light/70 mt-1">
-                  Manage your frequent passengers for faster bookings
-                </p>
-              </div>
-              <Link
-                href="/corporate/passengers/new"
-                className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-full shadow-sm text-sm font-medium text-white bg-sage hover:bg-sage-dark transition-colors"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Passenger
-              </Link>
-            </div>
-          </div>
-
-          {/* Search Bar */}
-          <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-4 mb-6">
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-light/50" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email, or phone..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full pl-10 pr-4 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                className="px-4 py-2 border border-sage rounded-lg text-sm font-medium text-sage hover:bg-sage/5 transition-colors"
-              >
-                Search
-              </button>
-            </div>
-          </div>
-
-          {/* Passengers List */}
-          <div className="bg-white rounded-lg shadow-sm border border-sage/20">
-            <div className="p-6 border-b border-sage/20 flex items-center gap-2">
-              <Users className="h-5 w-5 text-sage" />
-              <h2 className="text-lg font-semibold text-navy">
-                Passengers {!isLoading && `(${passengers.length})`}
-              </h2>
-            </div>
-
-            {isLoading ? (
-              <div className="p-6 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage mx-auto" />
-              </div>
-            ) : passengers.length === 0 ? (
-              <div className="p-12 text-center">
-                <Users className="mx-auto h-12 w-12 text-sage/30" />
-                <p className="mt-4 text-sm text-navy-light/70">
-                  {searchQuery ? 'No passengers found matching your search' : 'No passengers saved yet'}
-                </p>
-                <p className="mt-1 text-xs text-navy-light/50">
-                  Add passengers to quickly select them when booking transfers
-                </p>
-                <Link
-                  href="/corporate/passengers/new"
-                  className="mt-4 inline-flex items-center text-sm font-medium text-sage hover:text-sage-dark"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add your first passenger
-                </Link>
-              </div>
-            ) : (
-              <div className="divide-y divide-sage/20">
-                {passengers.map((passenger) => (
-                  <div
-                    key={passenger.passengerId}
-                    className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 hover:bg-sage/5 transition-colors"
-                  >
-                    {/* Passenger Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium text-navy truncate">
-                          {formatPassengerName(passenger)}
-                        </h3>
-                        {passenger.alias && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sage/10 text-sage-dark">
-                            {passenger.alias}
-                          </span>
-                        )}
-                      </div>
-                      {passenger.email && (
-                        <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-navy-light/70">
-                          <span className="inline-flex items-center gap-1 truncate">
-                            <Mail className="h-3.5 w-3.5 flex-shrink-0" />
-                            {passenger.email}
-                          </span>
-                        </div>
-                      )}
-                      {passenger.usageCount > 0 && (
-                        <p className="mt-1 text-xs text-navy-light/50">
-                          {passenger.usageCount} journey{passenger.usageCount === 1 ? '' : 's'}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                      <Link
-                        href={`/corporate/quote?passengerId=${passenger.passengerId}`}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-sage border border-sage rounded-full hover:bg-sage-dark transition-colors"
-                      >
-                        <Calendar className="h-4 w-4 mr-1" />
-                        Quick Book
-                      </Link>
-                      <Link
-                        href={`/corporate/passengers/${passenger.passengerId}`}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Link>
-                      <Link
-                        href={`/corporate/passengers/${passenger.passengerId}?edit=true`}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-navy-light/70 border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
-                      >
-                        <Edit2 className="h-4 w-4 mr-1" />
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteClick(passenger.passengerId, passenger.firstName, passenger.lastName)}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 rounded-full hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+              Search
+            </button>
           </div>
         </div>
-      </main>
 
-      <Footer />
+        {/* Passengers List */}
+        <div className="corp-card rounded-lg">
+          <div className="p-6 border-b corp-border flex items-center gap-2">
+            <Users className="h-5 w-5 corp-icon" />
+            <h2 className="corp-section-title text-lg font-semibold">
+              Passengers {!isLoading && `(${passengers.length})`}
+            </h2>
+          </div>
+
+          {isLoading ? (
+            <div className="p-6 text-center">
+              <div className="corp-loading-spinner w-8 h-8 border-4 rounded-full animate-spin mx-auto" />
+            </div>
+          ) : passengers.length === 0 ? (
+            <div className="p-12 text-center">
+              <Users className="mx-auto h-12 w-12 opacity-30" />
+              <p className="mt-4 text-sm corp-page-subtitle">
+                {searchQuery ? 'No passengers found matching your search' : 'No passengers saved yet'}
+              </p>
+              <p className="mt-1 text-xs opacity-50">
+                Add passengers to quickly select them when booking transfers
+              </p>
+              <Link
+                href="/corporate/passengers/new"
+                className="mt-4 inline-flex items-center text-sm font-medium corp-link"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add your first passenger
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y corp-border">
+              {passengers.map((passenger) => (
+                <div
+                  key={passenger.passengerId}
+                  className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 corp-list-item"
+                >
+                  {/* Passenger Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium truncate">
+                        {formatPassengerName(passenger)}
+                      </h3>
+                      {passenger.alias && (
+                        <span className="corp-badge corp-badge-neutral text-xs">
+                          {passenger.alias}
+                        </span>
+                      )}
+                    </div>
+                    {passenger.email && (
+                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm opacity-70">
+                        <span className="inline-flex items-center gap-1 truncate">
+                          <Mail className="h-3.5 w-3.5 flex-shrink-0" />
+                          {passenger.email}
+                        </span>
+                      </div>
+                    )}
+                    {passenger.usageCount > 0 && (
+                      <p className="mt-1 text-xs opacity-50">
+                        {passenger.usageCount} journey{passenger.usageCount === 1 ? '' : 's'}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <Link
+                      href={`/corporate/quote?passengerId=${passenger.passengerId}`}
+                      className="corp-btn corp-btn-primary inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
+                    >
+                      <Calendar className="h-4 w-4 mr-1" />
+                      Quick Book
+                    </Link>
+                    <Link
+                      href={`/corporate/passengers/${passenger.passengerId}`}
+                      className="corp-btn corp-btn-secondary inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Link>
+                    <Link
+                      href={`/corporate/passengers/${passenger.passengerId}?edit=true`}
+                      className="corp-btn corp-btn-ghost inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
+                    >
+                      <Edit2 className="h-4 w-4 mr-1" />
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteClick(passenger.passengerId, passenger.firstName, passenger.lastName)}
+                      className="corp-btn corp-btn-danger-ghost inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
       {confirmDialog?.show && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4">
             <div
-              className="fixed inset-0 bg-navy/50 transition-opacity"
+              className="fixed inset-0 bg-black/50 transition-opacity"
               onClick={() => setConfirmDialog(null)}
             />
-            <div className="relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
               <div className="text-center mb-4">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                   <AlertTriangle className="h-6 w-6 text-red-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-navy">Delete Passenger?</h3>
-                <p className="text-sm text-navy-light/70 mt-2">
+                <h3 className="text-lg font-semibold">Delete Passenger?</h3>
+                <p className="text-sm opacity-70 mt-2">
                   Are you sure you want to remove <strong>{confirmDialog.name}</strong> from your passenger directory? This action cannot be undone.
                 </p>
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmDialog(null)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-navy bg-white border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
+                  className="corp-btn corp-btn-secondary flex-1 px-4 py-2 text-sm font-medium rounded-full"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-full hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  className="corp-btn corp-btn-danger flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
@@ -309,6 +274,6 @@ export default function PassengersPage() {
           </div>
         </div>
       )}
-    </div>
+    </CorporateLayout>
   );
 }
