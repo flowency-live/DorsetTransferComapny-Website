@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Calendar, MapPin, Users, Car, Mail, Phone, Download, Loader2, Printer, User, Coffee, Droplet, MessageSquare } from 'lucide-react';
+import { CheckCircle, Calendar, MapPin, Users, Car, Mail, Phone, Download, Loader2, Printer, User, Coffee, Droplet, MessageSquare, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -37,10 +37,14 @@ interface BookingConfirmationProps {
   // Corporate-specific: When passenger is different from booking contact
   passengerInfo?: PassengerInfo;
   isCorporate?: boolean;
+  // Corporate-specific: Allow saving route as favourite trip
+  onSaveToFavourites?: () => void;
+  showSaveToFavourites?: boolean;
 }
 
-export default function BookingConfirmation({ quote, contactDetails, bookingId, specialRequests, returnUrl = '/', passengerInfo, isCorporate = false }: BookingConfirmationProps) {
+export default function BookingConfirmation({ quote, contactDetails, bookingId, specialRequests, returnUrl = '/', passengerInfo, isCorporate = false, onSaveToFavourites, showSaveToFavourites = false }: BookingConfirmationProps) {
   const [downloading, setDownloading] = useState(false);
+  const [favouriteSaved, setFavouriteSaved] = useState(false);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -395,6 +399,46 @@ export default function BookingConfirmation({ quote, contactDetails, bookingId, 
               </li>
             </ol>
           </div>
+
+          {/* Save to Favourites - Corporate only */}
+          {isCorporate && showSaveToFavourites && onSaveToFavourites && !favouriteSaved && (
+            <div className="bg-sage/5 border border-sage/20 rounded-3xl p-6 no-print">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-sage/10 rounded-lg">
+                    <Heart className="h-5 w-5 text-sage" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-navy">Save this route for future bookings?</p>
+                    <p className="text-xs text-navy-light/70">Quickly rebook this trip anytime</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSaveToFavourites();
+                    setFavouriteSaved(true);
+                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-sage text-sage font-medium text-sm rounded-lg hover:bg-sage hover:text-white transition-colors"
+                >
+                  <Heart className="h-4 w-4" />
+                  Save as Favourite
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Favourite Saved Confirmation */}
+          {isCorporate && favouriteSaved && (
+            <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-3xl p-4 no-print">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                  Route saved to your favourites
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 no-print">

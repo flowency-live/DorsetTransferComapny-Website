@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 import FavouriteTripCard from '@/components/corporate/FavouriteTripCard';
+import CreateTripModal from '@/components/corporate/CreateTripModal';
 import CorporateHeader from '@/components/corporate/CorporateHeader';
 import Footer from '@/components/shared/Footer';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
@@ -39,6 +40,9 @@ export default function TripsManagementPage() {
   // Delete confirmation state
   const [deletingTrip, setDeletingTrip] = useState<FavouriteTrip | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Create new trip modal state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchTrips = async () => {
     try {
@@ -173,13 +177,23 @@ export default function TripsManagementPage() {
                 </p>
               </div>
             </div>
-            <Link
-              href="/corporate/quote"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              New Quote
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-sage text-sage font-medium rounded-lg hover:bg-sage/5 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                New Trip
+              </button>
+              <Link
+                href="/corporate/quote"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                New Quote
+              </Link>
+            </div>
           </div>
 
           {/* Error message */}
@@ -396,6 +410,15 @@ export default function TripsManagementPage() {
           </div>
         </>
       )}
+
+      {/* Create New Trip Modal */}
+      <CreateTripModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSaved={() => {
+          fetchTrips();
+        }}
+      />
     </div>
   );
 }

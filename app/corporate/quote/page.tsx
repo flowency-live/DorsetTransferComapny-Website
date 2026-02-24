@@ -7,6 +7,7 @@ import { useState, useEffect, Suspense, useCallback } from 'react';
 
 import CorporateHeader from '@/components/corporate/CorporateHeader';
 import PassengerSelector, { SelectedPassenger } from '@/components/corporate/PassengerSelector';
+import PreferencesReviewStep, { BookingPreferences } from '@/components/corporate/PreferencesReviewStep';
 import SavePassengerModal from '@/components/corporate/SavePassengerModal';
 import SaveTripModal from '@/components/corporate/SaveTripModal';
 import Footer from '@/components/shared/Footer';
@@ -27,7 +28,7 @@ import { calculateMultiVehicleQuote, saveQuote } from '../../quote/lib/api';
 import { Extras, JourneyType, QuoteResponse, Location, Waypoint, MultiVehicleQuoteResponse } from '../../quote/lib/types';
 
 type Step = 1 | 2;
-type BookingStage = 'quote' | 'contact' | 'payment' | 'confirmation';
+type BookingStage = 'quote' | 'contact' | 'preferences' | 'payment' | 'confirmation';
 
 interface CompanyData {
   companyName: string;
@@ -110,6 +111,7 @@ function CorporateQuotePageContent() {
   // Booking flow state
   const [bookingStage, setBookingStage] = useState<BookingStage>('quote');
   const [contactDetails, setContactDetails] = useState<ContactDetails | null>(null);
+  const [bookingPreferences, setBookingPreferences] = useState<BookingPreferences | null>(null);
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
   const [bookingId, setBookingId] = useState<string>('');
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -446,13 +448,21 @@ function CorporateQuotePageContent() {
 
   const handleContactSubmit = (details: ContactDetails) => {
     setContactDetails(details);
+    // Go to preferences review step
+    setBookingStage('preferences');
+  };
 
+  const handlePreferencesBack = () => {
+    setBookingStage('contact');
+  };
+
+  const handlePreferencesContinue = () => {
     // Check payment terms - skip payment if on account
     const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
 
-    if (isPayOnAccount) {
+    if (isPayOnAccount && contactDetails) {
       // Skip payment, go straight to creating the booking
-      handleCreateBooking(details);
+      handleCreateBooking(contactDetails);
     } else {
       setBookingStage('payment');
     }
@@ -574,6 +584,8 @@ function CorporateQuotePageContent() {
               } : manualPassengerName ? {
                 name: manualPassengerName,
               } : undefined}
+              showSaveToFavourites={!loadedTrip}
+              onSaveToFavourites={() => setShowSaveTripModal(true)}
             />
             {isPayOnAccount && (
               <div className="mt-4 p-4 bg-sage/10 border border-sage/30 rounded-lg">
@@ -729,7 +741,7 @@ function CorporateQuotePageContent() {
                     })}
                     className="flex-1 px-4 py-3 bg-sage text-white rounded-lg font-medium hover:bg-sage-dark transition-colors"
                   >
-                    {isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
+                    Continue to Preferences
                   </button>
                 </div>
               </div>
@@ -753,7 +765,7 @@ function CorporateQuotePageContent() {
                   onSubmit={handleContactSubmit}
                   onBack={handleContactBack}
                   initialValues={contactDetails || undefined}
-                  submitLabel={isPayOnAccount ? 'Confirm Booking' : 'Continue to Payment'}
+                  submitLabel="Continue to Preferences"
                   isCorporate={true}
                   passengerName={selectedPassenger?.displayName || manualPassengerName}
                 />
@@ -768,6 +780,36 @@ function CorporateQuotePageContent() {
               </div>
             )}
           </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Render preferences review step
+  if (bookingStage === 'preferences' && quote && contactDetails) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
+        <CorporateHeader
+          userName={user.name}
+          companyName={company?.companyName}
+          onLogout={logout}
+          isAdmin={isAdmin}
+        />
+        <main className="flex-1 pt-28 pb-16">
+          <PreferencesReviewStep
+            passengerName={selectedPassenger?.displayName || manualPassengerName || contactDetails.name}
+            passengerPreferences={selectedPassenger ? {
+              refreshments: selectedPassenger.refreshments,
+              driverInstructions: selectedPassenger.driverInstructions,
+            } : undefined}
+            accountDefaults={undefined}
+            specialRequests={specialRequests}
+            onSpecialRequestsChange={setSpecialRequests}
+            onPreferencesChange={setBookingPreferences}
+            onBack={handlePreferencesBack}
+            onContinue={handlePreferencesContinue}
+          />
         </main>
         <Footer />
       </div>
@@ -832,14 +874,26 @@ function CorporateQuotePageContent() {
 
               {/* Save as Favourite button - only show if not already loaded from a favourite */}
               {!loadedTrip && (
-                <div className="mt-4 text-center">
-                  <button
-                    onClick={() => setShowSaveTripModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Save as Favourite Trip
-                  </button>
+                <div className="mt-6 p-4 bg-sage/5 border border-sage/20 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-sage/10 rounded-lg">
+                        <Heart className="h-5 w-5 text-sage" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-navy">Save this route?</p>
+                        <p className="text-xs text-navy-light/70">Quick book this trip again anytime</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSaveTripModal(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 border border-sage text-sage font-medium text-sm rounded-lg hover:bg-sage hover:text-white transition-colors"
+                    >
+                      <Heart className="h-4 w-4" />
+                      Save as Favourite
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
