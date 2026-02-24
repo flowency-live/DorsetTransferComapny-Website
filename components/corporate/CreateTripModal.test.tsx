@@ -62,6 +62,21 @@ describe('CreateTripModal', () => {
       expect(screen.getByText(/Drop-off Location/i)).toBeTruthy();
     });
 
+    it('renders vehicle type dropdown', () => {
+      render(<CreateTripModal {...defaultProps} />);
+      expect(screen.getByLabelText(/Vehicle Type/i)).toBeTruthy();
+    });
+
+    it('renders passengers input', () => {
+      render(<CreateTripModal {...defaultProps} />);
+      expect(screen.getByLabelText(/Passengers/i)).toBeTruthy();
+    });
+
+    it('renders luggage input', () => {
+      render(<CreateTripModal {...defaultProps} />);
+      expect(screen.getByLabelText(/Luggage/i)).toBeTruthy();
+    });
+
     it('renders Cancel and Save buttons', () => {
       render(<CreateTripModal {...defaultProps} />);
       expect(screen.getByRole('button', { name: /Cancel/i })).toBeTruthy();
@@ -138,6 +153,33 @@ describe('CreateTripModal', () => {
       fireEvent.change(tripNameInput, { target: { value: 'Daily Commute' } });
 
       expect(tripNameInput.value).toBe('Daily Commute');
+    });
+
+    it('updates vehicle type when changed', () => {
+      render(<CreateTripModal {...defaultProps} />);
+
+      const vehicleSelect = screen.getByLabelText(/Vehicle Type/i) as HTMLSelectElement;
+      fireEvent.change(vehicleSelect, { target: { value: 'executive' } });
+
+      expect(vehicleSelect.value).toBe('executive');
+    });
+
+    it('updates passengers count when changed', () => {
+      render(<CreateTripModal {...defaultProps} />);
+
+      const passengersInput = screen.getByLabelText(/Passengers/i) as HTMLInputElement;
+      fireEvent.change(passengersInput, { target: { value: '4' } });
+
+      expect(passengersInput.value).toBe('4');
+    });
+
+    it('updates luggage count when changed', () => {
+      render(<CreateTripModal {...defaultProps} />);
+
+      const luggageInput = screen.getByLabelText(/Luggage/i) as HTMLInputElement;
+      fireEvent.change(luggageInput, { target: { value: '3' } });
+
+      expect(luggageInput.value).toBe('3');
     });
   });
 

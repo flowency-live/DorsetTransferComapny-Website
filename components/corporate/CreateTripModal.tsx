@@ -1,11 +1,18 @@
 'use client';
 
-import { X, MapPin } from 'lucide-react';
+import { X, MapPin, Car, Users, Briefcase } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import LocationInput from '@/app/quote/components/LocationInput';
 import { saveFavouriteTrip, TripLocation } from '@/lib/services/corporateApi';
+
+const vehicleOptions = [
+  { value: '', label: 'No preference' },
+  { value: 'standard', label: 'Standard Saloon' },
+  { value: 'executive', label: 'Executive Saloon' },
+  { value: 'minibus', label: 'Minibus' },
+];
 
 interface CreateTripModalProps {
   isOpen: boolean;
@@ -23,6 +30,9 @@ export default function CreateTripModal({
   const [pickupAddress, setPickupAddress] = useState('');
   const [dropoffLocation, setDropoffLocation] = useState<TripLocation | null>(null);
   const [dropoffAddress, setDropoffAddress] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [passengers, setPassengers] = useState(2);
+  const [luggage, setLuggage] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -39,6 +49,9 @@ export default function CreateTripModal({
       setPickupAddress('');
       setDropoffLocation(null);
       setDropoffAddress('');
+      setVehicleType('');
+      setPassengers(2);
+      setLuggage(0);
       setError(null);
     }
   }, [isOpen]);
@@ -92,11 +105,29 @@ export default function CreateTripModal({
     setError(null);
 
     try {
-      const saveData = {
+      const saveData: {
+        label: string;
+        pickupLocation: TripLocation;
+        dropoffLocation: TripLocation;
+        vehicleType?: 'standard' | 'executive' | 'minibus';
+        passengers?: number;
+        luggage?: number;
+      } = {
         label: label.trim(),
         pickupLocation,
         dropoffLocation,
       };
+
+      // Only include optional fields if they have values
+      if (vehicleType) {
+        saveData.vehicleType = vehicleType as 'standard' | 'executive' | 'minibus';
+      }
+      if (passengers !== 2) {
+        saveData.passengers = passengers;
+      }
+      if (luggage > 0) {
+        saveData.luggage = luggage;
+      }
 
       const result = await saveFavouriteTrip(saveData);
 
@@ -193,10 +224,71 @@ export default function CreateTripModal({
               />
             </div>
 
+            {/* Vehicle & Passenger Details */}
+            <div className="grid grid-cols-3 gap-4">
+              {/* Vehicle Type */}
+              <div>
+                <label htmlFor="vehicleType" className="block text-sm font-medium text-navy mb-2">
+                  <div className="flex items-center gap-1">
+                    <Car className="h-4 w-4" />
+                    Vehicle Type
+                  </div>
+                </label>
+                <select
+                  id="vehicleType"
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage bg-white"
+                >
+                  {vehicleOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Passengers */}
+              <div>
+                <label htmlFor="passengers" className="block text-sm font-medium text-navy mb-2">
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    Passengers
+                  </div>
+                </label>
+                <input
+                  type="number"
+                  id="passengers"
+                  value={passengers}
+                  onChange={(e) => setPassengers(Math.min(16, Math.max(1, parseInt(e.target.value) || 1)))}
+                  min={1}
+                  max={16}
+                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage"
+                />
+              </div>
+
+              {/* Luggage */}
+              <div>
+                <label htmlFor="luggage" className="block text-sm font-medium text-navy mb-2">
+                  <div className="flex items-center gap-1">
+                    <Briefcase className="h-4 w-4" />
+                    Luggage
+                  </div>
+                </label>
+                <input
+                  type="number"
+                  id="luggage"
+                  value={luggage}
+                  onChange={(e) => setLuggage(Math.min(20, Math.max(0, parseInt(e.target.value) || 0)))}
+                  min={0}
+                  max={20}
+                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage"
+                />
+              </div>
+            </div>
+
             {/* Info text */}
             <div className="text-sm text-navy-light/70 bg-sage/5 rounded-lg p-3">
-              Save frequently used routes for quick booking. You can set vehicle preferences
-              when editing the trip later.
+              Save frequently used routes for quick booking. These settings will be pre-filled
+              when you create a new booking from this trip.
             </div>
 
             {/* Error message */}
