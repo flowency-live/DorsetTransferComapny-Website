@@ -28,14 +28,14 @@ interface RefreshmentsState {
 }
 
 interface PageProps {
-  params: Promise<{ passengerId: string }>;
+  params: { passengerId: string };
 }
 
 export default function PassengerDetailPage({ params }: PageProps) {
   const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [passengerId, setPassengerId] = useState<string>('');
+  const passengerId = params.passengerId;
   const [companyName, setCompanyName] = useState<string | undefined>();
   const [passenger, setPassenger] = useState<Passenger | null>(null);
   const [journeys, setJourneys] = useState<Journey[]>([]);
@@ -72,13 +72,6 @@ export default function PassengerDetailPage({ params }: PageProps) {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
-
-  // Resolve params
-  useEffect(() => {
-    params.then((resolvedParams) => {
-      setPassengerId(resolvedParams.passengerId);
-    });
-  }, [params]);
 
   // Check if edit mode from URL
   useEffect(() => {
