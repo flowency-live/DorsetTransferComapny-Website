@@ -178,34 +178,37 @@ function CorporateQuotePageContent() {
     loadTrip();
   }, [loadTrip]);
 
-  // Handle rebook params (from passenger journey history)
+  // Handle rebook/quick-book params (from passenger journey history or passenger directory)
   const loadRebook = useCallback(async () => {
-    // Only process if we have rebook params and not loading a favourite trip
-    if (!rebookPickupAddress || tripIdParam || !user) return;
+    // Skip if loading a favourite trip or user not loaded
+    if (tripIdParam || !user) return;
 
-    // Pre-fill pickup location
-    setPickupLocation({
-      address: rebookPickupAddress,
-      placeId: rebookPickupPlaceId || undefined,
-      lat: rebookPickupLat ? parseFloat(rebookPickupLat) : undefined,
-      lng: rebookPickupLng ? parseFloat(rebookPickupLng) : undefined,
-    });
-
-    // Pre-fill dropoff location
-    if (rebookDropoffAddress) {
-      setDropoffLocation({
-        address: rebookDropoffAddress,
-        placeId: rebookDropoffPlaceId || undefined,
-        lat: rebookDropoffLat ? parseFloat(rebookDropoffLat) : undefined,
-        lng: rebookDropoffLng ? parseFloat(rebookDropoffLng) : undefined,
+    // Only process location pre-fill if we have full rebook params (from journey history)
+    if (rebookPickupAddress) {
+      // Pre-fill pickup location
+      setPickupLocation({
+        address: rebookPickupAddress,
+        placeId: rebookPickupPlaceId || undefined,
+        lat: rebookPickupLat ? parseFloat(rebookPickupLat) : undefined,
+        lng: rebookPickupLng ? parseFloat(rebookPickupLng) : undefined,
       });
+
+      // Pre-fill dropoff location
+      if (rebookDropoffAddress) {
+        setDropoffLocation({
+          address: rebookDropoffAddress,
+          placeId: rebookDropoffPlaceId || undefined,
+          lat: rebookDropoffLat ? parseFloat(rebookDropoffLat) : undefined,
+          lng: rebookDropoffLng ? parseFloat(rebookDropoffLng) : undefined,
+        });
+      }
+
+      // Pre-fill passenger and luggage counts
+      if (rebookPassengers) setPassengers(parseInt(rebookPassengers, 10) || 2);
+      if (rebookLuggage) setLuggage(parseInt(rebookLuggage, 10) || 0);
     }
 
-    // Pre-fill passenger and luggage counts
-    if (rebookPassengers) setPassengers(parseInt(rebookPassengers, 10) || 2);
-    if (rebookLuggage) setLuggage(parseInt(rebookLuggage, 10) || 0);
-
-    // Load passenger details to auto-select and pre-fill preferences
+    // Load passenger details to auto-select (works with just passengerId from Quick Book)
     if (rebookPassengerId) {
       try {
         const { passenger } = await getPassenger(rebookPassengerId);

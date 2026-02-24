@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye, Calendar } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassengers,
@@ -216,7 +216,14 @@ export default function PassengersPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                      <Link
+                        href={`/corporate/quote?passengerId=${passenger.passengerId}`}
+                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-sage border border-sage rounded-full hover:bg-sage-dark transition-colors"
+                      >
+                        <Calendar className="h-4 w-4 mr-1" />
+                        Quick Book
+                      </Link>
                       <Link
                         href={`/corporate/passengers/${passenger.passengerId}`}
                         className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
