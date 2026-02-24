@@ -8,7 +8,7 @@ import FavouriteTripCard from '@/components/corporate/FavouriteTripCard';
 import CorporateHeader from '@/components/corporate/CorporateHeader';
 import Footer from '@/components/shared/Footer';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
-import { getDashboard, getFavouriteTrips, FavouriteTrip } from '@/lib/services/corporateApi';
+import { getDashboard, getFavouriteTrips, FavouriteTrip, getPassengers, PassengerListItem } from '@/lib/services/corporateApi';
 
 interface DashboardData {
   company: {
@@ -53,8 +53,10 @@ export default function CorporateDashboardPage() {
   const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [favouriteTrips, setFavouriteTrips] = useState<FavouriteTrip[]>([]);
+  const [passengers, setPassengers] = useState<PassengerListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tripsLoading, setTripsLoading] = useState(true);
+  const [passengersLoading, setPassengersLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
@@ -69,6 +71,12 @@ export default function CorporateDashboardPage() {
         .then((data) => setFavouriteTrips(data.trips || []))
         .catch(console.error)
         .finally(() => setTripsLoading(false));
+
+      // Fetch passengers
+      getPassengers()
+        .then((data) => setPassengers(data.passengers || []))
+        .catch(console.error)
+        .finally(() => setPassengersLoading(false));
     }
   }, [user]);
 
@@ -267,6 +275,87 @@ export default function CorporateDashboardPage() {
                     className="mt-4 inline-block text-sm font-medium text-sage hover:text-sage-dark"
                   >
                     Book a transfer &rarr;
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Our Passengers */}
+          <div className="bg-white rounded-lg shadow-sm border border-sage/20 mb-8">
+            <div className="p-6 border-b border-sage/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-sage" />
+                <h2 className="text-lg font-semibold text-navy">Our Passengers</h2>
+              </div>
+              <Link
+                href="/corporate/passengers/new"
+                className="inline-flex items-center gap-1 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Add Passenger
+              </Link>
+            </div>
+            <div className="p-6">
+              {passengersLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sage mx-auto" />
+                </div>
+              ) : passengers.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {passengers.slice(0, 6).map((passenger) => (
+                      <Link
+                        key={passenger.passengerId}
+                        href={`/corporate/passengers/${passenger.passengerId}`}
+                        className="flex items-center p-4 border border-sage/20 rounded-lg hover:bg-sage/5 transition-colors"
+                      >
+                        <div className="flex-shrink-0 h-10 w-10 bg-sage/10 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-semibold text-sage">
+                            {passenger.firstName[0]}{passenger.lastName[0]}
+                          </span>
+                        </div>
+                        <div className="ml-3 min-w-0 flex-1">
+                          <p className="text-sm font-medium text-navy truncate">
+                            {passenger.displayName}
+                          </p>
+                          {passenger.alias && (
+                            <p className="text-xs text-navy-light/60 truncate">
+                              &quot;{passenger.alias}&quot;
+                            </p>
+                          )}
+                          {passenger.usageCount > 0 && (
+                            <p className="text-xs text-navy-light/50">
+                              {passenger.usageCount} {passenger.usageCount === 1 ? 'trip' : 'trips'}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  {passengers.length > 6 && (
+                    <div className="mt-4 text-center">
+                      <Link
+                        href="/corporate/passengers"
+                        className="text-sm font-medium text-sage hover:text-sage-dark"
+                      >
+                        View all {passengers.length} passengers &rarr;
+                      </Link>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="mx-auto h-12 w-12 text-sage/30" />
+                  <p className="mt-2 text-sm text-navy-light/70">No passengers added yet</p>
+                  <p className="mt-1 text-xs text-navy-light/50">
+                    Add frequent travellers for quick booking
+                  </p>
+                  <Link
+                    href="/corporate/passengers/new"
+                    className="mt-4 inline-block text-sm font-medium text-sage hover:text-sage-dark"
+                  >
+                    Add your first passenger &rarr;
                   </Link>
                 </div>
               )}
