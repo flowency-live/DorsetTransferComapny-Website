@@ -1227,7 +1227,7 @@
 }
 
 [data-theme="dark"] .corp-layout .text-muted-foreground {
-  color: var(--corp-text-muted) !important;
+  color: var(--corp-text-secondary) !important;
 }
 
 /* Radio buttons */

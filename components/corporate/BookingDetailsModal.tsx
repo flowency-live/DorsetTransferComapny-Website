@@ -135,26 +135,37 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
   const canModify = booking && booking.status !== 'cancelled' && booking.status !== 'completed';
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="corp-card rounded-xl max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto shadow-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b corp-border bg-[var(--corp-bg-elevated)]">
-          <div>
-            <h2 className="text-lg font-semibold">Booking Details</h2>
-            {booking && (
-              <p className="text-sm corp-page-subtitle mt-1">Reference: {booking.bookingId}</p>
-            )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+      {/* Frosted glass overlay */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      <div className="corp-card relative rounded-xl max-w-2xl w-full my-8 max-h-[90vh] overflow-hidden shadow-2xl border-2 border-[var(--corp-border-subtle)]">
+        {/* Header with stronger visual separation */}
+        <div className="sticky top-0 z-10 flex items-center justify-between p-5 border-b-2 border-[var(--corp-accent)] bg-[var(--corp-bg-elevated)]">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-[var(--corp-accent-muted)]">
+              <MapPin className="w-5 h-5 text-[var(--corp-accent)]" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Booking Details</h2>
+              {booking && (
+                <p className="text-sm corp-page-subtitle mt-0.5">Ref: <span className="font-mono font-medium">{booking.bookingId}</span></p>
+              )}
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-[var(--corp-bg-hover)] transition-colors"
+            className="p-2 rounded-lg hover:bg-[var(--corp-bg-hover)] border border-transparent hover:border-[var(--corp-border-default)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* Content - scrollable */}
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
           {loading && (
             <div className="text-center py-12">
               <div className="corp-loading-spinner w-10 h-10 border-4 rounded-full animate-spin mx-auto" />
@@ -268,7 +279,7 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
               </div>
 
               {/* Booking Info */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
                   <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
                     <Car className="w-3.5 h-3.5" />

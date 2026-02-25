@@ -705,15 +705,15 @@ function CorporateQuotePageContent() {
     if (instantBookLoading) {
       return (
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="animate-spin w-12 h-12 border-4 border-sage/20 border-t-sage rounded-full mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-navy mb-2">Getting your quote...</h2>
-            <p className="text-navy-light/70">
+          <div className="corp-card rounded-2xl shadow-lg p-8 text-center">
+            <div className="corp-loading-spinner w-12 h-12 border-4 rounded-full mx-auto mb-4 animate-spin" />
+            <h2 className="text-xl font-semibold mb-2">Getting your quote...</h2>
+            <p className="corp-page-subtitle">
               We&apos;re preparing your booking with your saved preferences.
             </p>
             {loadedTrip && (
-              <div className="mt-4 p-3 bg-sage/5 rounded-lg">
-                <p className="text-sm text-navy-light">
+              <div className="mt-4 p-3 bg-[var(--corp-accent-muted)] rounded-lg">
+                <p className="text-sm corp-page-subtitle">
                   {loadedTrip.label}
                 </p>
               </div>
@@ -746,8 +746,8 @@ function CorporateQuotePageContent() {
             onSaveToFavourites={() => setShowSaveTripModal(true)}
           />
           {isPayOnAccount && (
-            <div className="mt-4 p-4 bg-sage/10 border border-sage/30 rounded-lg">
-              <p className="text-sm text-navy">
+            <div className="mt-4 p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)] rounded-lg">
+              <p className="text-sm">
                 <span className="font-medium">Payment on Account:</span> This booking will be invoiced according to your corporate payment terms ({company?.paymentTerms}).
               </p>
             </div>
@@ -755,17 +755,17 @@ function CorporateQuotePageContent() {
 
           {/* Save Passenger Option - only show if passenger was entered manually (not from directory) */}
           {!selectedPassenger && (manualPassengerName || contactDetails.name !== user?.name) && (
-            <div className="mt-4 p-4 bg-white border border-sage/20 rounded-lg">
+            <div className="mt-4 p-4 corp-card rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-navy">Save passenger for future bookings?</p>
-                  <p className="text-xs text-navy-light/70 mt-0.5">
+                  <p className="text-sm font-medium">Save passenger for future bookings?</p>
+                  <p className="text-xs corp-page-subtitle mt-0.5">
                     Add {manualPassengerName || contactDetails.name} to your passenger directory
                   </p>
                 </div>
                 <button
                   onClick={() => setShowSavePassengerModal(true)}
-                  className="px-4 py-2 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-[var(--corp-accent)] border border-[var(--corp-accent)] rounded-full hover:bg-[var(--corp-bg-hover)] transition-colors"
                 >
                   Save Passenger
                 </button>
@@ -831,9 +831,9 @@ function CorporateQuotePageContent() {
         <div className="max-w-2xl mx-auto">
           {/* Show loading state */}
           {bookingLoading && (
-            <div className="mb-4 p-4 bg-navy/5 rounded-lg text-center">
-              <div className="animate-spin h-5 w-5 border-2 border-navy border-t-transparent rounded-full mx-auto mb-2" />
-              <p className="text-sm text-navy">Processing payment...</p>
+            <div className="mb-4 p-4 bg-[var(--corp-bg-hover)] rounded-lg text-center">
+              <div className="corp-loading-spinner h-5 w-5 border-2 rounded-full mx-auto mb-2 animate-spin" />
+              <p className="text-sm">Processing payment...</p>
             </div>
           )}
 
@@ -863,33 +863,33 @@ function CorporateQuotePageContent() {
         <div className="max-w-2xl mx-auto">
           {/* Simplified view when passenger has full contact info */}
           {passengerHasContactInfo ? (
-            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-              <h2 className="text-lg font-semibold text-navy mb-4">Confirm Passenger Details</h2>
+            <div className="corp-card rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold mb-4">Confirm Passenger Details</h2>
 
               <div className="space-y-4">
-                <div className="p-4 bg-sage/5 border border-sage/20 rounded-lg">
-                  <p className="text-sm font-medium text-navy-light/70 mb-1">Passenger</p>
-                  <p className="text-navy font-medium text-lg">{selectedPassenger.displayName}</p>
+                <div className="p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)] rounded-lg">
+                  <p className="text-sm font-medium corp-page-subtitle mb-1">Passenger</p>
+                  <p className="font-medium text-lg">{selectedPassenger.displayName}</p>
                   {selectedPassenger.alias && (
-                    <p className="text-sm text-navy-light/70">&ldquo;{selectedPassenger.alias}&rdquo;</p>
+                    <p className="text-sm corp-page-subtitle">&ldquo;{selectedPassenger.alias}&rdquo;</p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm font-medium text-navy-light/70 mb-1">Email</p>
-                    <p className="text-navy">{selectedPassenger.email}</p>
+                    <p className="text-sm font-medium corp-page-subtitle mb-1">Email</p>
+                    <p>{selectedPassenger.email}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-navy-light/70 mb-1">Phone</p>
-                    <p className="text-navy">{selectedPassenger.phone}</p>
+                    <p className="text-sm font-medium corp-page-subtitle mb-1">Phone</p>
+                    <p>{selectedPassenger.phone}</p>
                   </div>
                 </div>
 
                 {selectedPassenger.driverInstructions && (
                   <div>
-                    <p className="text-sm font-medium text-navy-light/70 mb-1">Driver Instructions</p>
-                    <p className="text-sm text-navy">{selectedPassenger.driverInstructions}</p>
+                    <p className="text-sm font-medium corp-page-subtitle mb-1">Driver Instructions</p>
+                    <p className="text-sm">{selectedPassenger.driverInstructions}</p>
                   </div>
                 )}
               </div>
@@ -898,7 +898,7 @@ function CorporateQuotePageContent() {
                 <button
                   type="button"
                   onClick={handleContactBack}
-                  className="flex-1 px-4 py-3 border border-sage/30 rounded-lg text-navy font-medium hover:bg-sage/5 transition-colors"
+                  className="corp-btn corp-btn-secondary flex-1 px-4 py-3 rounded-lg font-medium"
                 >
                   Back
                 </button>
@@ -909,7 +909,7 @@ function CorporateQuotePageContent() {
                     email: selectedPassenger.email!,
                     phone: selectedPassenger.phone!,
                   })}
-                  className="flex-1 px-4 py-3 bg-sage text-white rounded-lg font-medium hover:bg-sage-dark transition-colors"
+                  className="corp-btn corp-btn-primary flex-1 px-4 py-3 rounded-lg font-medium"
                 >
                   Continue to Preferences
                 </button>
@@ -920,13 +920,13 @@ function CorporateQuotePageContent() {
             <>
               {/* Show selected passenger summary if present but missing contact info */}
               {(selectedPassenger || manualPassengerName) && (
-                <div className="mb-6 p-4 bg-sage/5 border border-sage/20 rounded-lg">
-                  <p className="text-sm font-medium text-navy-light/70 mb-1">Booking for:</p>
-                  <p className="text-navy font-medium">
+                <div className="mb-6 p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)] rounded-lg">
+                  <p className="text-sm font-medium corp-page-subtitle mb-1">Booking for:</p>
+                  <p className="font-medium">
                     {selectedPassenger?.displayName || manualPassengerName}
                   </p>
                   {selectedPassenger && !selectedPassenger.email && !selectedPassenger.phone && (
-                    <p className="text-xs text-amber-600 mt-1">Please enter contact details below</p>
+                    <p className="text-xs text-[var(--corp-warning)] mt-1">Please enter contact details below</p>
                   )}
                 </div>
               )}
@@ -943,8 +943,8 @@ function CorporateQuotePageContent() {
           )}
 
           {isPayOnAccount && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="mt-4 p-3 bg-[var(--corp-info-bg)] border border-[var(--corp-info)] rounded-lg">
+              <p className="text-sm text-[var(--corp-info)]">
                 <span className="font-medium">Payment on Account:</span> No payment required at checkout. This booking will be invoiced to your company.
               </p>
             </div>
@@ -1011,21 +1011,21 @@ function CorporateQuotePageContent() {
 
             {/* Save as Favourite button - only show if not already loaded from a favourite */}
             {!loadedTrip && (
-              <div className="mt-6 p-4 bg-sage/5 border border-sage/20 rounded-xl">
+              <div className="mt-6 p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-border-default)] rounded-xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-sage/10 rounded-lg">
-                      <Heart className="h-5 w-5 text-sage" />
+                    <div className="p-2 bg-[var(--corp-bg-hover)] rounded-lg">
+                      <Heart className="h-5 w-5 text-[var(--corp-accent)]" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-navy">Save this route?</p>
-                      <p className="text-xs text-navy-light/70">Quick book this trip again anytime</p>
+                      <p className="text-sm font-medium">Save this route?</p>
+                      <p className="text-xs corp-page-subtitle">Quick book this trip again anytime</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowSaveTripModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-sage text-sage font-medium text-sm rounded-lg hover:bg-sage hover:text-white transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--corp-accent)] text-[var(--corp-accent)] font-medium text-sm rounded-lg hover:bg-[var(--corp-accent)] hover:text-white transition-colors"
                   >
                     <Heart className="h-4 w-4" />
                     Save as Favourite
@@ -1040,7 +1040,7 @@ function CorporateQuotePageContent() {
               <Button
                 variant="outline-dark"
                 onClick={handlePreviousStep}
-                className="text-navy"
+                className="corp-btn corp-btn-secondary"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to journey details
@@ -1058,7 +1058,7 @@ function CorporateQuotePageContent() {
         ) : (
           <div className="max-w-3xl mx-auto">
             {/* Passenger Selection - first field before journey details */}
-            <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
+            <div className="mb-6 p-4 corp-card rounded-lg">
               <PassengerSelector
                 selectedPassenger={selectedPassenger}
                 onSelect={(passenger) => {
@@ -1086,11 +1086,11 @@ function CorporateQuotePageContent() {
 
               {/* Save to Directory button when manual name entered */}
               {manualPassengerName && manualPassengerName.trim().length >= 2 && !selectedPassenger && (
-                <div className="mt-3 pt-3 border-t border-sage/20">
+                <div className="mt-3 pt-3 border-t corp-border">
                   <button
                     type="button"
                     onClick={() => setShowSavePassengerModal(true)}
-                    className="inline-flex items-center gap-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-[var(--corp-accent)] hover:text-[var(--corp-accent-hover)] transition-colors"
                   >
                     <UserPlus className="h-4 w-4" />
                     Save &ldquo;{manualPassengerName.trim()}&rdquo; to passenger directory

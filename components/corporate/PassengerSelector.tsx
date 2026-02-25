@@ -180,28 +180,28 @@ export default function PassengerSelector({
 
   return (
     <div ref={containerRef} className="relative">
-      <label className="block text-sm font-medium text-navy mb-1">
+      <label className="block text-sm font-medium mb-1">
         {label}
       </label>
 
       {/* Selected Passenger Display */}
       {selectedPassenger ? (
-        <div className="flex items-center justify-between px-4 py-3 bg-sage/5 border border-sage/30 rounded-lg">
+        <div className="flex items-center justify-between px-4 py-3 bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)] rounded-lg">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-sage/10 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-sage" />
+            <div className="h-8 w-8 bg-[var(--corp-accent-muted)] rounded-full flex items-center justify-center">
+              <User className="h-4 w-4 text-[var(--corp-accent)]" />
             </div>
             <div>
-              <p className="text-sm font-medium text-navy">{selectedPassenger.displayName}</p>
+              <p className="text-sm font-medium">{selectedPassenger.displayName}</p>
               {selectedPassenger.alias && (
-                <p className="text-xs text-navy-light/70">&ldquo;{selectedPassenger.alias}&rdquo;</p>
+                <p className="text-xs corp-page-subtitle">&ldquo;{selectedPassenger.alias}&rdquo;</p>
               )}
             </div>
           </div>
           <button
             type="button"
             onClick={handleClear}
-            className="p-1.5 text-navy-light/50 hover:text-navy hover:bg-sage/10 rounded-full transition-colors"
+            className="p-1.5 corp-page-subtitle hover:text-[var(--corp-text-primary)] hover:bg-[var(--corp-bg-hover)] rounded-full transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -209,7 +209,7 @@ export default function PassengerSelector({
       ) : (
         /* Input Field */
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-light/50 pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--corp-text-muted)] pointer-events-none" />
           <input
             ref={inputRef}
             type="text"
@@ -217,13 +217,13 @@ export default function PassengerSelector({
             onChange={handleInputChange}
             onFocus={handleInputFocus}
             placeholder={placeholder}
-            className="w-full pl-10 pr-4 py-3 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
+            className="corp-input w-full pl-10 pr-4 py-3 rounded-lg"
           />
           {(searchQuery || (useManualEntry && manualName)) && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-navy-light/50 hover:text-navy"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 corp-page-subtitle hover:text-[var(--corp-text-primary)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -233,10 +233,10 @@ export default function PassengerSelector({
 
       {/* Dropdown */}
       {isOpen && !selectedPassenger && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-sage/20 rounded-lg shadow-lg max-h-64 overflow-auto">
+        <div className="absolute z-50 mt-1 w-full corp-card border border-[var(--corp-border-default)] rounded-lg shadow-lg max-h-64 overflow-auto">
           {isLoading ? (
             <div className="p-4 text-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-sage mx-auto" />
+              <div className="corp-loading-spinner h-5 w-5 border-2 rounded-full animate-spin mx-auto" />
             </div>
           ) : (
             <>
@@ -248,23 +248,23 @@ export default function PassengerSelector({
                       key={passenger.passengerId}
                       type="button"
                       onClick={() => handlePassengerSelect(passenger)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-sage/5 transition-colors"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--corp-bg-hover)] transition-colors"
                     >
-                      <div className="h-8 w-8 bg-sage/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-sage" />
+                      <div className="h-8 w-8 bg-[var(--corp-accent-muted)] rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-[var(--corp-accent)]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-navy truncate">
+                        <p className="text-sm font-medium truncate">
                           {passenger.displayName}
                         </p>
                         {passenger.alias && (
-                          <p className="text-xs text-navy-light/50 truncate">
+                          <p className="text-xs corp-page-subtitle truncate">
                             &ldquo;{passenger.alias}&rdquo;
                           </p>
                         )}
                       </div>
                       {passenger.email && (
-                        <span className="text-xs text-navy-light/50 truncate max-w-[120px]">
+                        <span className="text-xs corp-page-subtitle truncate max-w-[120px]">
                           {passenger.email}
                         </span>
                       )}
@@ -272,30 +272,30 @@ export default function PassengerSelector({
                   ))}
                 </div>
               ) : searchQuery ? (
-                <div className="p-4 text-center text-sm text-navy-light/70">
+                <div className="p-4 text-center text-sm corp-page-subtitle">
                   No passengers found matching &ldquo;{searchQuery}&rdquo;
                 </div>
               ) : (
-                <div className="p-4 text-center text-sm text-navy-light/70">
+                <div className="p-4 text-center text-sm corp-page-subtitle">
                   No passengers in your directory yet
                 </div>
               )}
 
               {/* Divider & Manual Entry Option */}
-              <div className="border-t border-sage/20">
+              <div className="border-t border-[var(--corp-border-default)]">
                 <button
                   type="button"
                   onClick={handleManualEntry}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-sage/5 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--corp-bg-hover)] transition-colors"
                 >
-                  <div className="h-8 w-8 bg-navy/5 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Plus className="h-4 w-4 text-navy-light/70" />
+                  <div className="h-8 w-8 bg-[var(--corp-bg-hover)] rounded-full flex items-center justify-center flex-shrink-0">
+                    <Plus className="h-4 w-4 corp-page-subtitle" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-navy">
+                    <p className="text-sm font-medium">
                       {searchQuery ? `Use "${searchQuery}"` : 'Enter name manually'}
                     </p>
-                    <p className="text-xs text-navy-light/50">
+                    <p className="text-xs corp-page-subtitle">
                       For one-time passengers not in your directory
                     </p>
                   </div>
@@ -308,14 +308,14 @@ export default function PassengerSelector({
 
       {/* Manual Entry Indicator */}
       {useManualEntry && !selectedPassenger && manualName && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-navy-light/70">
-          <Check className="h-3.5 w-3.5 text-sage" />
+        <div className="mt-2 flex items-center gap-2 text-xs corp-page-subtitle">
+          <Check className="h-3.5 w-3.5 text-[var(--corp-accent)]" />
           Manual entry - this passenger won&apos;t be saved to your directory
         </div>
       )}
 
       {helpText && !selectedPassenger && !useManualEntry && (
-        <p className="mt-1 text-xs text-navy-light/50">{helpText}</p>
+        <p className="mt-1 text-xs corp-page-subtitle">{helpText}</p>
       )}
     </div>
   );

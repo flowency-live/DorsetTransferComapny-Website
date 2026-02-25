@@ -239,13 +239,11 @@ export default function PreferencesPage() {
                 <div className="flex-shrink-0">
                   {preferences?.logoUrl ? (
                     <div className="relative w-32 h-32 border corp-border rounded-lg overflow-hidden">
-                      {/* Use unoptimized for S3 URLs with special characters in path */}
                       <Image
                         src={preferences.logoUrl}
                         alt="Company logo"
                         fill
                         className="object-contain p-2"
-                        unoptimized
                       />
                     </div>
                   ) : (
@@ -350,7 +348,6 @@ export default function PreferencesPage() {
                           alt="Company logo"
                           fill
                           className="object-contain"
-                          unoptimized
                         />
                       </div>
                     </div>

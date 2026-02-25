@@ -163,6 +163,16 @@ function BookingHistoryContent() {
   return (
     <CorporateLayout pageTitle="Booking History">
       <div className="max-w-6xl mx-auto">
+        {/* Page Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 rounded-xl bg-[var(--corp-accent-muted)]">
+            <History className="h-6 w-6 text-[var(--corp-accent)]" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Booking History</h1>
+            <p className="text-sm corp-page-subtitle">View and manage all your company bookings</p>
+          </div>
+        </div>
 
         {/* Search & Filters */}
         <div className="corp-card p-4 mb-6 rounded-lg border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
