@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye, Calendar } from 'lucide-react';
+import { Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassengers,
@@ -119,106 +119,109 @@ export default function PassengersPage() {
           </div>
         </div>
 
-        {/* Passengers List */}
-        <div className="corp-card rounded-lg">
-          <div className="p-6 border-b corp-border flex items-center gap-2">
-            <Users className="h-5 w-5 corp-icon" />
-            <h2 className="corp-section-title text-lg font-semibold">
-              Passengers {!isLoading && `(${passengers.length})`}
-            </h2>
-          </div>
+        {/* Passengers Header */}
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="h-5 w-5 corp-icon" />
+          <h2 className="corp-section-title text-lg font-semibold">
+            Passengers {!isLoading && `(${passengers.length})`}
+          </h2>
+        </div>
 
-          {isLoading ? (
-            <div className="p-6 text-center">
-              <div className="corp-loading-spinner w-8 h-8 border-4 rounded-full animate-spin mx-auto" />
-            </div>
-          ) : passengers.length === 0 ? (
-            <div className="p-12 text-center">
-              <Users className="mx-auto h-12 w-12 opacity-30" />
-              <p className="mt-4 text-sm corp-page-subtitle">
-                {searchQuery ? 'No passengers found matching your search' : 'No passengers saved yet'}
-              </p>
-              <p className="mt-1 text-xs opacity-50">
-                Add passengers to quickly select them when booking transfers
-              </p>
-              <Link
-                href="/corporate/passengers/new"
-                className="mt-4 inline-flex items-center text-sm font-medium corp-link"
+        {/* Passengers Grid */}
+        {isLoading ? (
+          <div className="p-12 text-center">
+            <div className="corp-loading-spinner w-8 h-8 border-4 rounded-full animate-spin mx-auto" />
+          </div>
+        ) : passengers.length === 0 ? (
+          <div className="corp-card p-12 text-center rounded-lg">
+            <Users className="mx-auto h-12 w-12 opacity-30" />
+            <p className="mt-4 text-sm corp-page-subtitle">
+              {searchQuery ? 'No passengers found matching your search' : 'No passengers saved yet'}
+            </p>
+            <p className="mt-1 text-xs opacity-50">
+              Add passengers to quickly select them when booking transfers
+            </p>
+            <Link
+              href="/corporate/passengers/new"
+              className="mt-4 inline-flex items-center text-sm font-medium corp-link"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add your first passenger
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {passengers.map((passenger) => (
+              <div
+                key={passenger.passengerId}
+                className="corp-card p-5 rounded-lg hover:shadow-md transition-shadow"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                Add your first passenger
-              </Link>
-            </div>
-          ) : (
-            <div className="divide-y corp-border">
-              {passengers.map((passenger) => (
-                <div
-                  key={passenger.passengerId}
-                  className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 corp-list-item"
-                >
-                  {/* Passenger Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium truncate">
-                        {formatPassengerName(passenger)}
-                      </h3>
-                      {passenger.alias && (
-                        <span className="corp-badge corp-badge-neutral text-xs">
-                          {passenger.alias}
-                        </span>
-                      )}
-                    </div>
-                    {passenger.email && (
-                      <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm opacity-70">
-                        <span className="inline-flex items-center gap-1 truncate">
-                          <Mail className="h-3.5 w-3.5 flex-shrink-0" />
-                          {passenger.email}
-                        </span>
-                      </div>
-                    )}
-                    {passenger.usageCount > 0 && (
-                      <p className="mt-1 text-xs opacity-50">
-                        {passenger.usageCount} journey{passenger.usageCount === 1 ? '' : 's'}
-                      </p>
+                {/* Header with name and menu */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <h3 className="font-semibold text-lg truncate">
+                      {formatPassengerName(passenger)}
+                    </h3>
+                    {passenger.alias && (
+                      <span className="corp-badge corp-badge-neutral text-xs mt-1 inline-block">
+                        {passenger.alias}
+                      </span>
                     )}
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <Link
-                      href={`/corporate/quote?passengerId=${passenger.passengerId}`}
-                      className="corp-btn corp-btn-primary inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
-                    >
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Quick Book
-                    </Link>
-                    <Link
-                      href={`/corporate/passengers/${passenger.passengerId}`}
-                      className="corp-btn corp-btn-secondary inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Link>
+                  <div className="flex items-center gap-1">
                     <Link
                       href={`/corporate/passengers/${passenger.passengerId}?edit=true`}
-                      className="corp-btn corp-btn-ghost inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
+                      className="p-1.5 rounded-md hover:bg-[var(--corp-bg-hover)] transition-colors"
+                      title="Edit"
                     >
-                      <Edit2 className="h-4 w-4 mr-1" />
-                      Edit
+                      <Edit2 className="h-4 w-4 opacity-60 hover:opacity-100" />
                     </Link>
                     <button
                       onClick={() => handleDeleteClick(passenger.passengerId, passenger.firstName, passenger.lastName)}
-                      className="corp-btn corp-btn-danger-ghost inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full"
+                      className="p-1.5 rounded-md hover:bg-red-50 transition-colors text-red-600"
+                      title="Delete"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Delete
+                      <Trash2 className="h-4 w-4 opacity-60 hover:opacity-100" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+
+                {/* Contact Info */}
+                <div className="space-y-2 mb-4">
+                  {passenger.email && (
+                    <div className="flex items-center gap-2 text-sm opacity-70">
+                      <Mail className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{passenger.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Usage Stats */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="corp-badge corp-badge-neutral text-xs">
+                    {passenger.usageCount || 0} journey{passenger.usageCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <Link
+                    href={`/corporate/quote?passengerId=${passenger.passengerId}`}
+                    className="flex-1 text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors"
+                  >
+                    Quick Book
+                  </Link>
+                  <Link
+                    href={`/corporate/passengers/${passenger.passengerId}`}
+                    className="px-4 py-2.5 border border-[var(--corp-border-default)] font-medium rounded-lg hover:bg-[var(--corp-bg-hover)] transition-colors"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}

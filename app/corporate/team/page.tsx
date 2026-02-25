@@ -175,8 +175,8 @@ export default function CorporateTeamPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead className="corp-table-header">
-                  <tr>
+                <thead>
+                  <tr className="corp-table-header-sage">
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Role</th>

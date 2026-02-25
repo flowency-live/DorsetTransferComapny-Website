@@ -10,7 +10,7 @@
    CSS Custom Properties - Light Mode (Default)
    ============================================ */
 :root,
-[data-corp-theme="light"] {
+[data-theme="light"] {
   /* Core Palette (from tailwind.config.ts) */
   --corp-sage: #5a8a60;
   --corp-sage-dark: #4a7a50;
@@ -98,7 +98,7 @@
 /* ============================================
    Dark Mode
    ============================================ */
-[data-corp-theme="dark"] {
+[data-theme="dark"] {
   /* Semantic Colors - Dark Mode */
   --corp-bg-primary: var(--corp-navy-dark);
   --corp-bg-secondary: #1f2e32;
@@ -339,7 +339,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-[data-corp-theme="dark"] .corp-theme-toggle-thumb {
+[data-theme="dark"] .corp-theme-toggle-thumb {
   transform: translateX(24px);
 }
 
@@ -628,7 +628,7 @@
   border-radius: var(--corp-radius-full);
 }
 
-[data-corp-theme="dark"] .corp-admin-badge {
+[data-theme="dark"] .corp-admin-badge {
   background: var(--corp-sage);
   color: var(--corp-navy-dark);
 }
@@ -763,3 +763,302 @@
 .corp-stagger > *:nth-child(4) { animation-delay: 150ms; }
 .corp-stagger > *:nth-child(5) { animation-delay: 200ms; }
 .corp-stagger > *:nth-child(6) { animation-delay: 250ms; }
+
+/* ============================================
+   Sage Icon Backgrounds (Quick Actions)
+   ============================================ */
+.corp-action-icon-sage {
+  background: var(--corp-sage-lighter);
+  color: var(--corp-sage-dark);
+  transition: all var(--corp-transition-fast);
+}
+
+.corp-card:hover .corp-action-icon-sage {
+  background: var(--corp-sage-light);
+  color: var(--corp-sage-dark);
+}
+
+[data-theme="dark"] .corp-action-icon-sage {
+  background: rgba(90, 138, 96, 0.2);
+  color: var(--corp-sage-light);
+}
+
+[data-theme="dark"] .corp-card:hover .corp-action-icon-sage {
+  background: rgba(90, 138, 96, 0.3);
+}
+
+/* Primary action card styling */
+.corp-action-card-primary {
+  background: var(--corp-sage);
+  color: white;
+  border: none;
+}
+
+.corp-action-card-primary:hover {
+  background: var(--corp-sage-dark);
+}
+
+.corp-action-card-primary .corp-action-icon-sage {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.corp-action-card-primary:hover .corp-action-icon-sage {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   Sage-Tinted Table Headers
+   ============================================ */
+.corp-table-header-sage {
+  background: var(--corp-sage-lighter);
+  color: var(--corp-sage-dark);
+}
+
+.corp-table-header-sage th {
+  color: var(--corp-sage-dark);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .corp-table-header-sage {
+  background: rgba(90, 138, 96, 0.15);
+  color: var(--corp-sage-light);
+}
+
+[data-theme="dark"] .corp-table-header-sage th {
+  color: var(--corp-sage-light);
+}
+
+/* ============================================
+   Stat Card Enhancements
+   ============================================ */
+.corp-stat-card {
+  border-left: 3px solid var(--corp-sage);
+}
+
+.corp-stat-card:hover {
+  border-left-color: var(--corp-sage-dark);
+}
+
+/* ============================================
+   Additional Badge Variants
+   ============================================ */
+.corp-badge-success {
+  background: var(--corp-success-bg);
+  color: var(--corp-success);
+}
+
+.corp-badge-neutral {
+  background: var(--corp-bg-hover);
+  color: var(--corp-text-secondary);
+}
+
+.corp-badge-admin {
+  background: var(--corp-navy);
+  color: white;
+}
+
+[data-theme="dark"] .corp-badge-admin {
+  background: var(--corp-sage);
+  color: var(--corp-navy-dark);
+}
+
+/* ============================================
+   Section Title
+   ============================================ */
+.corp-section-title {
+  color: var(--corp-text-primary);
+}
+
+/* ============================================
+   Link Styling
+   ============================================ */
+.corp-link {
+  color: var(--corp-accent);
+  text-decoration: none;
+  transition: color var(--corp-transition-fast);
+}
+
+.corp-link:hover {
+  color: var(--corp-accent-hover);
+  text-decoration: underline;
+}
+
+/* ============================================
+   Icon Styling
+   ============================================ */
+.corp-icon {
+  color: var(--corp-text-secondary);
+}
+
+/* ============================================
+   Border Styling
+   ============================================ */
+.corp-border {
+  border-color: var(--corp-border-subtle);
+}
+
+/* ============================================
+   Table Row Styling
+   ============================================ */
+.corp-table-row {
+  transition: background-color var(--corp-transition-fast);
+}
+
+.corp-table-row:hover {
+  background: var(--corp-bg-hover);
+}
+
+/* ============================================
+   Loading Spinner
+   ============================================ */
+.corp-loading-spinner {
+  border-color: var(--corp-border-default);
+  border-top-color: var(--corp-accent);
+}
+
+/* ============================================
+   Admin Card Styling
+   ============================================ */
+.corp-card-admin {
+  border-left: 3px solid var(--corp-navy);
+  transition: all var(--corp-transition-fast);
+}
+
+.corp-card-admin:hover {
+  border-left-color: var(--corp-sage);
+  background: var(--corp-bg-hover);
+}
+
+[data-theme="dark"] .corp-card-admin {
+  border-left-color: var(--corp-sage);
+}
+
+[data-theme="dark"] .corp-card-admin:hover {
+  border-left-color: var(--corp-sage-light);
+}
+
+/* ============================================
+   Form Inputs
+   ============================================ */
+.corp-input {
+  background: var(--corp-bg-secondary);
+  border: 1px solid var(--corp-border-default);
+  color: var(--corp-text-primary);
+  transition: all var(--corp-transition-fast);
+}
+
+.corp-input:focus {
+  outline: none;
+  border-color: var(--corp-accent);
+  box-shadow: 0 0 0 3px var(--corp-accent-muted);
+}
+
+.corp-input::placeholder {
+  color: var(--corp-text-muted);
+}
+
+/* ============================================
+   Modals
+   ============================================ */
+.corp-modal {
+  background: var(--corp-bg-secondary);
+  color: var(--corp-text-primary);
+}
+
+[data-theme="dark"] .corp-modal {
+  background: var(--corp-bg-elevated);
+}
+
+/* ============================================
+   Alerts
+   ============================================ */
+.corp-alert {
+  padding: var(--corp-space-3) var(--corp-space-4);
+  border-radius: var(--corp-radius-md);
+}
+
+.corp-alert-error {
+  background: var(--corp-error-bg);
+  color: var(--corp-error);
+  border: 1px solid rgba(201, 112, 100, 0.3);
+}
+
+.corp-alert-success {
+  background: var(--corp-success-bg);
+  color: var(--corp-success);
+  border: 1px solid rgba(74, 122, 80, 0.3);
+}
+
+/* ============================================
+   Button Variants (Additional)
+   ============================================ */
+.corp-btn-primary {
+  background: var(--corp-accent);
+  color: var(--corp-accent-text);
+}
+
+.corp-btn-primary:hover {
+  background: var(--corp-accent-hover);
+}
+
+.corp-btn-secondary {
+  background: transparent;
+  color: var(--corp-text-primary);
+  border: 1px solid var(--corp-border-default);
+}
+
+.corp-btn-secondary:hover {
+  background: var(--corp-bg-hover);
+  border-color: var(--corp-accent);
+}
+
+.corp-btn-danger {
+  background: var(--corp-error);
+  color: white;
+}
+
+.corp-btn-danger:hover {
+  background: #b86058;
+}
+
+/* ============================================
+   Badge Variants (Warning)
+   ============================================ */
+.corp-badge-warning {
+  background: var(--corp-warning-bg);
+  color: var(--corp-warning);
+}
+
+/* ============================================
+   Ghost Button Variants
+   ============================================ */
+.corp-btn-ghost {
+  background: transparent;
+  color: var(--corp-text-secondary);
+}
+
+.corp-btn-ghost:hover {
+  background: var(--corp-bg-hover);
+  color: var(--corp-text-primary);
+}
+
+.corp-btn-danger-ghost {
+  background: transparent;
+  color: var(--corp-error);
+}
+
+.corp-btn-danger-ghost:hover {
+  background: var(--corp-error-bg);
+}
+
+/* ============================================
+   List Item Styling
+   ============================================ */
+.corp-list-item {
+  transition: background-color var(--corp-transition-fast);
+}
+
+.corp-list-item:hover {
+  background: var(--corp-bg-hover);
+}

@@ -74,27 +74,21 @@ export default function CorporateDashboardPage() {
           </p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="corp-card p-5">
+        {/* Stats Grid - 3 columns */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="corp-card corp-stat-card p-5">
             <p className="corp-stat-label text-sm font-medium">Team Members</p>
             <p className="corp-stat-value mt-2 text-3xl font-bold">
               {isLoading ? '-' : dashboard?.stats.teamMembers || 0}
             </p>
           </div>
-          <div className="corp-card p-5">
+          <div className="corp-card corp-stat-card p-5">
             <p className="corp-stat-label text-sm font-medium">Total Bookings</p>
             <p className="corp-stat-value mt-2 text-3xl font-bold">
               {isLoading ? '-' : dashboard?.stats.totalBookings || 0}
             </p>
           </div>
-          <div className="corp-card p-5">
-            <p className="corp-stat-label text-sm font-medium">Your Discount</p>
-            <p className="corp-stat-value-accent mt-2 text-3xl font-bold">
-              {isLoading ? '-' : `${dashboard?.company?.discountPercentage || 0}%`}
-            </p>
-          </div>
-          <div className="corp-card p-5">
+          <div className="corp-card corp-stat-card p-5">
             <p className="corp-stat-label text-sm font-medium">Account Status</p>
             <div className="mt-2">
               <span className={`corp-badge ${dashboard?.company?.status === 'active' ? 'corp-badge-success' : 'corp-badge-neutral'}`}>
@@ -111,9 +105,9 @@ export default function CorporateDashboardPage() {
             {/* Book Now - Primary */}
             <Link
               href="/corporate/quote"
-              className="corp-action-card corp-action-card-primary p-5 rounded-xl flex flex-col items-center text-center gap-3"
+              className="corp-card corp-action-card-primary p-5 rounded-xl flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow"
             >
-              <div className="corp-action-icon w-12 h-12 rounded-full flex items-center justify-center">
+              <div className="corp-action-icon-sage w-12 h-12 rounded-full flex items-center justify-center">
                 <CalendarPlus className="w-6 h-6" />
               </div>
               <div>
@@ -125,9 +119,9 @@ export default function CorporateDashboardPage() {
             {/* Favourite Trips */}
             <Link
               href="/corporate/trips"
-              className="corp-action-card p-5 rounded-xl flex flex-col items-center text-center gap-3"
+              className="corp-card p-5 rounded-xl flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow"
             >
-              <div className="corp-action-icon w-12 h-12 rounded-full flex items-center justify-center">
+              <div className="corp-action-icon-sage w-12 h-12 rounded-full flex items-center justify-center">
                 <Star className="w-6 h-6" />
               </div>
               <div>
@@ -139,9 +133,9 @@ export default function CorporateDashboardPage() {
             {/* Passengers */}
             <Link
               href="/corporate/passengers"
-              className="corp-action-card p-5 rounded-xl flex flex-col items-center text-center gap-3"
+              className="corp-card p-5 rounded-xl flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow"
             >
-              <div className="corp-action-icon w-12 h-12 rounded-full flex items-center justify-center">
+              <div className="corp-action-icon-sage w-12 h-12 rounded-full flex items-center justify-center">
                 <Users className="w-6 h-6" />
               </div>
               <div>
@@ -153,9 +147,9 @@ export default function CorporateDashboardPage() {
             {/* Preferences */}
             <Link
               href="/corporate/settings/preferences"
-              className="corp-action-card p-5 rounded-xl flex flex-col items-center text-center gap-3"
+              className="corp-card p-5 rounded-xl flex flex-col items-center text-center gap-3 hover:shadow-md transition-shadow"
             >
-              <div className="corp-action-icon w-12 h-12 rounded-full flex items-center justify-center">
+              <div className="corp-action-icon-sage w-12 h-12 rounded-full flex items-center justify-center">
                 <Settings className="w-6 h-6" />
               </div>
               <div>
@@ -199,7 +193,7 @@ export default function CorporateDashboardPage() {
                 <div className="overflow-x-auto mt-4">
                   <table className="w-full">
                     <thead>
-                      <tr className="corp-table-header">
+                      <tr className="corp-table-header-sage">
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Passenger</th>
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">Booked By</th>

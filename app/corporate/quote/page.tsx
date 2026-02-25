@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback } from 'react';
 
-import CorporateHeader from '@/components/corporate/CorporateHeader';
+import CorporateLayout from '@/components/corporate/CorporateLayout';
 import PassengerSelector, { SelectedPassenger } from '@/components/corporate/PassengerSelector';
 import PreferencesReviewStep, { BookingPreferences } from '@/components/corporate/PreferencesReviewStep';
 import SavePassengerModal from '@/components/corporate/SavePassengerModal';
 import SaveTripModal from '@/components/corporate/SaveTripModal';
-import Footer from '@/components/shared/Footer';
 import { Button } from '@/components/ui/button';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
@@ -547,523 +546,458 @@ function CorporateQuotePageContent() {
     setBookingStage('contact');
   };
 
-  // Loading state
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen bg-[#FBF7F0] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage" />
-      </div>
-    );
-  }
-
-  // Render booking confirmation
-  if (bookingStage === 'confirmation' && quote && contactDetails && bookingId) {
+  // Render content based on booking stage
+  const renderContent = () => {
     const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
-    return (
-      <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-        <CorporateHeader
-          userName={user.name}
-          companyName={company?.companyName}
-          onLogout={logout}
-          isAdmin={isAdmin}
-        />
-        <main className="flex-1 pt-28 pb-16">
-          <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            <BookingConfirmation
-              quote={quote}
-              contactDetails={contactDetails}
-              bookingId={bookingId}
-              specialRequests={specialRequests}
-              returnUrl="/corporate/dashboard"
-              isCorporate={true}
-              passengerInfo={selectedPassenger ? {
-                name: selectedPassenger.displayName,
-                alias: selectedPassenger.alias,
-                driverInstructions: selectedPassenger.driverInstructions,
-                refreshments: selectedPassenger.refreshments,
-              } : manualPassengerName ? {
-                name: manualPassengerName,
-              } : undefined}
-              showSaveToFavourites={!loadedTrip}
-              onSaveToFavourites={() => setShowSaveTripModal(true)}
-            />
-            {isPayOnAccount && (
-              <div className="mt-4 p-4 bg-sage/10 border border-sage/30 rounded-lg">
-                <p className="text-sm text-navy">
-                  <span className="font-medium">Payment on Account:</span> This booking will be invoiced according to your corporate payment terms ({company?.paymentTerms}).
-                </p>
-              </div>
-            )}
 
-            {/* Save Passenger Option - only show if passenger was entered manually (not from directory) */}
-            {!selectedPassenger && (manualPassengerName || contactDetails.name !== user?.name) && (
-              <div className="mt-4 p-4 bg-white border border-sage/20 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-navy">Save passenger for future bookings?</p>
-                    <p className="text-xs text-navy-light/70 mt-0.5">
-                      Add {manualPassengerName || contactDetails.name} to your passenger directory
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowSavePassengerModal(true)}
-                    className="px-4 py-2 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
-                  >
-                    Save Passenger
-                  </button>
+    // Booking confirmation
+    if (bookingStage === 'confirmation' && quote && contactDetails && bookingId) {
+      return (
+        <div className="max-w-2xl mx-auto">
+          <BookingConfirmation
+            quote={quote}
+            contactDetails={contactDetails}
+            bookingId={bookingId}
+            specialRequests={specialRequests}
+            returnUrl="/corporate/dashboard"
+            isCorporate={true}
+            passengerInfo={selectedPassenger ? {
+              name: selectedPassenger.displayName,
+              alias: selectedPassenger.alias,
+              driverInstructions: selectedPassenger.driverInstructions,
+              refreshments: selectedPassenger.refreshments,
+            } : manualPassengerName ? {
+              name: manualPassengerName,
+            } : undefined}
+            showSaveToFavourites={!loadedTrip}
+            onSaveToFavourites={() => setShowSaveTripModal(true)}
+          />
+          {isPayOnAccount && (
+            <div className="mt-4 p-4 bg-sage/10 border border-sage/30 rounded-lg">
+              <p className="text-sm text-navy">
+                <span className="font-medium">Payment on Account:</span> This booking will be invoiced according to your corporate payment terms ({company?.paymentTerms}).
+              </p>
+            </div>
+          )}
+
+          {/* Save Passenger Option - only show if passenger was entered manually (not from directory) */}
+          {!selectedPassenger && (manualPassengerName || contactDetails.name !== user?.name) && (
+            <div className="mt-4 p-4 bg-white border border-sage/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-navy">Save passenger for future bookings?</p>
+                  <p className="text-xs text-navy-light/70 mt-0.5">
+                    Add {manualPassengerName || contactDetails.name} to your passenger directory
+                  </p>
                 </div>
+                <button
+                  onClick={() => setShowSavePassengerModal(true)}
+                  className="px-4 py-2 text-sm font-medium text-sage border border-sage rounded-full hover:bg-sage/5 transition-colors"
+                >
+                  Save Passenger
+                </button>
               </div>
-            )}
-          </div>
-        </main>
-        <Footer />
+            </div>
+          )}
 
-        {/* Save Passenger Modal */}
-        <SavePassengerModal
-          isOpen={showSavePassengerModal}
-          onClose={() => setShowSavePassengerModal(false)}
-          onSaved={() => {
-            console.log('Passenger saved to directory');
-          }}
-          initialData={{
-            name: manualPassengerName || contactDetails.name,
-            email: contactDetails.email,
-            phone: contactDetails.phone,
-          }}
-        />
-      </div>
-    );
-  }
+          {/* Save Passenger Modal */}
+          <SavePassengerModal
+            isOpen={showSavePassengerModal}
+            onClose={() => setShowSavePassengerModal(false)}
+            onSaved={() => {
+              console.log('Passenger saved to directory');
+            }}
+            initialData={{
+              name: manualPassengerName || contactDetails.name,
+              email: contactDetails.email,
+              phone: contactDetails.phone,
+            }}
+          />
+        </div>
+      );
+    }
 
-  // Render payment form (only for immediate payment accounts)
-  if (bookingStage === 'payment' && quote && contactDetails) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-        <CorporateHeader
-          userName={user.name}
-          companyName={company?.companyName}
-          onLogout={logout}
-          isAdmin={isAdmin}
-        />
-        <main className="flex-1 pt-28 pb-16">
-          <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            {/* Show loading state */}
-            {bookingLoading && (
-              <div className="mb-4 p-4 bg-navy/5 rounded-lg text-center">
-                <div className="animate-spin h-5 w-5 border-2 border-navy border-t-transparent rounded-full mx-auto mb-2" />
-                <p className="text-sm text-navy">Processing payment...</p>
-              </div>
-            )}
+    // Payment form (only for immediate payment accounts)
+    if (bookingStage === 'payment' && quote && contactDetails) {
+      return (
+        <div className="max-w-2xl mx-auto">
+          {/* Show loading state */}
+          {bookingLoading && (
+            <div className="mb-4 p-4 bg-navy/5 rounded-lg text-center">
+              <div className="animate-spin h-5 w-5 border-2 border-navy border-t-transparent rounded-full mx-auto mb-2" />
+              <p className="text-sm text-navy">Processing payment...</p>
+            </div>
+          )}
 
-            {/* Show error state */}
-            {bookingError && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {bookingError}
-              </div>
-            )}
+          {/* Show error state */}
+          {bookingError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {bookingError}
+            </div>
+          )}
 
-            <PaymentForm
-              onSubmit={(details) => {
-                handlePaymentSubmit(details);
-              }}
-              onBack={handlePaymentBack}
-            />
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+          <PaymentForm
+            onSubmit={(details) => {
+              handlePaymentSubmit(details);
+            }}
+            onBack={handlePaymentBack}
+          />
+        </div>
+      );
+    }
 
-  // Render contact details form
-  if (bookingStage === 'contact' && quote) {
-    const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
-    // Check if passenger has contact info - if so, show simplified view
-    const passengerHasContactInfo = selectedPassenger && selectedPassenger.email && selectedPassenger.phone;
+    // Contact details form
+    if (bookingStage === 'contact' && quote) {
+      // Check if passenger has contact info - if so, show simplified view
+      const passengerHasContactInfo = selectedPassenger && selectedPassenger.email && selectedPassenger.phone;
 
-    return (
-      <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-        <CorporateHeader
-          userName={user.name}
-          companyName={company?.companyName}
-          onLogout={logout}
-          isAdmin={isAdmin}
-        />
-        <main className="flex-1 pt-28 pb-16">
-          <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-            {/* Simplified view when passenger has full contact info */}
-            {passengerHasContactInfo ? (
-              <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-                <h2 className="text-lg font-semibold text-navy mb-4">Confirm Passenger Details</h2>
+      return (
+        <div className="max-w-2xl mx-auto">
+          {/* Simplified view when passenger has full contact info */}
+          {passengerHasContactInfo ? (
+            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
+              <h2 className="text-lg font-semibold text-navy mb-4">Confirm Passenger Details</h2>
 
-                <div className="space-y-4">
-                  <div className="p-4 bg-sage/5 border border-sage/20 rounded-lg">
-                    <p className="text-sm font-medium text-navy-light/70 mb-1">Passenger</p>
-                    <p className="text-navy font-medium text-lg">{selectedPassenger.displayName}</p>
-                    {selectedPassenger.alias && (
-                      <p className="text-sm text-navy-light/70">&ldquo;{selectedPassenger.alias}&rdquo;</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-navy-light/70 mb-1">Email</p>
-                      <p className="text-navy">{selectedPassenger.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-navy-light/70 mb-1">Phone</p>
-                      <p className="text-navy">{selectedPassenger.phone}</p>
-                    </div>
-                  </div>
-
-                  {selectedPassenger.driverInstructions && (
-                    <div>
-                      <p className="text-sm font-medium text-navy-light/70 mb-1">Driver Instructions</p>
-                      <p className="text-sm text-navy">{selectedPassenger.driverInstructions}</p>
-                    </div>
+              <div className="space-y-4">
+                <div className="p-4 bg-sage/5 border border-sage/20 rounded-lg">
+                  <p className="text-sm font-medium text-navy-light/70 mb-1">Passenger</p>
+                  <p className="text-navy font-medium text-lg">{selectedPassenger.displayName}</p>
+                  {selectedPassenger.alias && (
+                    <p className="text-sm text-navy-light/70">&ldquo;{selectedPassenger.alias}&rdquo;</p>
                   )}
                 </div>
 
-                <div className="mt-6 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={handleContactBack}
-                    className="flex-1 px-4 py-3 border border-sage/30 rounded-lg text-navy font-medium hover:bg-sage/5 transition-colors"
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleContactSubmit({
-                      name: selectedPassenger.displayName,
-                      email: selectedPassenger.email!,
-                      phone: selectedPassenger.phone!,
-                    })}
-                    className="flex-1 px-4 py-3 bg-sage text-white rounded-lg font-medium hover:bg-sage-dark transition-colors"
-                  >
-                    Continue to Preferences
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-navy-light/70 mb-1">Email</p>
+                    <p className="text-navy">{selectedPassenger.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-navy-light/70 mb-1">Phone</p>
+                    <p className="text-navy">{selectedPassenger.phone}</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              /* Full form when no passenger selected or passenger missing contact info */
-              <>
-                {/* Show selected passenger summary if present but missing contact info */}
-                {(selectedPassenger || manualPassengerName) && (
-                  <div className="mb-6 p-4 bg-sage/5 border border-sage/20 rounded-lg">
-                    <p className="text-sm font-medium text-navy-light/70 mb-1">Booking for:</p>
-                    <p className="text-navy font-medium">
-                      {selectedPassenger?.displayName || manualPassengerName}
-                    </p>
-                    {selectedPassenger && !selectedPassenger.email && !selectedPassenger.phone && (
-                      <p className="text-xs text-amber-600 mt-1">Please enter contact details below</p>
-                    )}
+
+                {selectedPassenger.driverInstructions && (
+                  <div>
+                    <p className="text-sm font-medium text-navy-light/70 mb-1">Driver Instructions</p>
+                    <p className="text-sm text-navy">{selectedPassenger.driverInstructions}</p>
                   </div>
                 )}
-
-                <ContactDetailsForm
-                  onSubmit={handleContactSubmit}
-                  onBack={handleContactBack}
-                  initialValues={contactDetails || undefined}
-                  submitLabel="Continue to Preferences"
-                  isCorporate={true}
-                  passengerName={selectedPassenger?.displayName || manualPassengerName}
-                />
-              </>
-            )}
-
-            {isPayOnAccount && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <span className="font-medium">Payment on Account:</span> No payment required at checkout. This booking will be invoiced to your company.
-                </p>
               </div>
-            )}
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
-  // Render preferences review step
-  if (bookingStage === 'preferences' && quote && contactDetails) {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-        <CorporateHeader
-          userName={user.name}
-          companyName={company?.companyName}
-          onLogout={logout}
-          isAdmin={isAdmin}
-        />
-        <main className="flex-1 pt-28 pb-16">
-          <PreferencesReviewStep
-            passengerName={selectedPassenger?.displayName || manualPassengerName || contactDetails.name}
-            passengerPreferences={selectedPassenger ? {
-              refreshments: selectedPassenger.refreshments,
-              driverInstructions: selectedPassenger.driverInstructions,
-            } : undefined}
-            accountDefaults={undefined}
-            specialRequests={specialRequests}
-            onSpecialRequestsChange={setSpecialRequests}
-            onPreferencesChange={setBookingPreferences}
-            onBack={handlePreferencesBack}
-            onContinue={handlePreferencesContinue}
-          />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-      <CorporateHeader
-        userName={user.name}
-        companyName={company?.companyName}
-        onLogout={logout}
-        isAdmin={isAdmin}
-      />
-
-      <main className="flex-1 pt-28 pb-16">
-        <div className="container mx-auto px-4 md:px-6">
-          {/* Cancel / Back to Dashboard */}
-          <div className="mb-4">
-            <Link
-              href="/corporate/dashboard"
-              className="inline-flex items-center text-sm text-navy-light/70 hover:text-sage transition-colors"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Cancel
-            </Link>
-          </div>
-
-          {/* Step indicator */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                currentStep >= 1 ? 'bg-sage text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                1
-              </div>
-              <div className={`w-16 h-1 ${currentStep >= 2 ? 'bg-sage' : 'bg-gray-200'}`} />
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                currentStep >= 2 ? 'bg-sage text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                2
-              </div>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          {loadingQuotes || tripLoading ? (
-            <LoadingState />
-          ) : quote ? (
-            <div className="max-w-2xl mx-auto">
-              <QuoteResult
-                quote={quote}
-                onNewQuote={handleNewQuote}
-                onConfirmBooking={handleConfirmBooking}
-                specialRequests={specialRequests}
-              />
-
-              {/* Save as Favourite button - only show if not already loaded from a favourite */}
-              {!loadedTrip && (
-                <div className="mt-6 p-4 bg-sage/5 border border-sage/20 rounded-xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-sage/10 rounded-lg">
-                        <Heart className="h-5 w-5 text-sage" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-navy">Save this route?</p>
-                        <p className="text-xs text-navy-light/70">Quick book this trip again anytime</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowSaveTripModal(true)}
-                      className="inline-flex items-center gap-2 px-4 py-2 border border-sage text-sage font-medium text-sm rounded-lg hover:bg-sage hover:text-white transition-colors"
-                    >
-                      <Heart className="h-4 w-4" />
-                      Save as Favourite
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : currentStep === 2 && multiQuote ? (
-            <div className="max-w-4xl mx-auto">
-              <div className="mb-4">
-                <Button
-                  variant="outline-dark"
-                  onClick={handlePreviousStep}
-                  className="text-navy"
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleContactBack}
+                  className="flex-1 px-4 py-3 border border-sage/30 rounded-lg text-navy font-medium hover:bg-sage/5 transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to journey details
-                </Button>
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleContactSubmit({
+                    name: selectedPassenger.displayName,
+                    email: selectedPassenger.email!,
+                    phone: selectedPassenger.phone!,
+                  })}
+                  className="flex-1 px-4 py-3 bg-sage text-white rounded-lg font-medium hover:bg-sage-dark transition-colors"
+                >
+                  Continue to Preferences
+                </button>
               </div>
-              <VehicleComparisonGrid
-                multiQuote={multiQuote}
-                passengers={passengers}
-                onSelect={handleVehicleSelect}
-                journeyType={journeyType}
-                preferredVehicle={loadedTrip?.vehicleType}
-              />
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto">
-              {/* Passenger Selection - first field before journey details */}
-              <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
-                <PassengerSelector
-                  selectedPassenger={selectedPassenger}
-                  onSelect={(passenger) => {
-                    setSelectedPassenger(passenger);
-                    // Auto-fill special requests with driver instructions when passenger selected
-                    if (passenger?.driverInstructions) {
-                      setSpecialRequests(passenger.driverInstructions);
-                    }
-                  }}
-                  manualName={manualPassengerName}
-                  onManualNameChange={setManualPassengerName}
-                  label="Who is travelling?"
-                  placeholder="Search passengers or enter name..."
-                  helpText="Select from your passenger directory or enter a name for a one-time booking"
-                />
+            /* Full form when no passenger selected or passenger missing contact info */
+            <>
+              {/* Show selected passenger summary if present but missing contact info */}
+              {(selectedPassenger || manualPassengerName) && (
+                <div className="mb-6 p-4 bg-sage/5 border border-sage/20 rounded-lg">
+                  <p className="text-sm font-medium text-navy-light/70 mb-1">Booking for:</p>
+                  <p className="text-navy font-medium">
+                    {selectedPassenger?.displayName || manualPassengerName}
+                  </p>
+                  {selectedPassenger && !selectedPassenger.email && !selectedPassenger.phone && (
+                    <p className="text-xs text-amber-600 mt-1">Please enter contact details below</p>
+                  )}
+                </div>
+              )}
 
-                {/* Save to Directory button when manual name entered */}
-                {manualPassengerName && manualPassengerName.trim().length >= 2 && !selectedPassenger && (
-                  <div className="mt-3 pt-3 border-t border-sage/20">
-                    <button
-                      type="button"
-                      onClick={() => setShowSavePassengerModal(true)}
-                      className="inline-flex items-center gap-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
-                    >
-                      <UserPlus className="h-4 w-4" />
-                      Save &ldquo;{manualPassengerName.trim()}&rdquo; to passenger directory
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <AllInputsStep
-                pickup={pickupLocation}
-                dropoff={dropoffLocation}
-                waypoints={waypoints}
-                pickupDate={pickupDate}
-                returnDate={returnDate}
-                passengers={passengers}
-                luggage={luggage}
-                journeyType={journeyType}
-                duration={duration}
-                extras={extras}
-                flightNumber={flightNumber}
-                trainNumber={trainNumber}
-                returnToPickup={returnToPickup}
-                onPickupChange={setPickupLocation}
-                onDropoffChange={setDropoffLocation}
-                onWaypointsChange={setWaypoints}
-                onDateChange={setPickupDate}
-                onReturnDateChange={setReturnDate}
-                onPassengersChange={setPassengers}
-                onLuggageChange={setLuggage}
-                onJourneyTypeChange={handleJourneyTypeChange}
-                onDurationChange={setDuration}
-                onExtrasChange={setExtras}
-                onFlightNumberChange={setFlightNumber}
-                onTrainNumberChange={setTrainNumber}
-                returnFlightNumber={returnFlightNumber}
-                returnTrainNumber={returnTrainNumber}
-                onReturnFlightNumberChange={setReturnFlightNumber}
-                onReturnTrainNumberChange={setReturnTrainNumber}
-                onReturnToPickupChange={setReturnToPickup}
-                specialRequests={specialRequests}
-                onSpecialRequestsChange={setSpecialRequests}
+              <ContactDetailsForm
+                onSubmit={handleContactSubmit}
+                onBack={handleContactBack}
+                initialValues={contactDetails || undefined}
+                submitLabel="Continue to Preferences"
+                isCorporate={true}
+                passengerName={selectedPassenger?.displayName || manualPassengerName}
               />
+            </>
+          )}
 
-              {/* Get Prices Button */}
-              <div className="mt-6">
-                <Button
-                  type="button"
-                  onClick={handleNextStep}
-                  disabled={!canProceedFromStep1() || loadingQuotes}
-                  className="w-full bg-sage hover:bg-sage-dark text-white py-3 text-lg font-medium"
-                >
-                  {loadingQuotes ? 'Getting Quotes...' : 'Get Prices'}
-                </Button>
-              </div>
+          {isPayOnAccount && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <span className="font-medium">Payment on Account:</span> No payment required at checkout. This booking will be invoiced to your company.
+              </p>
             </div>
           )}
         </div>
-      </main>
+      );
+    }
 
-      <Footer />
+    // Preferences review step
+    if (bookingStage === 'preferences' && quote && contactDetails) {
+      return (
+        <PreferencesReviewStep
+          passengerName={selectedPassenger?.displayName || manualPassengerName || contactDetails.name}
+          passengerPreferences={selectedPassenger ? {
+            refreshments: selectedPassenger.refreshments,
+            driverInstructions: selectedPassenger.driverInstructions,
+          } : undefined}
+          accountDefaults={undefined}
+          specialRequests={specialRequests}
+          onSpecialRequestsChange={setSpecialRequests}
+          onPreferencesChange={setBookingPreferences}
+          onBack={handlePreferencesBack}
+          onContinue={handlePreferencesContinue}
+        />
+      );
+    }
 
-      {/* Save Trip Modal */}
-      {quote && pickupLocation && dropoffLocation && (
-        <SaveTripModal
-          isOpen={showSaveTripModal}
-          onClose={() => setShowSaveTripModal(false)}
-          onSaved={() => {
-            // Could show a toast notification here
-            console.log('Trip saved successfully');
+    // Main quote flow
+    return (
+      <>
+        {/* Step indicator */}
+        <div className="flex items-center justify-center mb-8">
+          <div className="flex items-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              currentStep >= 1 ? 'bg-sage text-white' : 'bg-gray-200 text-gray-600'
+            }`}>
+              1
+            </div>
+            <div className={`w-16 h-1 ${currentStep >= 2 ? 'bg-sage' : 'bg-gray-200'}`} />
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              currentStep >= 2 ? 'bg-sage text-white' : 'bg-gray-200 text-gray-600'
+            }`}>
+              2
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {loadingQuotes || tripLoading ? (
+          <LoadingState />
+        ) : quote ? (
+          <div className="max-w-2xl mx-auto">
+            <QuoteResult
+              quote={quote}
+              onNewQuote={handleNewQuote}
+              onConfirmBooking={handleConfirmBooking}
+              specialRequests={specialRequests}
+            />
+
+            {/* Save as Favourite button - only show if not already loaded from a favourite */}
+            {!loadedTrip && (
+              <div className="mt-6 p-4 bg-sage/5 border border-sage/20 rounded-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-sage/10 rounded-lg">
+                      <Heart className="h-5 w-5 text-sage" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-navy">Save this route?</p>
+                      <p className="text-xs text-navy-light/70">Quick book this trip again anytime</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSaveTripModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-sage text-sage font-medium text-sm rounded-lg hover:bg-sage hover:text-white transition-colors"
+                  >
+                    <Heart className="h-4 w-4" />
+                    Save as Favourite
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : currentStep === 2 && multiQuote ? (
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-4">
+              <Button
+                variant="outline-dark"
+                onClick={handlePreviousStep}
+                className="text-navy"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to journey details
+              </Button>
+            </div>
+            <VehicleComparisonGrid
+              multiQuote={multiQuote}
+              passengers={passengers}
+              onSelect={handleVehicleSelect}
+              journeyType={journeyType}
+              preferredVehicle={loadedTrip?.vehicleType}
+            />
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto">
+            {/* Passenger Selection - first field before journey details */}
+            <div className="mb-6 p-4 bg-white border border-sage/20 rounded-lg">
+              <PassengerSelector
+                selectedPassenger={selectedPassenger}
+                onSelect={(passenger) => {
+                  setSelectedPassenger(passenger);
+                  // Auto-fill special requests with driver instructions when passenger selected
+                  if (passenger?.driverInstructions) {
+                    setSpecialRequests(passenger.driverInstructions);
+                  }
+                }}
+                manualName={manualPassengerName}
+                onManualNameChange={setManualPassengerName}
+                label="Who is travelling?"
+                placeholder="Search passengers or enter name..."
+                helpText="Select from your passenger directory or enter a name for a one-time booking"
+              />
+
+              {/* Save to Directory button when manual name entered */}
+              {manualPassengerName && manualPassengerName.trim().length >= 2 && !selectedPassenger && (
+                <div className="mt-3 pt-3 border-t border-sage/20">
+                  <button
+                    type="button"
+                    onClick={() => setShowSavePassengerModal(true)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-sage hover:text-sage-dark transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Save &ldquo;{manualPassengerName.trim()}&rdquo; to passenger directory
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <AllInputsStep
+              pickup={pickupLocation}
+              dropoff={dropoffLocation}
+              waypoints={waypoints}
+              pickupDate={pickupDate}
+              returnDate={returnDate}
+              passengers={passengers}
+              luggage={luggage}
+              journeyType={journeyType}
+              duration={duration}
+              extras={extras}
+              flightNumber={flightNumber}
+              trainNumber={trainNumber}
+              returnToPickup={returnToPickup}
+              onPickupChange={setPickupLocation}
+              onDropoffChange={setDropoffLocation}
+              onWaypointsChange={setWaypoints}
+              onDateChange={setPickupDate}
+              onReturnDateChange={setReturnDate}
+              onPassengersChange={setPassengers}
+              onLuggageChange={setLuggage}
+              onJourneyTypeChange={handleJourneyTypeChange}
+              onDurationChange={setDuration}
+              onExtrasChange={setExtras}
+              onFlightNumberChange={setFlightNumber}
+              onTrainNumberChange={setTrainNumber}
+              returnFlightNumber={returnFlightNumber}
+              returnTrainNumber={returnTrainNumber}
+              onReturnFlightNumberChange={setReturnFlightNumber}
+              onReturnTrainNumberChange={setReturnTrainNumber}
+              onReturnToPickupChange={setReturnToPickup}
+              specialRequests={specialRequests}
+              onSpecialRequestsChange={setSpecialRequests}
+            />
+
+            {/* Get Prices Button */}
+            <div className="mt-6">
+              <Button
+                type="button"
+                onClick={handleNextStep}
+                disabled={!canProceedFromStep1() || loadingQuotes}
+                className="w-full bg-sage hover:bg-sage-dark text-white py-3 text-lg font-medium"
+              >
+                {loadingQuotes ? 'Getting Quotes...' : 'Get Prices'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Save Trip Modal */}
+        {quote && pickupLocation && dropoffLocation && (
+          <SaveTripModal
+            isOpen={showSaveTripModal}
+            onClose={() => setShowSaveTripModal(false)}
+            onSaved={() => {
+              // Could show a toast notification here
+              console.log('Trip saved successfully');
+            }}
+            tripData={{
+              pickupLocation: {
+                address: pickupLocation.address,
+                placeId: pickupLocation.placeId,
+                lat: pickupLocation.lat || 0,
+                lng: pickupLocation.lng || 0,
+              },
+              dropoffLocation: {
+                address: dropoffLocation.address,
+                placeId: dropoffLocation.placeId,
+                lat: dropoffLocation.lat || 0,
+                lng: dropoffLocation.lng || 0,
+              },
+              waypoints: waypoints.length > 0 ? waypoints.map(w => ({
+                address: w.address,
+                placeId: w.placeId,
+                lat: w.lat || 0,
+                lng: w.lng || 0,
+                waitTime: w.waitTime,
+              })) : undefined,
+              vehicleType: quote.vehicleType as 'standard' | 'executive' | 'minibus',
+              passengers,
+              luggage,
+            }}
+          />
+        )}
+
+        {/* Save Passenger Modal (during booking flow) */}
+        <SavePassengerModal
+          isOpen={showSavePassengerModal}
+          onClose={() => setShowSavePassengerModal(false)}
+          onSaved={(savedPassenger) => {
+            // Auto-select the newly saved passenger
+            if (savedPassenger) {
+              setSelectedPassenger({
+                passengerId: savedPassenger.passengerId,
+                displayName: savedPassenger.displayName,
+                firstName: savedPassenger.firstName,
+                lastName: savedPassenger.lastName,
+                email: savedPassenger.email || undefined,
+                phone: savedPassenger.phone || undefined,
+              });
+              setManualPassengerName('');
+            }
           }}
-          tripData={{
-            pickupLocation: {
-              address: pickupLocation.address,
-              placeId: pickupLocation.placeId,
-              lat: pickupLocation.lat || 0,
-              lng: pickupLocation.lng || 0,
-            },
-            dropoffLocation: {
-              address: dropoffLocation.address,
-              placeId: dropoffLocation.placeId,
-              lat: dropoffLocation.lat || 0,
-              lng: dropoffLocation.lng || 0,
-            },
-            waypoints: waypoints.length > 0 ? waypoints.map(w => ({
-              address: w.address,
-              placeId: w.placeId,
-              lat: w.lat || 0,
-              lng: w.lng || 0,
-              waitTime: w.waitTime,
-            })) : undefined,
-            vehicleType: quote.vehicleType as 'standard' | 'executive' | 'minibus',
-            passengers,
-            luggage,
+          initialData={{
+            name: manualPassengerName || '',
           }}
         />
-      )}
+      </>
+    );
+  };
 
-      {/* Save Passenger Modal (during booking flow) */}
-      <SavePassengerModal
-        isOpen={showSavePassengerModal}
-        onClose={() => setShowSavePassengerModal(false)}
-        onSaved={(savedPassenger) => {
-          // Auto-select the newly saved passenger
-          if (savedPassenger) {
-            setSelectedPassenger({
-              passengerId: savedPassenger.passengerId,
-              displayName: savedPassenger.displayName,
-              firstName: savedPassenger.firstName,
-              lastName: savedPassenger.lastName,
-              email: savedPassenger.email || undefined,
-              phone: savedPassenger.phone || undefined,
-            });
-            setManualPassengerName('');
-          }
-        }}
-        initialData={{
-          name: manualPassengerName || '',
-        }}
-      />
-    </div>
+  return (
+    <CorporateLayout>
+      <div className="max-w-6xl mx-auto">
+        {renderContent()}
+      </div>
+    </CorporateLayout>
   );
 }
 
