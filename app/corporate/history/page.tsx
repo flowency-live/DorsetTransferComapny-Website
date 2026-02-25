@@ -307,7 +307,7 @@ function BookingHistoryContent() {
                       >
                         <Eye className="w-4 h-4 corp-icon" />
                       </button>
-                      {booking.status === 'confirmed' && booking.magicToken && (
+                      {(booking.status === 'confirmed' || booking.status === 'pending') && booking.magicToken && (
                         <>
                           <button
                             type="button"
@@ -351,8 +351,8 @@ function BookingHistoryContent() {
           bookingId={selectedBooking.id}
           magicToken={selectedBooking.magicToken || undefined}
           onClose={closeModal}
-          onEdit={selectedBooking.status === 'confirmed' && selectedBooking.magicToken ? handleEditClick : undefined}
-          onCancel={selectedBooking.status === 'confirmed' && selectedBooking.magicToken ? () => setModalMode('cancel') : undefined}
+          onEdit={(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') && selectedBooking.magicToken ? handleEditClick : undefined}
+          onCancel={(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') && selectedBooking.magicToken ? () => setModalMode('cancel') : undefined}
         />
       )}
 
