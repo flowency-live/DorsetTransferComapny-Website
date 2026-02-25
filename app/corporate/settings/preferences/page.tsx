@@ -16,13 +16,43 @@ import {
 } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 
-const NAME_BOARD_OPTIONS: { value: NameBoardFormat; label: string; example: string }[] = [
-  { value: 'title-initial-surname', label: 'Title + Initial + Surname', example: 'Mr J Jones' },
-  { value: 'firstname-lastname', label: 'First Name + Last Name', example: 'John Jones' },
-  { value: 'company-only', label: 'Company Name Only', example: 'ACME Corp' },
-  { value: 'passenger-alias', label: 'Passenger Alias', example: 'Bruce (if set)' },
-  { value: 'title-initial-surname-company', label: 'Name + Company (2 lines)', example: 'Mr J Jones / ACME Corp' },
-  { value: 'custom', label: 'Custom Text', example: 'Enter your own text' },
+interface NameBoardOption {
+  value: NameBoardFormat;
+  label: string;
+  getExample: (firstName: string, lastName: string, companyName: string) => string;
+}
+
+const NAME_BOARD_OPTIONS: NameBoardOption[] = [
+  {
+    value: 'title-initial-surname',
+    label: 'Title + Initial + Surname',
+    getExample: (firstName, lastName) => `Mr ${firstName.charAt(0)} ${lastName}`,
+  },
+  {
+    value: 'firstname-lastname',
+    label: 'First Name + Last Name',
+    getExample: (firstName, lastName) => `${firstName} ${lastName}`,
+  },
+  {
+    value: 'company-only',
+    label: 'Company Name Only',
+    getExample: (_firstName, _lastName, companyName) => companyName,
+  },
+  {
+    value: 'passenger-alias',
+    label: 'Passenger Alias',
+    getExample: (firstName) => `${firstName} (if set)`,
+  },
+  {
+    value: 'title-initial-surname-company',
+    label: 'Name + Company (2 lines)',
+    getExample: (firstName, lastName, companyName) => `Mr ${firstName.charAt(0)} ${lastName} / ${companyName}`,
+  },
+  {
+    value: 'custom',
+    label: 'Custom Text',
+    getExample: () => 'Enter your own text',
+  },
 ];
 
 export default function PreferencesPage() {
@@ -166,12 +196,22 @@ export default function PreferencesPage() {
     }
   };
 
+  // Extract user name parts for examples
+  const nameParts = user?.name?.split(' ') || ['Guest'];
+  const firstName = nameParts[0] || 'Guest';
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : 'User';
+  const companyName = user?.companyName || 'Your Company';
+
+  const getExample = (option: NameBoardOption): string => {
+    return option.getExample(firstName, lastName, companyName);
+  };
+
   const getNameBoardPreview = (): string => {
     if (selectedFormat === 'custom') {
       return customText || 'Custom text will appear here';
     }
     const option = NAME_BOARD_OPTIONS.find((o) => o.value === selectedFormat);
-    return option?.example || '';
+    return option ? getExample(option) : '';
   };
 
   return (
@@ -269,7 +309,7 @@ export default function PreferencesPage() {
                     />
                     <div className="ml-3 flex-1">
                       <span className="text-sm font-medium">{option.label}</span>
-                      <span className="ml-2 text-sm opacity-50">— {option.example}</span>
+                      <span className="ml-2 text-sm opacity-50">— {getExample(option)}</span>
                     </div>
                   </label>
                 ))}
