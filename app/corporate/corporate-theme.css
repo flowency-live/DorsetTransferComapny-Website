@@ -124,11 +124,11 @@
   /* Status Colors - Dark */
   --corp-success: #8fb894;
   --corp-success-bg: rgba(143, 184, 148, 0.15);
-  --corp-warning: #e8c49a;
+  --corp-warning: #f5d9b8;
   --corp-warning-bg: rgba(232, 196, 154, 0.15);
-  --corp-error: #e09990;
+  --corp-error: #f0ada5;
   --corp-error-bg: rgba(224, 153, 144, 0.15);
-  --corp-info: #7a9ba5;
+  --corp-info: #a8c5ce;
   --corp-info-bg: rgba(122, 155, 165, 0.15);
 
   /* Shadows - Dark */
