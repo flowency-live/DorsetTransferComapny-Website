@@ -216,14 +216,14 @@ export default function DateTimePicker({
                 weekStartsOn={1}
                 showOutsideDays
                 classNames={{
-                  root: 'w-full',
+                  root: 'w-full pt-6',
                   months: 'flex flex-col',
                   month: 'space-y-4',
                   month_caption: 'flex justify-center pt-1 relative items-center mb-4',
                   caption_label: 'text-base font-semibold text-foreground',
                   nav: 'absolute inset-x-0 flex justify-between',
-                  button_previous: 'h-8 w-8 bg-transparent p-0 hover:bg-sage-lighter rounded-lg flex items-center justify-center transition-colors absolute left-1',
-                  button_next: 'h-8 w-8 bg-transparent p-0 hover:bg-sage-lighter rounded-lg flex items-center justify-center transition-colors absolute right-1',
+                  button_previous: 'h-8 w-8 bg-transparent p-0 hover:bg-sage-lighter rounded-lg flex items-center justify-center transition-colors absolute left-0',
+                  button_next: 'h-8 w-8 bg-transparent p-0 hover:bg-sage-lighter rounded-lg flex items-center justify-center transition-colors absolute right-0',
                   month_grid: 'w-full border-collapse',
                   weekdays: 'flex justify-between',
                   weekday: 'text-muted-foreground font-medium text-xs w-10 text-center',
