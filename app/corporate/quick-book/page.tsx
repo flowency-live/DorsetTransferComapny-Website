@@ -156,6 +156,16 @@ export default function QuickBookPage() {
 
     const params = new URLSearchParams();
 
+    // Pass date/time for instant booking
+    if (pickupDate && pickupTime) {
+      params.set('pickupDateTime', `${pickupDate}T${pickupTime}`);
+    }
+
+    // Pass passenger if selected
+    if (selectedPassenger?.passengerId) {
+      params.set('passengerId', selectedPassenger.passengerId);
+    }
+
     if (selectedTripData.type === 'favourite') {
       // Mark favourite trip as used
       try {
@@ -164,6 +174,11 @@ export default function QuickBookPage() {
         console.error('Failed to mark trip as used:', err);
       }
       params.set('tripId', selectedTripData.trip.tripId);
+
+      // Enable instant booking if trip has vehicle type defined
+      if (selectedTripData.trip.vehicleType) {
+        params.set('instantBook', 'true');
+      }
     } else {
       // For recent journeys, pass location data as rebook params
       const journey = selectedTripData.journey;

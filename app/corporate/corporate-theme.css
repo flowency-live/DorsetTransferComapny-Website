@@ -414,13 +414,14 @@
    ============================================ */
 .corp-card {
   background: var(--corp-bg-secondary);
-  border: 1px solid var(--corp-border-subtle);
+  border: 1px solid var(--corp-border-default);
   border-radius: var(--corp-radius-lg);
   box-shadow: var(--corp-shadow-sm);
   transition: all var(--corp-transition-fast);
 }
 
 .corp-card:hover {
+  border-color: var(--corp-border-strong);
   box-shadow: var(--corp-shadow-md);
 }
 

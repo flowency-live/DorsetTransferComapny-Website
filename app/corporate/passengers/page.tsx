@@ -161,7 +161,7 @@ export default function PassengersPage() {
             {passengers.map((passenger) => (
               <div
                 key={passenger.passengerId}
-                className="corp-card p-5 rounded-lg hover:shadow-md transition-shadow"
+                className="corp-card p-5 rounded-lg hover:shadow-md transition-shadow flex flex-col h-full"
               >
                 {/* Header with name and 3-dot menu */}
                 <div className="flex items-start justify-between mb-3">
@@ -216,27 +216,32 @@ export default function PassengersPage() {
                   </div>
                 </div>
 
-                {/* Contact Info */}
-                <div className="space-y-2 mb-4">
-                  {passenger.email && (
+                {/* Contact Info - flex-grow to push stats and button to bottom */}
+                <div className="space-y-2 mb-4 flex-grow">
+                  {passenger.email ? (
                     <div className="flex items-center gap-2 text-sm opacity-70">
                       <Mail className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{passenger.email}</span>
                     </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm opacity-40">
+                      <Mail className="h-4 w-4 flex-shrink-0" />
+                      <span className="italic">No email</span>
+                    </div>
                   )}
                 </div>
 
-                {/* Usage Stats */}
-                <div className="flex flex-wrap gap-2 mb-4">
+                {/* Usage Stats - fixed height area */}
+                <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
                   <span className="corp-badge corp-badge-neutral text-xs">
                     {passenger.usageCount || 0} journey{passenger.usageCount === 1 ? '' : 's'}
                   </span>
                 </div>
 
-                {/* Book Now button */}
+                {/* Book Now button - always at bottom */}
                 <Link
                   href={`/corporate/quote?passengerId=${passenger.passengerId}`}
-                  className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors"
+                  className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors mt-auto"
                 >
                   Book Now
                 </Link>

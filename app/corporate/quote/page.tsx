@@ -241,6 +241,134 @@ function CorporateQuotePageContent() {
     loadRebook();
   }, [loadRebook]);
 
+  // Instant booking params (from Quick Book)
+  const instantBookParam = searchParams.get('instantBook') === 'true';
+  const pickupDateTimeParam = searchParams.get('pickupDateTime');
+  const [instantBookLoading, setInstantBookLoading] = useState(false);
+  const [instantBookTriggered, setInstantBookTriggered] = useState(false);
+
+  // Instant booking: auto-fetch quote and skip to contact when trip has vehicleType + date/time
+  useEffect(() => {
+    // Only run once and when all conditions are met
+    if (
+      !instantBookParam ||
+      !pickupDateTimeParam ||
+      !loadedTrip?.vehicleType ||
+      !loadedTrip ||
+      tripLoading ||
+      instantBookTriggered ||
+      !pickupLocation ||
+      !dropoffLocation
+    ) {
+      return;
+    }
+
+    // Parse and set the pickup date/time
+    const dateTime = new Date(pickupDateTimeParam);
+    if (isNaN(dateTime.getTime())) return;
+
+    setPickupDate(dateTime);
+    setInstantBookTriggered(true);
+    setInstantBookLoading(true);
+
+    // Fetch quotes and auto-select vehicle
+    const runInstantBook = async () => {
+      try {
+        // Use the passed date/time for quote calculation
+        const response = await calculateMultiVehicleQuote({
+          pickupLocation: pickupLocation!,
+          dropoffLocation: dropoffLocation!,
+          waypoints: waypoints.length > 0 ? waypoints : undefined,
+          pickupTime: dateTime.toISOString(),
+          passengers,
+          luggage,
+          journeyType: 'one-way',
+          compareMode: true,
+          corpAccountId: user?.corpAccountId,
+        });
+
+        setMultiQuote(response);
+
+        // Check if the saved vehicle type is available
+        const vehicleId = loadedTrip.vehicleType;
+        if (vehicleId && response.vehicles[vehicleId as keyof typeof response.vehicles]) {
+          const vehiclePricing = response.vehicles[vehicleId as keyof typeof response.vehicles];
+
+          // Check capacity
+          if (vehiclePricing.capacity >= passengers) {
+            // Auto-select the vehicle and create quote
+            const pricing = vehiclePricing.oneWay;
+
+            const quoteData: QuoteResponse = {
+              quoteId: response.quoteId || `quote-${Date.now()}`,
+              status: response.status || 'valid',
+              expiresAt: response.expiresAt || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+              journey: {
+                ...response.journey,
+                route: { polyline: null },
+              },
+              pricing: {
+                currency: 'GBP',
+                transferPrice: pricing.transferPrice,
+                displayTransferPrice: pricing.displayTransferPrice,
+                totalPrice: pricing.totalPrice,
+                displayTotal: pricing.displayTotalPrice,
+                fees: pricing.fees,
+              },
+              vehicleType: vehicleId,
+              vehicleDetails: {
+                name: vehiclePricing.name,
+                description: vehiclePricing.description,
+                imageUrl: vehiclePricing.imageUrl,
+                capacity: vehiclePricing.capacity,
+                features: vehiclePricing.features,
+              },
+              pickupLocation: response.pickupLocation,
+              dropoffLocation: response.dropoffLocation || response.pickupLocation,
+              waypoints: response.waypoints,
+              pickupTime: response.pickupTime,
+              passengers: response.passengers,
+              luggage: response.luggage,
+              returnJourney: false,
+              journeyType: response.journeyType,
+              durationHours: response.durationHours,
+              extras: response.extras,
+              createdAt: response.createdAt,
+            };
+
+            // Save quote to get magic token
+            const savedQuote = await saveQuote(quoteData);
+            setQuote({ ...quoteData, quoteId: savedQuote.quoteId });
+            setMagicToken(savedQuote.token);
+
+            // Skip to contact stage
+            setCurrentStep(2);
+            setBookingStage('contact');
+          }
+        }
+      } catch (err) {
+        console.error('Instant book failed:', err);
+        setError('Failed to get instant quote. Please select a vehicle.');
+      } finally {
+        setInstantBookLoading(false);
+      }
+    };
+
+    runInstantBook();
+  }, [
+    instantBookParam,
+    pickupDateTimeParam,
+    loadedTrip,
+    tripLoading,
+    instantBookTriggered,
+    pickupLocation,
+    dropoffLocation,
+    waypoints,
+    passengers,
+    luggage,
+    user?.corpAccountId,
+  ]);
+
   // Pre-fill contact details from user profile
   useEffect(() => {
     if (user && !contactDetails) {
@@ -509,10 +637,17 @@ function CorporateQuotePageContent() {
         passengerName: selectedPassenger?.displayName || manualPassengerName || contact.name,
         passengerId: selectedPassenger?.passengerId || undefined,
         bookedBy: user?.email,
-        // Passenger preferences (from directory)
+        // Passenger preferences - use bookingPreferences (from PreferencesReviewStep) if available,
+        // fall back to selectedPassenger values (from directory)
         passengerAlias: selectedPassenger?.alias || undefined,
-        passengerDriverInstructions: selectedPassenger?.driverInstructions || undefined,
-        passengerRefreshments: selectedPassenger?.refreshments || undefined,
+        passengerDriverInstructions:
+          bookingPreferences?.driverInstructions ||
+          selectedPassenger?.driverInstructions ||
+          undefined,
+        passengerRefreshments:
+          bookingPreferences?.refreshments ||
+          selectedPassenger?.refreshments ||
+          undefined,
         // Payment
         paymentMethod: isPayOnAccount ? 'invoice' : 'card',
         specialRequests: specialRequests || '',
@@ -549,6 +684,28 @@ function CorporateQuotePageContent() {
   // Render content based on booking stage
   const renderContent = () => {
     const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
+
+    // Instant booking loading state
+    if (instantBookLoading) {
+      return (
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-sage/20 border-t-sage rounded-full mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-navy mb-2">Getting your quote...</h2>
+            <p className="text-navy-light/70">
+              We&apos;re preparing your booking with your saved preferences.
+            </p>
+            {loadedTrip && (
+              <div className="mt-4 p-3 bg-sage/5 rounded-lg">
+                <p className="text-sm text-navy-light">
+                  {loadedTrip.label}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     // Booking confirmation
     if (bookingStage === 'confirmation' && quote && contactDetails && bookingId) {
@@ -613,6 +770,41 @@ function CorporateQuotePageContent() {
               phone: contactDetails.phone,
             }}
           />
+
+          {/* Save Trip Modal - for saving route as favourite after booking */}
+          {pickupLocation && dropoffLocation && (
+            <SaveTripModal
+              isOpen={showSaveTripModal}
+              onClose={() => setShowSaveTripModal(false)}
+              onSaved={() => {
+                console.log('Trip saved to favourites');
+              }}
+              tripData={{
+                pickupLocation: {
+                  address: pickupLocation.address,
+                  placeId: pickupLocation.placeId,
+                  lat: pickupLocation.lat || 0,
+                  lng: pickupLocation.lng || 0,
+                },
+                dropoffLocation: {
+                  address: dropoffLocation.address,
+                  placeId: dropoffLocation.placeId,
+                  lat: dropoffLocation.lat || 0,
+                  lng: dropoffLocation.lng || 0,
+                },
+                waypoints: waypoints.length > 0 ? waypoints.map(w => ({
+                  address: w.address,
+                  placeId: w.placeId,
+                  lat: w.lat || 0,
+                  lng: w.lng || 0,
+                  waitTime: w.waitTime,
+                })) : undefined,
+                vehicleType: quote.vehicleType as 'standard' | 'executive' | 'minibus',
+                passengers,
+                luggage,
+              }}
+            />
+          )}
         </div>
       );
     }

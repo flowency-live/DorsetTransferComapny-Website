@@ -90,7 +90,7 @@ export default function FavouriteTripCard({
   }
 
   return (
-    <div className="corp-card rounded-lg p-5 hover:shadow-md transition-shadow">
+    <div className="corp-card rounded-lg p-5 hover:shadow-md transition-shadow flex flex-col h-full">
       {/* Header with label and menu */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pr-2">
@@ -142,8 +142,8 @@ export default function FavouriteTripCard({
         )}
       </div>
 
-      {/* Route */}
-      <div className="space-y-2 mb-4">
+      {/* Route - flex-grow to push badges and button to bottom */}
+      <div className="space-y-2 mb-4 flex-grow">
         <div className="flex items-start gap-2">
           <div className="flex-shrink-0 mt-1">
             <div className="h-2 w-2 rounded-full bg-[var(--corp-sage)]" />
@@ -172,8 +172,8 @@ export default function FavouriteTripCard({
         </div>
       </div>
 
-      {/* Preferences */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      {/* Preferences - fixed height area */}
+      <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
         {trip.vehicleType && (
           <span className="corp-badge corp-badge-neutral inline-flex items-center gap-1 text-xs">
             <Car className="h-3 w-3" />
@@ -200,10 +200,10 @@ export default function FavouriteTripCard({
         )}
       </div>
 
-      {/* Book button */}
+      {/* Book button - always at bottom */}
       <Link
         href={`/corporate/quote?tripId=${trip.tripId}`}
-        className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors"
+        className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors mt-auto"
       >
         Book Now
       </Link>
