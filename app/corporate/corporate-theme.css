@@ -1201,6 +1201,15 @@
   color: white !important;
 }
 
+/* Journey type tabs (Transfer / By the Hour) - uses bg-muted class */
+[data-theme="dark"] .corp-layout .bg-muted {
+  background-color: var(--corp-bg-secondary) !important;
+}
+
+[data-theme="dark"] .corp-layout .text-muted-foreground {
+  color: var(--corp-text-muted) !important;
+}
+
 /* Radio buttons */
 [data-theme="dark"] .corp-layout input[type="radio"]:checked {
   accent-color: var(--corp-sage) !important;
