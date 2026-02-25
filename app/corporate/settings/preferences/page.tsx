@@ -239,11 +239,13 @@ export default function PreferencesPage() {
                 <div className="flex-shrink-0">
                   {preferences?.logoUrl ? (
                     <div className="relative w-32 h-32 border corp-border rounded-lg overflow-hidden">
+                      {/* Use unoptimized for S3 URLs with special characters in path */}
                       <Image
                         src={preferences.logoUrl}
                         alt="Company logo"
                         fill
                         className="object-contain p-2"
+                        unoptimized
                       />
                     </div>
                   ) : (
@@ -340,10 +342,20 @@ export default function PreferencesPage() {
                   <span className="text-xs opacity-60 uppercase tracking-wider">Preview</span>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-bold">{getNameBoardPreview()}</p>
                   {preferences?.logoUrl && (
-                    <p className="text-sm opacity-60 mt-2">Your logo will also be displayed</p>
+                    <div className="flex justify-center mb-3">
+                      <div className="relative w-16 h-16">
+                        <Image
+                          src={preferences.logoUrl}
+                          alt="Company logo"
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
                   )}
+                  <p className="text-2xl font-bold">{getNameBoardPreview()}</p>
                 </div>
               </div>
             </div>
