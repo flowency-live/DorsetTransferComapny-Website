@@ -141,8 +141,11 @@
 /* ============================================
    Base Portal Styles
    ============================================ */
-.corp-portal {
-  min-height: 100vh;
+.corp-portal,
+.corp-layout {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
   background: var(--corp-bg-primary);
   color: var(--corp-text-primary);
   font-family: var(--corp-font-sans);
@@ -910,11 +913,15 @@
 }
 
 /* ============================================
-   Loading Spinner
+   Loading Spinner & Background
    ============================================ */
 .corp-loading-spinner {
   border-color: var(--corp-border-default);
   border-top-color: var(--corp-accent);
+}
+
+.corp-loading-bg {
+  background: var(--corp-bg-primary);
 }
 
 /* ============================================
