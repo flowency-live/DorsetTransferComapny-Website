@@ -262,8 +262,8 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
           </div>
         )}
 
-        {/* Content - scrollable */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 220px)' }}>
+        {/* Content - scrollable with fixed min-height */}
+        <div className="p-6 overflow-y-auto" style={{ height: 'calc(90vh - 280px)', minHeight: '400px' }}>
           {loading && (
             <div className="text-center py-12">
               <div className="corp-loading-spinner w-10 h-10 border-4 rounded-full animate-spin mx-auto" />

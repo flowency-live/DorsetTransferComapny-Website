@@ -25,11 +25,11 @@ interface Booking {
 
 type ModalMode = 'view' | 'edit' | 'cancel' | null;
 
-// Redirect component for editing - navigates to full edit page
+// Redirect component for editing - navigates to corporate booking edit page
 function EditRedirectModal({ bookingId, magicToken }: { bookingId: string; magicToken: string }) {
   useEffect(() => {
-    // Redirect to the public booking page which has the full edit functionality
-    window.location.href = `/booking/${bookingId}?token=${encodeURIComponent(magicToken)}`;
+    // Redirect to the corporate booking page which has edit functionality within the corporate layout
+    window.location.href = `/corporate/booking/${bookingId}?token=${encodeURIComponent(magicToken)}`;
   }, [bookingId, magicToken]);
 
   return (
@@ -153,10 +153,9 @@ function BookingHistoryContent() {
   };
 
   const handleEditClick = () => {
-    // For edit, redirect to the public booking page with the magic token
-    // This uses the existing full edit functionality
+    // Navigate to corporate booking page which stays within the corporate layout
     if (selectedBooking?.magicToken) {
-      window.location.href = `/booking/${selectedBooking.id}?token=${encodeURIComponent(selectedBooking.magicToken)}`;
+      router.push(`/corporate/booking/${selectedBooking.id}?token=${encodeURIComponent(selectedBooking.magicToken)}`);
     }
   };
 
