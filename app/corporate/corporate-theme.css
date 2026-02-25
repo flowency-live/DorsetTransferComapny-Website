@@ -1091,3 +1091,122 @@
 .corp-list-item:hover {
   background: var(--corp-bg-hover);
 }
+
+/* ============================================
+   Quote/Booking Form Dark Mode Overrides
+   These override shadcn/Tailwind classes for
+   components reused from public quote flow
+   ============================================ */
+
+/* Card backgrounds in corporate dark mode */
+[data-theme="dark"] .corp-layout .bg-card,
+[data-theme="dark"] .corp-layout .bg-background {
+  background-color: var(--corp-bg-elevated) !important;
+}
+
+[data-theme="dark"] .corp-layout .bg-\[rgb\(251\2c 247\2c 240\)\],
+[data-theme="dark"] .corp-layout .bg-\[\#FBF7F0\] {
+  background-color: var(--corp-bg-elevated) !important;
+}
+
+/* Text colors in dark mode */
+[data-theme="dark"] .corp-layout .text-foreground {
+  color: var(--corp-text-primary) !important;
+}
+
+[data-theme="dark"] .corp-layout .text-muted-foreground {
+  color: var(--corp-text-secondary) !important;
+}
+
+/* Input fields in dark mode */
+[data-theme="dark"] .corp-layout input,
+[data-theme="dark"] .corp-layout textarea,
+[data-theme="dark"] .corp-layout select {
+  background-color: var(--corp-bg-secondary) !important;
+  border-color: var(--corp-border-default) !important;
+  color: var(--corp-text-primary) !important;
+}
+
+[data-theme="dark"] .corp-layout input::placeholder,
+[data-theme="dark"] .corp-layout textarea::placeholder {
+  color: var(--corp-text-muted) !important;
+}
+
+/* Border colors in dark mode */
+[data-theme="dark"] .corp-layout .border-sage-light {
+  border-color: var(--corp-border-default) !important;
+}
+
+[data-theme="dark"] .corp-layout .border-border {
+  border-color: var(--corp-border-subtle) !important;
+}
+
+/* Shadow adjustments */
+[data-theme="dark"] .corp-layout .shadow-mobile {
+  box-shadow: var(--corp-shadow-md) !important;
+}
+
+/* Sage button backgrounds in dark mode */
+[data-theme="dark"] .corp-layout .bg-sage {
+  background-color: var(--corp-sage) !important;
+}
+
+[data-theme="dark"] .corp-layout .bg-sage-light {
+  background-color: rgba(90, 138, 96, 0.2) !important;
+}
+
+[data-theme="dark"] .corp-layout .bg-sage\/10,
+[data-theme="dark"] .corp-layout .bg-sage\/20 {
+  background-color: rgba(90, 138, 96, 0.15) !important;
+}
+
+/* Labels and small text */
+[data-theme="dark"] .corp-layout label {
+  color: var(--corp-text-secondary) !important;
+}
+
+/* Step indicators */
+[data-theme="dark"] .corp-layout .bg-white {
+  background-color: var(--corp-bg-secondary) !important;
+}
+
+/* Ring/focus states */
+[data-theme="dark"] .corp-layout .ring-sage {
+  --tw-ring-color: var(--corp-sage) !important;
+}
+
+/* Dropdown menus from LocationInput */
+[data-theme="dark"] .corp-layout [role="listbox"],
+[data-theme="dark"] .corp-layout [role="option"] {
+  background-color: var(--corp-bg-elevated) !important;
+  color: var(--corp-text-primary) !important;
+}
+
+[data-theme="dark"] .corp-layout [role="option"]:hover {
+  background-color: var(--corp-bg-hover) !important;
+}
+
+/* Tab buttons (Transfer/By the Hour) */
+[data-theme="dark"] .corp-layout [role="tablist"] {
+  background-color: var(--corp-bg-secondary) !important;
+}
+
+[data-theme="dark"] .corp-layout [role="tab"] {
+  color: var(--corp-text-secondary) !important;
+}
+
+[data-theme="dark"] .corp-layout [role="tab"][data-state="active"] {
+  background-color: var(--corp-sage) !important;
+  color: white !important;
+}
+
+/* Radio buttons */
+[data-theme="dark"] .corp-layout input[type="radio"]:checked {
+  accent-color: var(--corp-sage) !important;
+}
+
+/* Number input steppers */
+[data-theme="dark"] .corp-layout .bg-cream,
+[data-theme="dark"] .corp-layout .bg-\[var\(--cream\)\] {
+  background-color: var(--corp-bg-secondary) !important;
+}

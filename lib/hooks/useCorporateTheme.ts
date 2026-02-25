@@ -16,12 +16,14 @@ const THEME_STORAGE_KEY = 'corporate-theme';
 /**
  * Hook for managing corporate portal theme (light/dark mode)
  * Persists preference to localStorage and applies CSS class to document
+ * Default: dark mode for corporate users (executive/professional look)
  */
 export function useCorporateTheme(): UseCorporateThemeReturn {
-  const [theme, setThemeState] = useState<Theme>('light');
+  // Default to dark mode for corporate portal
+  const [theme, setThemeState] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
 
-  // Initialize theme from localStorage on mount
+  // Initialize theme from localStorage on mount (default to dark if not set)
   useEffect(() => {
     setMounted(true);
 
@@ -30,9 +32,8 @@ export function useCorporateTheme(): UseCorporateThemeReturn {
     if (stored === 'light' || stored === 'dark') {
       setThemeState(stored);
     } else {
-      // Check system preference as fallback
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setThemeState(prefersDark ? 'dark' : 'light');
+      // Default to dark mode for corporate portal (no system preference check)
+      setThemeState('dark');
     }
   }, []);
 
