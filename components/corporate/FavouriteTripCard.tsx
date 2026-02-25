@@ -97,7 +97,7 @@ export default function FavouriteTripCard({
           <h3 className="font-semibold text-lg truncate">{trip.label}</h3>
           <p className="text-xs opacity-60 mt-0.5">
             {formatLastUsed(trip.lastUsedAt)}
-            {trip.usageCount && trip.usageCount > 0 && ` (${trip.usageCount} bookings)`}
+            {trip.usageCount !== undefined && trip.usageCount > 0 && ` (${trip.usageCount} bookings)`}
           </p>
         </div>
 

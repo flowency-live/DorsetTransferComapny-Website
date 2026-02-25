@@ -234,7 +234,7 @@ export default function PassengersPage() {
                 {/* Usage Stats - fixed height area */}
                 <div className="flex flex-wrap gap-2 mb-4 min-h-[28px]">
                   <span className="corp-badge corp-badge-neutral text-xs">
-                    {passenger.usageCount || 0} journey{passenger.usageCount === 1 ? '' : 's'}
+                    {passenger.usageCount || 0} booking{passenger.usageCount === 1 ? '' : 's'}
                   </span>
                 </div>
 

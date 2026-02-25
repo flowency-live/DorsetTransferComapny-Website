@@ -718,7 +718,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
                     <div className="flex items-center gap-4 text-sm opacity-70">
                       {journey.vehicleName && <div className="flex items-center gap-1"><Car className="h-4 w-4" /><span>{journey.vehicleName}</span></div>}
                       {journey.pricePence !== null && <span className="font-medium">{formatPrice(journey.pricePence)}</span>}
-                      {(journey.status === 'completed' || journey.status === 'confirmed') && journey.pickupLocation && journey.dropoffLocation && (
+                      {(journey.status === 'completed' || journey.status === 'confirmed' || journey.status === 'pending') && (journey.pickupLocation || journey.pickup) && (journey.dropoffLocation || journey.dropoff) && (
                         <Link href={buildRebookUrl(journey)} className="corp-btn corp-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full">
                           <RotateCw className="h-3.5 w-3.5" />Rebook
                         </Link>
