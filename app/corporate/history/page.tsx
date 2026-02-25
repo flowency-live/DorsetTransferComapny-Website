@@ -358,10 +358,9 @@ function BookingHistoryContent() {
       {modalMode === 'view' && selectedBooking && (
         <BookingDetailsModal
           bookingId={selectedBooking.id}
-          magicToken={selectedBooking.magicToken || undefined}
           onClose={closeModal}
-          onEdit={(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') && selectedBooking.magicToken ? handleEditClick : undefined}
-          onCancel={(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') && selectedBooking.magicToken ? () => setModalMode('cancel') : undefined}
+          onEdit={(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') ? handleEditClick : undefined}
+          onCancel={(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') ? () => setModalMode('cancel') : undefined}
         />
       )}
 

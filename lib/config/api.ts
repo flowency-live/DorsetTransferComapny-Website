@@ -39,6 +39,7 @@ export const API_ENDPOINTS = {
   corporateNotifications: '/corporate/me/notifications',
   corporateTrips: '/corporate/me/trips',
   corporateDashboard: '/corporate/dashboard',
+  corporateBookings: '/corporate/bookings', // GET /corporate/bookings/{bookingId}
   corporateCompany: '/corporate/company',
   corporateUsers: '/corporate/users',
   corporatePreferences: '/corporate/preferences',

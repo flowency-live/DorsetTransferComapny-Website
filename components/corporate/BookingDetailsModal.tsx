@@ -1,23 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, MapPin, Calendar, Users, Briefcase, Car, CreditCard, Clock, Plane, Train, FileText, Activity, CheckCircle, AlertCircle, XCircle, PlusCircle } from 'lucide-react';
+import { X, MapPin, Calendar, Users, Car, CreditCard, Plane, FileText, Activity, CheckCircle, AlertCircle, XCircle, PlusCircle } from 'lucide-react';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { getTenantHeaders } from '@/lib/config/tenant';
 
-interface BookingLocation {
-  address: string;
-  placeId?: string;
-  lat?: number;
-  lng?: number;
+// API response format from GET /corporate/bookings/{bookingId}
+interface CorporateBookingResponse {
+  bookingId: string;
+  pickupTime: string | null;
+  status: string;
+  vehicleType: string | null;
+  passengers: number | null;
+  specialRequirements: string | null;
+  flightNumber: string | null;
+  createdAt: string | null;
+  bookedBy: string;
+  price: number; // in pence
+  pickup: {
+    address: string;
+    postcode: string;
+  };
+  dropoff: {
+    address: string;
+    postcode: string;
+  };
+  passenger: {
+    name: string;
+    phone: string;
+    email: string;
+  };
 }
 
-interface BookingPricing {
-  currency: string;
-  totalPrice: number;
-  displayTotal: string;
-}
-
+// Internal format for display (mapped from API response)
 interface BookingData {
   bookingId: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -27,28 +42,44 @@ interface BookingData {
     phone: string;
   };
   pickupTime: string;
-  pickupLocation: BookingLocation;
-  dropoffLocation: BookingLocation;
-  waypoints?: BookingLocation[];
+  pickupLocation: { address: string };
+  dropoffLocation: { address: string };
   vehicleType: string;
   journeyType: 'one-way' | 'round-trip' | 'by-the-hour';
   passengers: number;
-  luggage?: number;
-  returnJourney: boolean;
-  returnPickupTime?: string;
   flightNumber?: string;
-  trainNumber?: string;
-  returnFlightNumber?: string;
-  returnTrainNumber?: string;
   specialRequests?: string;
-  durationHours?: number;
-  pricing: BookingPricing;
+  pricing: { totalPrice: number };
   createdAt: string;
+}
+
+/**
+ * Map API response to internal BookingData format
+ */
+function mapApiResponseToBookingData(response: CorporateBookingResponse): BookingData {
+  return {
+    bookingId: response.bookingId,
+    status: (response.status?.toLowerCase() || 'pending') as BookingData['status'],
+    customer: {
+      name: response.passenger.name,
+      email: response.passenger.email,
+      phone: response.passenger.phone,
+    },
+    pickupTime: response.pickupTime || '',
+    pickupLocation: { address: response.pickup.address },
+    dropoffLocation: { address: response.dropoff.address },
+    vehicleType: response.vehicleType || 'Standard',
+    journeyType: 'one-way', // API doesn't include this yet
+    passengers: response.passengers || 1,
+    flightNumber: response.flightNumber || undefined,
+    specialRequests: response.specialRequirements || undefined,
+    pricing: { totalPrice: response.price },
+    createdAt: response.createdAt || new Date().toISOString(),
+  };
 }
 
 interface Props {
   bookingId: string;
-  magicToken?: string;
   onClose: () => void;
   onEdit?: () => void;
   onCancel?: () => void;
@@ -160,7 +191,7 @@ function generateActivityEvents(booking: BookingData): ActivityEvent[] {
   return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
 
-export default function BookingDetailsModal({ bookingId, magicToken, onClose, onEdit, onCancel }: Props) {
+export default function BookingDetailsModal({ bookingId, onClose, onEdit, onCancel }: Props) {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -168,16 +199,18 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
 
   useEffect(() => {
     const fetchBooking = async () => {
-      if (!bookingId || !magicToken) {
+      if (!bookingId) {
         setError('Unable to load booking details');
         setLoading(false);
         return;
       }
 
       try {
-        const url = `${API_BASE_URL}${API_ENDPOINTS.bookings}/${bookingId}?token=${encodeURIComponent(magicToken)}`;
+        // Use corporate endpoint with cookie-based auth (no magicToken needed)
+        const url = `${API_BASE_URL}${API_ENDPOINTS.corporateBookings}/${bookingId}`;
         const response = await fetch(url, {
           method: 'GET',
+          credentials: 'include', // Send auth cookie
           headers: {
             'Content-Type': 'application/json',
             ...getTenantHeaders(),
@@ -189,8 +222,9 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
           throw new Error(errorData.error || 'Failed to load booking');
         }
 
-        const data = await response.json();
-        setBooking(data.booking);
+        const data: CorporateBookingResponse = await response.json();
+        // Map API response to internal display format
+        setBooking(mapApiResponseToBookingData(data));
       } catch (err) {
         console.error('Error fetching booking:', err);
         setError(err instanceof Error ? err.message : 'Failed to load booking');
@@ -200,7 +234,7 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
     };
 
     fetchBooking();
-  }, [bookingId, magicToken]);
+  }, [bookingId]);
 
   const canModify = booking && booking.status !== 'cancelled' && booking.status !== 'completed';
 
@@ -316,23 +350,7 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
                         Flight: {booking.flightNumber}
                       </p>
                     )}
-                    {booking.trainNumber && (
-                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
-                        <Train className="w-3.5 h-3.5" />
-                        Train: {booking.trainNumber}
-                      </p>
-                    )}
                   </div>
-
-                  {/* Waypoints */}
-                  {booking.waypoints && booking.waypoints.length > 0 && (
-                    booking.waypoints.map((waypoint, index) => (
-                      <div key={index} className="p-3 rounded-lg bg-[var(--corp-bg-elevated)]">
-                        <p className="text-xs uppercase tracking-wider corp-page-subtitle mb-1">Stop {index + 1}</p>
-                        <p className="font-medium">{waypoint.address}</p>
-                      </div>
-                    ))
-                  )}
 
                   {/* Dropoff */}
                   <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)]">
@@ -341,39 +359,6 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
                   </div>
                 </div>
 
-                {/* Return Journey */}
-                {booking.returnJourney && booking.returnPickupTime && (
-                  <div className="mt-4 p-4 rounded-lg bg-[var(--corp-bg-elevated)] border-l-3 border-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
-                    <p className="text-xs uppercase tracking-wider corp-page-subtitle mb-2 flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-[var(--corp-accent-muted)] flex items-center justify-center">
-                        <span className="text-[10px] text-[var(--corp-accent)] font-bold">R</span>
-                      </span>
-                      Return Journey
-                    </p>
-                    <p className="text-sm">
-                      <span className="corp-page-subtitle">From:</span> {booking.dropoffLocation?.address}
-                    </p>
-                    <p className="text-sm">
-                      <span className="corp-page-subtitle">To:</span> {booking.pickupLocation?.address}
-                    </p>
-                    <p className="text-sm text-[var(--corp-accent)] mt-2 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {formatDate(booking.returnPickupTime)} at {formatTime(booking.returnPickupTime)}
-                    </p>
-                    {booking.returnFlightNumber && (
-                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
-                        <Plane className="w-3.5 h-3.5" />
-                        Flight: {booking.returnFlightNumber}
-                      </p>
-                    )}
-                    {booking.returnTrainNumber && (
-                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
-                        <Train className="w-3.5 h-3.5" />
-                        Train: {booking.returnTrainNumber}
-                      </p>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Booking Info */}
@@ -392,24 +377,6 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
                   </div>
                   <p className="font-medium">{booking.passengers}</p>
                 </div>
-                {booking.luggage !== undefined && booking.luggage > 0 && (
-                  <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
-                      <Briefcase className="w-3.5 h-3.5" />
-                      Luggage
-                    </div>
-                    <p className="font-medium">{booking.luggage} items</p>
-                  </div>
-                )}
-                {booking.journeyType === 'by-the-hour' && booking.durationHours && (
-                  <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      Duration
-                    </div>
-                    <p className="font-medium">{booking.durationHours} hours</p>
-                  </div>
-                )}
               </div>
 
               {/* Special Requests */}
