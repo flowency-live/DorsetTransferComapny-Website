@@ -1,17 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, AlertTriangle, User } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   createPassenger,
-  getDashboard,
   type CreatePassengerData,
 } from '@/lib/services/corporateApi';
-import CorporateHeader from '@/components/corporate/CorporateHeader';
-import Footer from '@/components/shared/Footer';
+import CorporateLayout from '@/components/corporate/CorporateLayout';
 
 const VALID_TITLES = ['Mr', 'Mrs', 'Ms', 'Miss', 'Dr', 'Prof', 'Lord', 'Lady', 'Sir', 'Dame'] as const;
 
@@ -24,9 +22,8 @@ interface RefreshmentsState {
 }
 
 export default function NewPassengerPage() {
-  const { user, isLoading: authLoading, logout, isAdmin } = useRequireCorporateAuth();
+  const { user } = useRequireCorporateAuth();
   const router = useRouter();
-  const [companyName, setCompanyName] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' } | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -56,14 +53,6 @@ export default function NewPassengerPage() {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
-
-  useEffect(() => {
-    if (user) {
-      getDashboard()
-        .then((data) => setCompanyName(data.company?.companyName))
-        .catch(console.error);
-    }
-  }, [user]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -149,296 +138,277 @@ export default function NewPassengerPage() {
     }
   };
 
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen bg-[#FBF7F0] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sage" />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FBF7F0]">
-      <CorporateHeader
-        userName={user.name}
-        companyName={companyName}
-        onLogout={logout}
-        isAdmin={isAdmin}
-      />
+    <CorporateLayout pageTitle="Add Passenger">
+      <div className="max-w-2xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-8">
+          <Link
+            href="/corporate/passengers"
+            className="inline-flex items-center text-sm opacity-70 hover:opacity-100 transition-colors mb-3"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Passengers
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 corp-action-icon-sage rounded-full flex items-center justify-center">
+              <User className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Add New Passenger</h1>
+              <p className="corp-page-subtitle mt-0.5">
+                Save passenger details for quick bookings
+              </p>
+            </div>
+          </div>
+        </div>
 
-      <main className="flex-1 pt-28 pb-16">
-        <div className="container mx-auto px-4 md:px-6 max-w-2xl">
-          {/* Page Header */}
-          <div className="mb-8">
-            <Link
-              href="/corporate/passengers"
-              className="inline-flex items-center text-sm text-navy-light/70 hover:text-sage transition-colors mb-3"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back to Passengers
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-sage/10 rounded-full flex items-center justify-center">
-                <User className="h-5 w-5 text-sage" />
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          {/* Identity Section */}
+          <div className="corp-card rounded-lg p-6 mb-6">
+            <h2 className="corp-section-title text-lg font-semibold mb-4">Passenger Details</h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Title */}
+              <div className="sm:col-span-1">
+                <label htmlFor="title" className="block text-sm font-medium mb-1">
+                  Title
+                </label>
+                <select
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => handleChange('title', e.target.value)}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                >
+                  <option value="">Select...</option>
+                  {VALID_TITLES.map((title) => (
+                    <option key={title} value={title}>{title}</option>
+                  ))}
+                </select>
               </div>
+
+              {/* Empty space for alignment */}
+              <div className="hidden sm:block" />
+
+              {/* First Name */}
               <div>
-                <h1 className="text-2xl font-bold text-navy">Add New Passenger</h1>
-                <p className="text-navy-light/70 mt-0.5">
-                  Save passenger details for quick bookings
-                </p>
+                <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+                  First Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleChange('firstName', e.target.value)}
+                  className={`corp-input w-full px-3 py-2 rounded-lg ${
+                    errors.firstName ? 'border-red-500' : ''
+                  }`}
+                  placeholder="John"
+                />
+                {errors.firstName && (
+                  <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+                )}
+              </div>
+
+              {/* Last Name */}
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+                  Last Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleChange('lastName', e.target.value)}
+                  className={`corp-input w-full px-3 py-2 rounded-lg ${
+                    errors.lastName ? 'border-red-500' : ''
+                  }`}
+                  placeholder="Smith"
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-xs text-red-500">{errors.lastName}</p>
+                )}
+              </div>
+
+              {/* Alias */}
+              <div>
+                <label htmlFor="alias" className="block text-sm font-medium mb-1">
+                  Alias / Nickname
+                </label>
+                <input
+                  type="text"
+                  id="alias"
+                  value={formData.alias}
+                  onChange={(e) => handleChange('alias', e.target.value)}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                  placeholder="Johnny"
+                />
+                <p className="mt-1 text-xs opacity-50">Visible to driver if set</p>
+              </div>
+
+              {/* Refer To As */}
+              <div>
+                <label htmlFor="referToAs" className="block text-sm font-medium mb-1">
+                  Refer To As
+                </label>
+                <input
+                  type="text"
+                  id="referToAs"
+                  value={formData.referToAs}
+                  onChange={(e) => handleChange('referToAs', e.target.value)}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                  placeholder="Dr Smith"
+                />
+                <p className="mt-1 text-xs opacity-50">How the driver should address them</p>
               </div>
             </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit}>
-            {/* Identity Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6 mb-6">
-              <h2 className="text-lg font-semibold text-navy mb-4">Passenger Details</h2>
+          {/* Contact Section */}
+          <div className="corp-card rounded-lg p-6 mb-6">
+            <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Title */}
-                <div className="sm:col-span-1">
-                  <label htmlFor="title" className="block text-sm font-medium text-navy mb-1">
-                    Title
-                  </label>
-                  <select
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleChange('title', e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy bg-white"
-                  >
-                    <option value="">Select...</option>
-                    {VALID_TITLES.map((title) => (
-                      <option key={title} value={title}>{title}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Empty space for alignment */}
-                <div className="hidden sm:block" />
-
-                {/* First Name */}
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-navy mb-1">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => handleChange('firstName', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50 ${
-                      errors.firstName ? 'border-red-300' : 'border-sage/30'
-                    }`}
-                    placeholder="John"
-                  />
-                  {errors.firstName && (
-                    <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>
-                  )}
-                </div>
-
-                {/* Last Name */}
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-navy mb-1">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => handleChange('lastName', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50 ${
-                      errors.lastName ? 'border-red-300' : 'border-sage/30'
-                    }`}
-                    placeholder="Smith"
-                  />
-                  {errors.lastName && (
-                    <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>
-                  )}
-                </div>
-
-                {/* Alias */}
-                <div>
-                  <label htmlFor="alias" className="block text-sm font-medium text-navy mb-1">
-                    Alias / Nickname
-                  </label>
-                  <input
-                    type="text"
-                    id="alias"
-                    value={formData.alias}
-                    onChange={(e) => handleChange('alias', e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                    placeholder="Johnny"
-                  />
-                  <p className="mt-1 text-xs text-navy-light/50">Visible to driver if set</p>
-                </div>
-
-                {/* Refer To As */}
-                <div>
-                  <label htmlFor="referToAs" className="block text-sm font-medium text-navy mb-1">
-                    Refer To As
-                  </label>
-                  <input
-                    type="text"
-                    id="referToAs"
-                    value={formData.referToAs}
-                    onChange={(e) => handleChange('referToAs', e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                    placeholder="Dr Smith"
-                  />
-                  <p className="mt-1 text-xs text-navy-light/50">How the driver should address them</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6 mb-6">
-              <h2 className="text-lg font-semibold text-navy mb-4">Contact Information</h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Email */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-navy mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50 ${
-                      errors.email ? 'border-red-300' : 'border-sage/30'
-                    }`}
-                    placeholder="john.smith@example.com"
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-xs text-red-600">{errors.email}</p>
-                  )}
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-navy mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                    placeholder="+44 7700 900000"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Preferences Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6 mb-6">
-              <h2 className="text-lg font-semibold text-navy mb-4">Preferences</h2>
-
-              {/* Refreshments */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-navy mb-2">
-                  Refreshment Preferences
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { key: 'stillWater', label: 'Still Water' },
-                    { key: 'sparklingWater', label: 'Sparkling Water' },
-                    { key: 'tea', label: 'Tea' },
-                    { key: 'coffee', label: 'Coffee' },
-                  ].map(({ key, label }) => (
-                    <label
-                      key={key}
-                      className={`flex items-center justify-center px-3 py-2 border rounded-lg cursor-pointer transition-colors ${
-                        refreshments[key as keyof RefreshmentsState]
-                          ? 'border-sage bg-sage/10 text-sage-dark'
-                          : 'border-sage/30 hover:border-sage/50'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={refreshments[key as keyof RefreshmentsState] as boolean}
-                        onChange={(e) => handleRefreshmentChange(key as keyof RefreshmentsState, e.target.checked)}
-                        className="sr-only"
-                      />
-                      <span className="text-sm">{label}</span>
-                    </label>
-                  ))}
-                </div>
-                <div className="mt-3">
-                  <input
-                    type="text"
-                    value={refreshments.other}
-                    onChange={(e) => handleRefreshmentChange('other', e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                    placeholder="Other refreshment preferences..."
-                  />
-                </div>
-              </div>
-
-              {/* Driver Instructions */}
-              <div className="mb-4">
-                <label htmlFor="driverInstructions" className="block text-sm font-medium text-navy mb-1">
-                  Driver Instructions
-                </label>
-                <textarea
-                  id="driverInstructions"
-                  value={formData.driverInstructions}
-                  onChange={(e) => handleChange('driverInstructions', e.target.value)}
-                  rows={3}
-                  maxLength={500}
-                  className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                  placeholder="E.g., Prefers quiet journeys, uses wheelchair..."
-                />
-                <p className="mt-1 text-xs text-navy-light/50">
-                  {formData.driverInstructions.length}/500 characters - Visible to driver
-                </p>
-              </div>
-
-              {/* Booker Notes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Email */}
               <div>
-                <label htmlFor="bookerNotes" className="block text-sm font-medium text-navy mb-1">
-                  Booker Notes
+                <label htmlFor="email" className="block text-sm font-medium mb-1">
+                  Email
                 </label>
-                <textarea
-                  id="bookerNotes"
-                  value={formData.bookerNotes}
-                  onChange={(e) => handleChange('bookerNotes', e.target.value)}
-                  rows={3}
-                  maxLength={500}
-                  className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy placeholder:text-navy-light/50"
-                  placeholder="Internal notes for bookers..."
+                <input
+                  type="email"
+                  id="email"
+                  value={formData.email}
+                  onChange={(e) => handleChange('email', e.target.value)}
+                  className={`corp-input w-full px-3 py-2 rounded-lg ${
+                    errors.email ? 'border-red-500' : ''
+                  }`}
+                  placeholder="john.smith@example.com"
                 />
-                <p className="mt-1 text-xs text-navy-light/50">
-                  {formData.bookerNotes.length}/500 characters - Only visible to bookers
-                </p>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleChange('phone', e.target.value)}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                  placeholder="+44 7700 900000"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Preferences Section */}
+          <div className="corp-card rounded-lg p-6 mb-6">
+            <h2 className="corp-section-title text-lg font-semibold mb-4">Preferences</h2>
+
+            {/* Refreshments */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">
+                Refreshment Preferences
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { key: 'stillWater', label: 'Still Water' },
+                  { key: 'sparklingWater', label: 'Sparkling Water' },
+                  { key: 'tea', label: 'Tea' },
+                  { key: 'coffee', label: 'Coffee' },
+                ].map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className={`corp-checkbox-card flex items-center justify-center px-3 py-2 border rounded-lg cursor-pointer transition-colors ${
+                      refreshments[key as keyof RefreshmentsState]
+                        ? 'corp-checkbox-card-selected'
+                        : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={refreshments[key as keyof RefreshmentsState] as boolean}
+                      onChange={(e) => handleRefreshmentChange(key as keyof RefreshmentsState, e.target.checked)}
+                      className="sr-only"
+                    />
+                    <span className="text-sm">{label}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="mt-3">
+                <input
+                  type="text"
+                  value={refreshments.other}
+                  onChange={(e) => handleRefreshmentChange('other', e.target.value)}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                  placeholder="Other refreshment preferences..."
+                />
               </div>
             </div>
 
-            {/* Submit Buttons */}
-            <div className="flex justify-end gap-3">
-              <Link
-                href="/corporate/passengers"
-                className="px-6 py-2 text-sm font-medium text-navy bg-white border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 text-sm font-medium text-white bg-sage border border-transparent rounded-full hover:bg-sage-dark disabled:opacity-50 transition-colors"
-              >
-                {isSubmitting ? 'Saving...' : 'Add Passenger'}
-              </button>
+            {/* Driver Instructions */}
+            <div className="mb-4">
+              <label htmlFor="driverInstructions" className="block text-sm font-medium mb-1">
+                Driver Instructions
+              </label>
+              <textarea
+                id="driverInstructions"
+                value={formData.driverInstructions}
+                onChange={(e) => handleChange('driverInstructions', e.target.value)}
+                rows={3}
+                maxLength={500}
+                className="corp-input w-full px-3 py-2 rounded-lg"
+                placeholder="E.g., Prefers quiet journeys, uses wheelchair..."
+              />
+              <p className="mt-1 text-xs opacity-50">
+                {formData.driverInstructions.length}/500 characters - Visible to driver
+              </p>
             </div>
-          </form>
-        </div>
-      </main>
 
-      <Footer />
+            {/* Booker Notes */}
+            <div>
+              <label htmlFor="bookerNotes" className="block text-sm font-medium mb-1">
+                Booker Notes
+              </label>
+              <textarea
+                id="bookerNotes"
+                value={formData.bookerNotes}
+                onChange={(e) => handleChange('bookerNotes', e.target.value)}
+                rows={3}
+                maxLength={500}
+                className="corp-input w-full px-3 py-2 rounded-lg"
+                placeholder="Internal notes for bookers..."
+              />
+              <p className="mt-1 text-xs opacity-50">
+                {formData.bookerNotes.length}/500 characters - Only visible to bookers
+              </p>
+            </div>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex justify-end gap-3">
+            <Link
+              href="/corporate/passengers"
+              className="corp-btn corp-btn-secondary px-6 py-2 rounded-full text-sm font-medium"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="corp-btn corp-btn-primary px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50"
+            >
+              {isSubmitting ? 'Saving...' : 'Add Passenger'}
+            </button>
+          </div>
+        </form>
+      </div>
 
       {/* Toast Notification */}
       {toast?.show && (
@@ -455,6 +425,6 @@ export default function NewPassengerPage() {
           </div>
         </div>
       )}
-    </div>
+    </CorporateLayout>
   );
 }

@@ -166,17 +166,17 @@ export default function CreateTripModal({
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+          className="corp-modal rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-sage/20">
-            <h2 className="text-xl font-semibold text-navy">Create Favourite Trip</h2>
+          <div className="flex items-center justify-between p-5 border-b corp-border">
+            <h2 className="text-xl font-semibold">Create Favourite Trip</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="text-navy-light/50 hover:text-navy transition-colors"
+              className="opacity-50 hover:opacity-100 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -186,7 +186,7 @@ export default function CreateTripModal({
           <form onSubmit={handleSubmit} className="p-5 space-y-5">
             {/* Trip Name */}
             <div>
-              <label htmlFor="tripLabel" className="block text-sm font-medium text-navy mb-2">
+              <label htmlFor="tripLabel" className="block text-sm font-medium mb-2">
                 Trip Name
               </label>
               <input
@@ -195,7 +195,7 @@ export default function CreateTripModal({
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="e.g., Office to Heathrow"
-                className="w-full px-4 py-2.5 border border-sage/30 rounded-lg text-navy placeholder:text-navy-light/40 focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage"
+                className="corp-input w-full px-4 py-2.5 rounded-lg"
                 maxLength={100}
                 autoFocus
               />
@@ -203,9 +203,9 @@ export default function CreateTripModal({
 
             {/* Pickup Location */}
             <div>
-              <label className="block text-sm font-medium text-navy mb-2">
+              <label className="block text-sm font-medium mb-2">
                 <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-sage" />
+                  <div className="h-2 w-2 rounded-full bg-[var(--corp-sage)]" />
                   Pickup Location
                 </div>
               </label>
@@ -219,9 +219,9 @@ export default function CreateTripModal({
 
             {/* Dropoff Location */}
             <div>
-              <label className="block text-sm font-medium text-navy mb-2">
+              <label className="block text-sm font-medium mb-2">
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-3 w-3 text-navy" />
+                  <MapPin className="h-3 w-3" />
                   Drop-off Location
                 </div>
               </label>
@@ -238,7 +238,7 @@ export default function CreateTripModal({
             <div className="grid grid-cols-3 gap-4">
               {/* Vehicle Type */}
               <div>
-                <label htmlFor="vehicleType" className="block text-sm font-medium text-navy mb-2">
+                <label htmlFor="vehicleType" className="block text-sm font-medium mb-2">
                   <div className="flex items-center gap-1">
                     <Car className="h-4 w-4" />
                     Vehicle Type
@@ -249,7 +249,7 @@ export default function CreateTripModal({
                   value={vehicleType}
                   onChange={(e) => setVehicleType(e.target.value)}
                   disabled={loadingVehicles}
-                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage bg-white disabled:opacity-50"
+                  className="corp-input w-full px-3 py-2.5 rounded-lg disabled:opacity-50"
                 >
                   <option value="">
                     {loadingVehicles ? 'Loading...' : 'No preference'}
@@ -262,7 +262,7 @@ export default function CreateTripModal({
 
               {/* Passengers */}
               <div>
-                <label htmlFor="passengers" className="block text-sm font-medium text-navy mb-2">
+                <label htmlFor="passengers" className="block text-sm font-medium mb-2">
                   <div className="flex items-center gap-1">
                     <Users className="h-4 w-4" />
                     Passengers
@@ -275,13 +275,13 @@ export default function CreateTripModal({
                   onChange={(e) => setPassengers(Math.min(16, Math.max(1, parseInt(e.target.value) || 1)))}
                   min={1}
                   max={16}
-                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage"
+                  className="corp-input w-full px-3 py-2.5 rounded-lg"
                 />
               </div>
 
               {/* Luggage */}
               <div>
-                <label htmlFor="luggage" className="block text-sm font-medium text-navy mb-2">
+                <label htmlFor="luggage" className="block text-sm font-medium mb-2">
                   <div className="flex items-center gap-1">
                     <Briefcase className="h-4 w-4" />
                     Luggage
@@ -294,21 +294,21 @@ export default function CreateTripModal({
                   onChange={(e) => setLuggage(Math.min(20, Math.max(0, parseInt(e.target.value) || 0)))}
                   min={0}
                   max={20}
-                  className="w-full px-3 py-2.5 border border-sage/30 rounded-lg text-navy focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage"
+                  className="corp-input w-full px-3 py-2.5 rounded-lg"
                 />
               </div>
             </div>
 
             {/* Info text */}
-            <div className="text-sm text-navy-light/70 bg-sage/5 rounded-lg p-3">
+            <div className="text-sm opacity-70 bg-[var(--corp-bg-hover)] rounded-lg p-3">
               Save frequently used routes for quick booking. These settings will be pre-filled
               when you create a new booking from this trip.
             </div>
 
             {/* Error message */}
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="corp-alert corp-alert-error">
+                <p className="text-sm">{error}</p>
               </div>
             )}
 
@@ -317,14 +317,14 @@ export default function CreateTripModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-sage/30 text-navy font-medium rounded-lg hover:bg-sage/5 transition-colors"
+                className="corp-btn corp-btn-secondary flex-1 px-4 py-2.5 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !isFormValid}
-                className="flex-1 px-4 py-2.5 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="corp-btn corp-btn-primary flex-1 px-4 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Saving...' : 'Save Trip'}
               </button>
