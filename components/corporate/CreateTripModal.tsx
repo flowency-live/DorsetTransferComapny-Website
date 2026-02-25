@@ -166,17 +166,17 @@ export default function CreateTripModal({
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
         <div
-          className="corp-modal rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+          className="corp-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b corp-border">
+          <div className="flex items-center justify-between p-5 border-b corp-border bg-[var(--corp-bg-elevated)]">
             <h2 className="text-xl font-semibold">Create Favourite Trip</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="opacity-50 hover:opacity-100 transition-colors"
+              className="corp-page-subtitle hover:text-[var(--corp-text-primary)] transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -240,7 +240,7 @@ export default function CreateTripModal({
               <div>
                 <label htmlFor="vehicleType" className="block text-sm font-medium mb-2">
                   <div className="flex items-center gap-1">
-                    <Car className="h-4 w-4" />
+                    <Car className="h-4 w-4 text-[var(--corp-accent)]" />
                     Vehicle Type
                   </div>
                 </label>
@@ -264,7 +264,7 @@ export default function CreateTripModal({
               <div>
                 <label htmlFor="passengers" className="block text-sm font-medium mb-2">
                   <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
+                    <Users className="h-4 w-4 text-[var(--corp-accent)]" />
                     Passengers
                   </div>
                 </label>
@@ -283,7 +283,7 @@ export default function CreateTripModal({
               <div>
                 <label htmlFor="luggage" className="block text-sm font-medium mb-2">
                   <div className="flex items-center gap-1">
-                    <Briefcase className="h-4 w-4" />
+                    <Briefcase className="h-4 w-4 text-[var(--corp-accent)]" />
                     Luggage
                   </div>
                 </label>

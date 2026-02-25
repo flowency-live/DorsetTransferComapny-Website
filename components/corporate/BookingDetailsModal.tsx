@@ -136,18 +136,18 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="corp-card rounded-xl max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto">
+      <div className="corp-card rounded-xl max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b corp-border">
+        <div className="flex items-center justify-between p-6 border-b corp-border bg-[var(--corp-bg-elevated)]">
           <div>
             <h2 className="text-lg font-semibold">Booking Details</h2>
             {booking && (
-              <p className="text-sm opacity-70 mt-1">Reference: {booking.bookingId}</p>
+              <p className="text-sm corp-page-subtitle mt-1">Reference: {booking.bookingId}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-[var(--corp-bg-hover)] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -176,39 +176,39 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
           {booking && !loading && !error && (
             <div className="space-y-6">
               {/* Status */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border">
                 <span className={`corp-badge ${getStatusColor(booking.status)} text-sm capitalize`}>
                   {booking.status}
                 </span>
-                <span className="text-sm opacity-70">
+                <span className="text-sm corp-page-subtitle">
                   Booked: {formatDate(booking.createdAt)}
                 </span>
               </div>
 
               {/* Journey Details */}
               <div className="space-y-4">
-                <h3 className="font-medium flex items-center gap-2">
-                  <MapPin className="w-4 h-4 corp-icon" />
+                <h3 className="font-medium flex items-center gap-2 text-[var(--corp-accent)]">
+                  <MapPin className="w-4 h-4" />
                   Journey Details
                 </h3>
 
                 {/* Pickup */}
-                <div className="pl-6 border-l-2 border-sage/30 space-y-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider opacity-60 mb-1">Pickup</p>
+                <div className="pl-6 border-l-3 border-[var(--corp-accent)] space-y-3" style={{ borderLeftWidth: '3px' }}>
+                  <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)]">
+                    <p className="text-xs uppercase tracking-wider corp-page-subtitle mb-1">Pickup</p>
                     <p className="font-medium">{booking.pickupLocation?.address || 'Not specified'}</p>
-                    <p className="text-sm text-sage-dark mt-1 flex items-center gap-1">
+                    <p className="text-sm text-[var(--corp-accent)] mt-1 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
                       {formatDate(booking.pickupTime)} at {formatTime(booking.pickupTime)}
                     </p>
                     {booking.flightNumber && (
-                      <p className="text-sm opacity-70 flex items-center gap-1 mt-1">
+                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
                         <Plane className="w-3.5 h-3.5" />
                         Flight: {booking.flightNumber}
                       </p>
                     )}
                     {booking.trainNumber && (
-                      <p className="text-sm opacity-70 flex items-center gap-1 mt-1">
+                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
                         <Train className="w-3.5 h-3.5" />
                         Train: {booking.trainNumber}
                       </p>
@@ -218,42 +218,47 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
                   {/* Waypoints */}
                   {booking.waypoints && booking.waypoints.length > 0 && (
                     booking.waypoints.map((waypoint, index) => (
-                      <div key={index}>
-                        <p className="text-xs uppercase tracking-wider opacity-60 mb-1">Stop {index + 1}</p>
+                      <div key={index} className="p-3 rounded-lg bg-[var(--corp-bg-elevated)]">
+                        <p className="text-xs uppercase tracking-wider corp-page-subtitle mb-1">Stop {index + 1}</p>
                         <p className="font-medium">{waypoint.address}</p>
                       </div>
                     ))
                   )}
 
                   {/* Dropoff */}
-                  <div>
-                    <p className="text-xs uppercase tracking-wider opacity-60 mb-1">Drop-off</p>
+                  <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)]">
+                    <p className="text-xs uppercase tracking-wider corp-page-subtitle mb-1">Drop-off</p>
                     <p className="font-medium">{booking.dropoffLocation?.address || 'Not specified'}</p>
                   </div>
                 </div>
 
                 {/* Return Journey */}
                 {booking.returnJourney && booking.returnPickupTime && (
-                  <div className="mt-4 p-4 rounded-lg bg-sage/5 border corp-border">
-                    <p className="text-xs uppercase tracking-wider opacity-60 mb-2">Return Journey</p>
-                    <p className="text-sm">
-                      <span className="opacity-70">From:</span> {booking.dropoffLocation?.address}
+                  <div className="mt-4 p-4 rounded-lg bg-[var(--corp-bg-elevated)] border-l-3 border-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
+                    <p className="text-xs uppercase tracking-wider corp-page-subtitle mb-2 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-[var(--corp-accent-muted)] flex items-center justify-center">
+                        <span className="text-[10px] text-[var(--corp-accent)] font-bold">R</span>
+                      </span>
+                      Return Journey
                     </p>
                     <p className="text-sm">
-                      <span className="opacity-70">To:</span> {booking.pickupLocation?.address}
+                      <span className="corp-page-subtitle">From:</span> {booking.dropoffLocation?.address}
                     </p>
-                    <p className="text-sm text-sage-dark mt-2 flex items-center gap-1">
+                    <p className="text-sm">
+                      <span className="corp-page-subtitle">To:</span> {booking.pickupLocation?.address}
+                    </p>
+                    <p className="text-sm text-[var(--corp-accent)] mt-2 flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
                       {formatDate(booking.returnPickupTime)} at {formatTime(booking.returnPickupTime)}
                     </p>
                     {booking.returnFlightNumber && (
-                      <p className="text-sm opacity-70 flex items-center gap-1 mt-1">
+                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
                         <Plane className="w-3.5 h-3.5" />
                         Flight: {booking.returnFlightNumber}
                       </p>
                     )}
                     {booking.returnTrainNumber && (
-                      <p className="text-sm opacity-70 flex items-center gap-1 mt-1">
+                      <p className="text-sm corp-page-subtitle flex items-center gap-1 mt-1">
                         <Train className="w-3.5 h-3.5" />
                         Train: {booking.returnTrainNumber}
                       </p>
@@ -263,24 +268,24 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
               </div>
 
               {/* Booking Info */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-3 rounded-lg bg-sage/5 border corp-border">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-60 mb-1">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
                     <Car className="w-3.5 h-3.5" />
                     Vehicle
                   </div>
                   <p className="font-medium capitalize">{booking.vehicleType || 'Standard'}</p>
                 </div>
-                <div className="p-3 rounded-lg bg-sage/5 border corp-border">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-60 mb-1">
+                <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
                     <Users className="w-3.5 h-3.5" />
                     Passengers
                   </div>
                   <p className="font-medium">{booking.passengers}</p>
                 </div>
                 {booking.luggage !== undefined && booking.luggage > 0 && (
-                  <div className="p-3 rounded-lg bg-sage/5 border corp-border">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-60 mb-1">
+                  <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
                       <Briefcase className="w-3.5 h-3.5" />
                       Luggage
                     </div>
@@ -288,8 +293,8 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
                   </div>
                 )}
                 {booking.journeyType === 'by-the-hour' && booking.durationHours && (
-                  <div className="p-3 rounded-lg bg-sage/5 border corp-border">
-                    <div className="flex items-center gap-2 text-xs uppercase tracking-wider opacity-60 mb-1">
+                  <div className="p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-wider corp-page-subtitle mb-1">
                       <Clock className="w-3.5 h-3.5" />
                       Duration
                     </div>
@@ -300,35 +305,35 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
 
               {/* Special Requests */}
               {booking.specialRequests && (
-                <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-amber-700 mb-2">
+                <div className="p-4 rounded-lg bg-[var(--corp-warning-bg)] border border-[var(--corp-warning)]">
+                  <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-[var(--corp-warning)] mb-2">
                     <FileText className="w-3.5 h-3.5" />
                     Special Requests
                   </div>
-                  <p className="text-sm text-amber-900">{booking.specialRequests}</p>
+                  <p className="text-sm">{booking.specialRequests}</p>
                 </div>
               )}
 
               {/* Contact Details */}
-              <div>
-                <h3 className="font-medium flex items-center gap-2 mb-3">
-                  <Users className="w-4 h-4 corp-icon" />
+              <div className="p-4 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border">
+                <h3 className="font-medium flex items-center gap-2 mb-3 text-[var(--corp-accent)]">
+                  <Users className="w-4 h-4" />
                   Contact Details
                 </h3>
                 <div className="text-sm space-y-1">
-                  <p><span className="opacity-60">Name:</span> {booking.customer.name}</p>
-                  <p><span className="opacity-60">Email:</span> {booking.customer.email}</p>
-                  <p><span className="opacity-60">Phone:</span> {booking.customer.phone}</p>
+                  <p><span className="corp-page-subtitle">Name:</span> {booking.customer.name}</p>
+                  <p><span className="corp-page-subtitle">Email:</span> {booking.customer.email}</p>
+                  <p><span className="corp-page-subtitle">Phone:</span> {booking.customer.phone}</p>
                 </div>
               </div>
 
               {/* Pricing */}
-              <div className="flex items-center justify-between p-4 rounded-lg bg-sage/10 border corp-border">
+              <div className="flex items-center justify-between p-4 rounded-lg bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)]">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 corp-icon" />
+                  <CreditCard className="w-5 h-5 text-[var(--corp-accent)]" />
                   <span className="font-medium">Total Price</span>
                 </div>
-                <span className="text-xl font-bold text-sage-dark">
+                <span className="text-xl font-bold text-[var(--corp-accent)]">
                   {formatPrice(booking.pricing?.totalPrice || 0)}
                 </span>
               </div>
@@ -338,7 +343,7 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
 
         {/* Footer Actions */}
         {booking && !loading && !error && (
-          <div className="p-6 border-t corp-border flex flex-col sm:flex-row gap-3">
+          <div className="p-6 border-t corp-border flex flex-col sm:flex-row gap-3 bg-[var(--corp-bg-elevated)]">
             <button
               onClick={onClose}
               className="corp-btn corp-btn-secondary flex-1"

@@ -233,13 +233,13 @@ export default function TripsManagementPage() {
             onClick={() => setEditingTrip(null)}
           />
           <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-            <div className="corp-modal bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="corp-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
               {/* Header */}
-              <div className="corp-modal-header flex items-center justify-between p-5 border-b">
+              <div className="flex items-center justify-between p-5 border-b corp-border bg-[var(--corp-bg-elevated)]">
                 <h2 className="text-xl font-semibold">Edit Trip</h2>
                 <button
                   onClick={() => setEditingTrip(null)}
-                  className="corp-modal-close p-1 rounded-lg transition-colors"
+                  className="p-1 rounded-lg hover:bg-[var(--corp-bg-hover)] transition-colors"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -265,7 +265,7 @@ export default function TripsManagementPage() {
                 {/* Vehicle Type */}
                 <div>
                   <label htmlFor="editVehicle" className="block text-sm font-medium mb-2">
-                    <Car className="h-4 w-4 inline mr-1" />
+                    <Car className="h-4 w-4 inline mr-1 text-[var(--corp-accent)]" />
                     Default Vehicle
                   </label>
                   <select
@@ -283,7 +283,7 @@ export default function TripsManagementPage() {
                 {/* Passengers */}
                 <div>
                   <label htmlFor="editPassengers" className="block text-sm font-medium mb-2">
-                    <Users className="h-4 w-4 inline mr-1" />
+                    <Users className="h-4 w-4 inline mr-1 text-[var(--corp-accent)]" />
                     Default Passengers
                   </label>
                   <input
@@ -300,7 +300,7 @@ export default function TripsManagementPage() {
                 {/* Luggage */}
                 <div>
                   <label htmlFor="editLuggage" className="block text-sm font-medium mb-2">
-                    <Briefcase className="h-4 w-4 inline mr-1" />
+                    <Briefcase className="h-4 w-4 inline mr-1 text-[var(--corp-accent)]" />
                     Default Luggage
                   </label>
                   <input
@@ -316,7 +316,7 @@ export default function TripsManagementPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 p-5 border-t">
+              <div className="flex gap-3 p-5 border-t corp-border bg-[var(--corp-bg-elevated)]">
                 <button
                   type="button"
                   onClick={() => setEditingTrip(null)}
@@ -346,21 +346,21 @@ export default function TripsManagementPage() {
             onClick={() => setDeletingTrip(null)}
           />
           <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-            <div className="corp-modal bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="corp-card rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
               {/* Header */}
-              <div className="p-5 border-b">
+              <div className="p-5 border-b corp-border bg-[var(--corp-bg-elevated)]">
                 <h2 className="text-xl font-semibold">Delete Trip?</h2>
               </div>
 
               {/* Content */}
               <div className="p-5">
                 <p className="corp-page-subtitle">
-                  Are you sure you want to delete <span className="font-medium">{deletingTrip.label}</span>? This action cannot be undone.
+                  Are you sure you want to delete <span className="font-medium text-[var(--corp-text-primary)]">{deletingTrip.label}</span>? This action cannot be undone.
                 </p>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 p-5 border-t">
+              <div className="flex gap-3 p-5 border-t corp-border bg-[var(--corp-bg-elevated)]">
                 <button
                   type="button"
                   onClick={() => setDeletingTrip(null)}

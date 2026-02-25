@@ -165,11 +165,11 @@ function BookingHistoryContent() {
       <div className="max-w-6xl mx-auto">
 
         {/* Search & Filters */}
-        <div className="corp-card p-4 mb-6 rounded-lg">
+        <div className="corp-card p-4 mb-6 rounded-lg border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 opacity-50" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--corp-text-muted)]" />
               <input
                 type="text"
                 placeholder="Search by passenger, route, or booker..."
@@ -199,10 +199,10 @@ function BookingHistoryContent() {
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
-                    className={`corp-badge px-3 py-1 text-sm cursor-pointer transition-colors ${
+                    className={`corp-badge px-3 py-1.5 text-sm cursor-pointer transition-colors ${
                       statusFilter === status
-                        ? 'corp-badge-primary'
-                        : 'corp-badge-neutral'
+                        ? 'bg-[var(--corp-accent)] text-white'
+                        : 'corp-badge-neutral hover:bg-[var(--corp-bg-hover)]'
                     }`}
                   >
                     {status === 'all' ? 'All' : status}
@@ -244,12 +244,12 @@ function BookingHistoryContent() {
           ) : (
             <div className="divide-y corp-border">
               {filteredBookings.map((booking) => (
-                <div key={booking.id} className="p-4 sm:p-6 corp-list-item">
+                <div key={booking.id} className="p-4 sm:p-6 corp-list-item hover:bg-[var(--corp-bg-hover)] transition-colors">
                   <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                     {/* Date & Status */}
                     <div className="flex items-center gap-3 lg:w-64">
-                      <div className="corp-icon-wrapper p-2 rounded-lg">
-                        <Calendar className="h-4 w-4" />
+                      <div className="p-2.5 rounded-lg bg-[var(--corp-accent-muted)]">
+                        <Calendar className="h-4 w-4 text-[var(--corp-accent)]" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">{formatDate(booking.date)}</p>
@@ -266,34 +266,34 @@ function BookingHistoryContent() {
 
                     {/* Route */}
                     <div className="flex-1 min-w-0">
-                      <div className="space-y-1">
+                      <div className="space-y-1 pl-4 border-l-2 border-[var(--corp-border-default)]">
                         <div className="flex items-start gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-sage mt-0.5 flex-shrink-0" />
-                          <span className="truncate opacity-80">{booking.pickup}</span>
+                          <div className="w-2 h-2 rounded-full bg-[var(--corp-accent)] mt-1.5 flex-shrink-0" />
+                          <span className="truncate corp-page-subtitle">{booking.pickup}</span>
                         </div>
                         <div className="flex items-start gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
-                          <span className="truncate opacity-80">{booking.dropoff}</span>
+                          <div className="w-2 h-2 rounded-full bg-[var(--corp-error)] mt-1.5 flex-shrink-0" />
+                          <span className="truncate corp-page-subtitle">{booking.dropoff}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Passenger & Booker */}
-                    <div className="lg:w-48 text-sm">
+                    <div className="lg:w-48 text-sm p-2 rounded-lg bg-[var(--corp-bg-elevated)]">
                       <p className="font-medium truncate">{booking.passengerName || '-'}</p>
-                      <p className="opacity-60 truncate">Booked by {booking.bookedBy || '-'}</p>
+                      <p className="corp-page-subtitle truncate text-xs">Booked by {booking.bookedBy || '-'}</p>
                     </div>
 
                     {/* Vehicle & Price */}
                     <div className="flex items-center gap-4 lg:w-40">
                       {booking.vehicleType && (
-                        <div className="flex items-center gap-1 text-sm opacity-70">
+                        <div className="flex items-center gap-1 text-sm corp-page-subtitle">
                           <Car className="h-4 w-4" />
                           <span className="capitalize">{booking.vehicleType}</span>
                         </div>
                       )}
                       {booking.pricePence && (
-                        <span className="text-sm font-medium">{formatPrice(booking.pricePence)}</span>
+                        <span className="text-sm font-bold text-[var(--corp-accent)]">{formatPrice(booking.pricePence)}</span>
                       )}
                     </div>
 
@@ -302,7 +302,7 @@ function BookingHistoryContent() {
                       <button
                         type="button"
                         onClick={() => openModal(booking, 'view')}
-                        className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
+                        className="p-2 rounded-lg hover:bg-[var(--corp-bg-hover)] border border-transparent hover:border-[var(--corp-border-default)] transition-colors"
                         title="View Details"
                       >
                         <Eye className="w-4 h-4 corp-icon" />
@@ -312,7 +312,7 @@ function BookingHistoryContent() {
                           <button
                             type="button"
                             onClick={() => openModal(booking, 'edit')}
-                            className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
+                            className="p-2 rounded-lg hover:bg-[var(--corp-bg-hover)] border border-transparent hover:border-[var(--corp-border-default)] transition-colors"
                             title="Edit Booking"
                           >
                             <Edit2 className="w-4 h-4 corp-icon" />
@@ -320,7 +320,7 @@ function BookingHistoryContent() {
                           <button
                             type="button"
                             onClick={() => openModal(booking, 'cancel')}
-                            className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-500"
+                            className="p-2 rounded-lg hover:bg-[var(--corp-error-bg)] border border-transparent hover:border-[var(--corp-error)] transition-colors text-[var(--corp-error)]"
                             title="Cancel Booking"
                           >
                             <XCircle className="w-4 h-4" />

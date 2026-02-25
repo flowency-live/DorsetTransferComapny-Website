@@ -123,24 +123,24 @@ export default function SavePassengerModal({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4">
         <div
-          className="fixed inset-0 bg-navy/50 transition-opacity"
+          className="fixed inset-0 bg-black/50 transition-opacity"
           onClick={onClose}
         />
-        <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="relative corp-card rounded-lg shadow-xl max-w-md w-full p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-sage/10 rounded-full flex items-center justify-center">
-                <User className="h-5 w-5 text-sage" />
+              <div className="h-10 w-10 bg-[var(--corp-accent-muted)] rounded-full flex items-center justify-center">
+                <User className="h-5 w-5 text-[var(--corp-accent)]" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-navy">Save Passenger</h3>
-                <p className="text-sm text-navy-light/70">Add to your directory for future bookings</p>
+                <h3 className="text-lg font-semibold">Save Passenger</h3>
+                <p className="text-sm corp-page-subtitle">Add to your directory for future bookings</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-navy-light/50 hover:text-navy hover:bg-sage/10 rounded-full transition-colors"
+              className="p-2 corp-page-subtitle hover:text-[var(--corp-text-primary)] hover:bg-[var(--corp-bg-hover)] rounded-full transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
@@ -148,11 +148,11 @@ export default function SavePassengerModal({
 
           {success ? (
             <div className="py-8 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-sage/20 mb-4">
-                <CheckCircle className="h-6 w-6 text-sage" />
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-[var(--corp-success-bg)] mb-4">
+                <CheckCircle className="h-6 w-6 text-[var(--corp-success)]" />
               </div>
-              <h4 className="text-lg font-semibold text-navy">Passenger Saved!</h4>
-              <p className="mt-2 text-sm text-navy-light/70">
+              <h4 className="text-lg font-semibold">Passenger Saved!</h4>
+              <p className="mt-2 text-sm corp-page-subtitle">
                 They&apos;ve been added to your passenger directory.
               </p>
             </div>
@@ -161,11 +161,11 @@ export default function SavePassengerModal({
               <div className="space-y-4">
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-navy mb-1">Title</label>
+                  <label className="block text-sm font-medium mb-1">Title</label>
                   <select
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy bg-white"
+                    className="corp-input w-full px-3 py-2 rounded-lg"
                   >
                     <option value="">Select...</option>
                     {VALID_TITLES.map((t) => (
@@ -177,26 +177,26 @@ export default function SavePassengerModal({
                 {/* Name Row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-navy mb-1">
-                      First Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-1">
+                      First Name <span className="text-[var(--corp-error)]">*</span>
                     </label>
                     <input
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                      className="corp-input w-full px-3 py-2 rounded-lg"
                       placeholder="John"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-navy mb-1">
-                      Last Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-1">
+                      Last Name <span className="text-[var(--corp-error)]">*</span>
                     </label>
                     <input
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                      className="corp-input w-full px-3 py-2 rounded-lg"
                       placeholder="Smith"
                     />
                   </div>
@@ -204,14 +204,14 @@ export default function SavePassengerModal({
 
                 {/* Alias */}
                 <div>
-                  <label className="block text-sm font-medium text-navy mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Alias / Nickname
                   </label>
                   <input
                     type="text"
                     value={alias}
                     onChange={(e) => setAlias(e.target.value)}
-                    className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                    className="corp-input w-full px-3 py-2 rounded-lg"
                     placeholder="Optional"
                   />
                 </div>
@@ -219,29 +219,29 @@ export default function SavePassengerModal({
                 {/* Contact Row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-navy mb-1">Email</label>
+                    <label className="block text-sm font-medium mb-1">Email</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                      className="corp-input w-full px-3 py-2 rounded-lg"
                       placeholder="Optional"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-navy mb-1">Phone</label>
+                    <label className="block text-sm font-medium mb-1">Phone</label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full px-3 py-2 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                      className="corp-input w-full px-3 py-2 rounded-lg"
                       placeholder="Optional"
                     />
                   </div>
                 </div>
 
                 {error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  <div className="flex items-center gap-2 p-3 bg-[var(--corp-error-bg)] border border-[var(--corp-error)] rounded-lg text-[var(--corp-error)] text-sm">
                     <AlertTriangle className="h-4 w-4 flex-shrink-0" />
                     {error}
                   </div>
@@ -252,14 +252,14 @@ export default function SavePassengerModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-sm font-medium text-navy bg-white border border-sage/30 rounded-full hover:bg-sage/5 transition-colors"
+                  className="corp-btn corp-btn-secondary px-4 py-2 text-sm font-medium rounded-full"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-sage border border-transparent rounded-full hover:bg-sage-dark disabled:opacity-50 transition-colors"
+                  className="corp-btn corp-btn-primary px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Passenger'}
                 </button>

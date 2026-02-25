@@ -110,18 +110,18 @@ export default function CancelBookingModal({ bookingId, magicToken, onClose, onC
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="corp-card rounded-xl max-w-md w-full">
+      <div className="corp-card rounded-xl max-w-md w-full shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b corp-border">
+        <div className="flex items-center justify-between p-6 border-b corp-border bg-[var(--corp-bg-elevated)]">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-red-100">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
+            <div className="p-2 rounded-full bg-[var(--corp-error-bg)]">
+              <AlertTriangle className="w-5 h-5 text-[var(--corp-error)]" />
             </div>
             <h2 className="text-lg font-semibold">Cancel Booking</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-[var(--corp-bg-hover)] transition-colors"
             disabled={cancelling}
           >
             <X className="w-5 h-5" />
@@ -133,11 +133,11 @@ export default function CancelBookingModal({ bookingId, magicToken, onClose, onC
           {/* Success State */}
           {cancelled && (
             <div className="text-center py-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 bg-[var(--corp-success-bg)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-[var(--corp-success)]" />
               </div>
               <h3 className="text-lg font-semibold mb-2">Booking Cancelled</h3>
-              <p className="text-sm opacity-70">
+              <p className="text-sm corp-page-subtitle">
                 Your booking has been successfully cancelled.
                 {cancelPreview?.refundAmount && cancelPreview.refundAmount > 0 && (
                   <span> A refund of {formatPrice(cancelPreview.refundAmount)} will be processed.</span>
@@ -171,36 +171,36 @@ export default function CancelBookingModal({ bookingId, magicToken, onClose, onC
             <>
               {/* Free Cancellation Notice */}
               {cancelPreview.isFreeCancel ? (
-                <div className="p-4 rounded-lg bg-green-50 border border-green-200 mb-4">
-                  <p className="text-sm text-green-800">
+                <div className="p-4 rounded-lg bg-[var(--corp-success-bg)] border border-[var(--corp-success)] mb-4">
+                  <p className="text-sm text-[var(--corp-success)]">
                     <span className="font-semibold">Free cancellation</span> - You will receive a full refund of {formatPrice(cancelPreview.refundAmount)}
                   </p>
                 </div>
               ) : (
-                <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 mb-4">
-                  <p className="text-sm font-semibold text-amber-800 mb-2">Cancellation fee applies</p>
-                  <div className="space-y-1 text-sm text-amber-900">
+                <div className="p-4 rounded-lg bg-[var(--corp-warning-bg)] border border-[var(--corp-warning)] mb-4">
+                  <p className="text-sm font-semibold mb-2">Cancellation fee applies</p>
+                  <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
-                      <span>Original amount:</span>
+                      <span className="corp-page-subtitle">Original amount:</span>
                       <span>{formatPrice(cancelPreview.originalAmount)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Cancellation fee ({cancelPreview.cancellationFeePercent}%):</span>
-                      <span className="text-red-600">-{formatPrice(cancelPreview.cancellationFee)}</span>
+                      <span className="corp-page-subtitle">Cancellation fee ({cancelPreview.cancellationFeePercent}%):</span>
+                      <span className="text-[var(--corp-error)]">-{formatPrice(cancelPreview.cancellationFee)}</span>
                     </div>
-                    <div className="flex justify-between font-semibold pt-2 border-t border-amber-200">
+                    <div className="flex justify-between font-semibold pt-2 border-t border-[var(--corp-warning)]">
                       <span>Refund amount:</span>
-                      <span>{formatPrice(cancelPreview.refundAmount)}</span>
+                      <span className="text-[var(--corp-success)]">{formatPrice(cancelPreview.refundAmount)}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-amber-700 mt-3">
+                  <p className="text-xs corp-page-subtitle mt-3">
                     Free cancellation is available up to {cancelPreview.freeCancellationHours} hours before pickup.
                   </p>
                 </div>
               )}
 
               {/* Confirmation Text */}
-              <p className="text-sm opacity-70 mb-6">
+              <p className="text-sm corp-page-subtitle mb-6">
                 Are you sure you want to cancel booking <span className="font-semibold">{bookingId}</span>? This action cannot be undone.
               </p>
 

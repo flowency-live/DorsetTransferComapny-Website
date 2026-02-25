@@ -874,6 +874,21 @@
   color: var(--corp-success);
 }
 
+.corp-badge-info {
+  background: var(--corp-info-bg);
+  color: var(--corp-info);
+}
+
+.corp-badge-danger {
+  background: var(--corp-error-bg);
+  color: var(--corp-error);
+}
+
+.corp-badge-primary {
+  background: var(--corp-accent);
+  color: var(--corp-accent-text);
+}
+
 .corp-badge-neutral {
   background: var(--corp-bg-hover);
   color: var(--corp-text-secondary);
@@ -915,6 +930,11 @@
    ============================================ */
 .corp-icon {
   color: var(--corp-text-secondary);
+}
+
+.corp-icon-wrapper {
+  background: var(--corp-accent-muted);
+  color: var(--corp-accent);
 }
 
 /* ============================================

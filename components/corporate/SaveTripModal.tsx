@@ -98,13 +98,13 @@ export default function SaveTripModal({
 
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div className="corp-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-sage/20">
-            <h2 className="text-xl font-semibold text-navy">Save as Favourite</h2>
+          <div className="flex items-center justify-between p-5 border-b corp-border bg-[var(--corp-bg-elevated)]">
+            <h2 className="text-xl font-semibold">Save as Favourite</h2>
             <button
               onClick={onClose}
-              className="text-navy-light/50 hover:text-navy transition-colors"
+              className="corp-page-subtitle hover:text-[var(--corp-text-primary)] transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -113,21 +113,21 @@ export default function SaveTripModal({
           {/* Content */}
           <form onSubmit={handleSubmit} className="p-5">
             {/* Trip Summary */}
-            <div className="bg-sage/5 rounded-lg p-4 mb-5">
+            <div className="bg-[var(--corp-bg-elevated)] rounded-lg p-4 mb-5 border-l-3 border-l-[var(--corp-accent)]" style={{ borderLeftWidth: '3px' }}>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0 mt-1">
-                    <div className="h-2 w-2 rounded-full bg-sage" />
+                    <div className="h-2 w-2 rounded-full bg-[var(--corp-accent)]" />
                   </div>
-                  <p className="text-sm text-navy-light/80" title={tripData.pickupLocation.address}>
+                  <p className="text-sm corp-page-subtitle" title={tripData.pickupLocation.address}>
                     {truncateAddress(tripData.pickupLocation.address)}
                   </p>
                 </div>
 
                 {tripData.waypoints && tripData.waypoints.length > 0 && (
                   <div className="flex items-center gap-2 ml-0.5">
-                    <div className="h-3 border-l-2 border-dashed border-sage/40" />
-                    <p className="text-xs text-navy-light/60">
+                    <div className="h-3 border-l-2 border-dashed border-[var(--corp-border-default)]" />
+                    <p className="text-xs corp-page-subtitle">
                       +{tripData.waypoints.length} stop{tripData.waypoints.length > 1 ? 's' : ''}
                     </p>
                   </div>
@@ -135,9 +135,9 @@ export default function SaveTripModal({
 
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0 mt-1">
-                    <MapPin className="h-3 w-3 text-navy" />
+                    <MapPin className="h-3 w-3 text-[var(--corp-error)]" />
                   </div>
-                  <p className="text-sm text-navy-light/80" title={tripData.dropoffLocation.address}>
+                  <p className="text-sm corp-page-subtitle" title={tripData.dropoffLocation.address}>
                     {truncateAddress(tripData.dropoffLocation.address)}
                   </p>
                 </div>
@@ -146,7 +146,7 @@ export default function SaveTripModal({
 
             {/* Trip Name */}
             <div className="mb-5">
-              <label htmlFor="tripLabel" className="block text-sm font-medium text-navy mb-2">
+              <label htmlFor="tripLabel" className="block text-sm font-medium mb-2">
                 Trip Name
               </label>
               <input
@@ -155,7 +155,7 @@ export default function SaveTripModal({
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="e.g., Office to Heathrow"
-                className="w-full px-4 py-2.5 border border-sage/30 rounded-lg text-navy placeholder:text-navy-light/40 focus:outline-none focus:ring-2 focus:ring-sage/50 focus:border-sage"
+                className="corp-input w-full px-4 py-2.5 rounded-lg"
                 required
                 maxLength={100}
                 autoFocus
@@ -164,31 +164,31 @@ export default function SaveTripModal({
 
             {/* Save Vehicle Preference */}
             {tripData.vehicleType && (
-              <div className="mb-5">
+              <div className="mb-5 p-4 rounded-lg bg-[var(--corp-bg-elevated)]">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={saveVehicle}
                     onChange={(e) => setSaveVehicle(e.target.checked)}
-                    className="mt-1 h-4 w-4 text-sage border-sage/30 rounded focus:ring-sage/50"
+                    className="mt-1 h-4 w-4 accent-[var(--corp-accent)]"
                   />
                   <div>
-                    <span className="block text-sm font-medium text-navy">
+                    <span className="block text-sm font-medium">
                       Save vehicle preference
                     </span>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-[var(--corp-accent-muted)] text-[var(--corp-accent)] rounded-md">
                         <Car className="h-3 w-3" />
                         {vehicleLabels[tripData.vehicleType]}
                       </span>
                       {tripData.passengers && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-[var(--corp-accent-muted)] text-[var(--corp-accent)] rounded-md">
                           <Users className="h-3 w-3" />
                           {tripData.passengers} pax
                         </span>
                       )}
                       {tripData.luggage && tripData.luggage > 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-[var(--corp-accent-muted)] text-[var(--corp-accent)] rounded-md">
                           <Briefcase className="h-3 w-3" />
                           {tripData.luggage} bags
                         </span>
@@ -201,8 +201,8 @@ export default function SaveTripModal({
 
             {/* Error message */}
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="mb-4 p-3 bg-[var(--corp-error-bg)] border border-[var(--corp-error)] rounded-lg">
+                <p className="text-sm text-[var(--corp-error)]">{error}</p>
               </div>
             )}
 
@@ -211,14 +211,14 @@ export default function SaveTripModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-sage/30 text-navy font-medium rounded-lg hover:bg-sage/5 transition-colors"
+                className="corp-btn corp-btn-secondary flex-1 py-2.5 rounded-lg"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !label.trim()}
-                className="flex-1 px-4 py-2.5 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="corp-btn corp-btn-primary flex-1 py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Saving...' : 'Save Trip'}
               </button>
