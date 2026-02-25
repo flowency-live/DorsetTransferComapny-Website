@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, AlertTriangle, User } from 'lucide-react';
@@ -37,9 +37,21 @@ export default function NewPassengerPage() {
     referToAs: '',
     email: '',
     phone: '',
+    contactName: '',
     driverInstructions: '',
     bookerNotes: '',
   });
+
+  // Representative contact toggle
+  const [isRepresentative, setIsRepresentative] = useState(false);
+
+  // Sync contact name with passenger name when not representative
+  useEffect(() => {
+    if (!isRepresentative) {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      setFormData((prev) => ({ ...prev, contactName: fullName }));
+    }
+  }, [formData.firstName, formData.lastName, isRepresentative]);
 
   const [refreshments, setRefreshments] = useState<RefreshmentsState>({
     stillWater: false,
@@ -108,6 +120,8 @@ export default function NewPassengerPage() {
       if (formData.referToAs.trim()) passengerData.referToAs = formData.referToAs.trim();
       if (formData.email.trim()) passengerData.email = formData.email.trim();
       if (formData.phone.trim()) passengerData.phone = formData.phone.trim();
+      if (formData.contactName.trim()) passengerData.contactName = formData.contactName.trim();
+      if (isRepresentative) passengerData.isRepresentative = true;
       if (formData.driverInstructions.trim()) passengerData.driverInstructions = formData.driverInstructions.trim();
       if (formData.bookerNotes.trim()) passengerData.bookerNotes = formData.bookerNotes.trim();
 
@@ -269,7 +283,46 @@ export default function NewPassengerPage() {
           <div className="corp-card rounded-lg p-6 mb-6">
             <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
 
+            {/* Representative Toggle */}
+            <div className="mb-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isRepresentative}
+                  onChange={(e) => setIsRepresentative(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[var(--corp-sage)] focus:ring-[var(--corp-sage)]"
+                />
+                <span className="text-sm">
+                  Contact is a representative (different person from passenger)
+                </span>
+              </label>
+              <p className="mt-1 ml-6 text-xs opacity-50">
+                Enable this if someone else should be contacted for this passenger&apos;s bookings
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Contact Name */}
+              <div className="sm:col-span-2">
+                <label htmlFor="contactName" className="block text-sm font-medium mb-1">
+                  Contact Name {isRepresentative && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  id="contactName"
+                  value={formData.contactName}
+                  onChange={(e) => handleChange('contactName', e.target.value)}
+                  disabled={!isRepresentative}
+                  className={`corp-input w-full px-3 py-2 rounded-lg ${
+                    !isRepresentative ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
+                  placeholder={isRepresentative ? 'Enter contact name' : 'Same as passenger'}
+                />
+                {!isRepresentative && (
+                  <p className="mt-1 text-xs opacity-50">Auto-filled from passenger name</p>
+                )}
+              </div>
+
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-1">

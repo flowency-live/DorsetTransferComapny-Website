@@ -17,6 +17,7 @@ interface VehicleComparisonGridProps {
   journeyType: JourneyType;
   onSelect: (vehicleId: string, isReturn: boolean) => void;
   preferredVehicle?: string | null; // Pre-select this vehicle (e.g., from favourite trip)
+  filterToPreferred?: boolean; // When true, only show preferred vehicle initially
 }
 
 export default function VehicleComparisonGrid({
@@ -25,12 +26,14 @@ export default function VehicleComparisonGrid({
   journeyType,
   onSelect,
   preferredVehicle,
+  filterToPreferred = false,
 }: VehicleComparisonGridProps) {
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   // For round-trip, default to return pricing; for one-way/hourly, default to one-way
   const [selectedIsReturn, setSelectedIsReturn] = useState<boolean>(journeyType === 'round-trip');
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [showAllVehicles, setShowAllVehicles] = useState(!filterToPreferred);
 
   // Pre-select preferred vehicle if available and valid for passenger count
   useEffect(() => {
@@ -58,9 +61,17 @@ export default function VehicleComparisonGrid({
   const vehicleTypes = Object.keys(multiQuote.vehicles);
 
   // Filter vehicles by capacity
-  const availableVehicles = vehicleTypes.filter(
+  const vehiclesWithCapacity = vehicleTypes.filter(
     type => multiQuote.vehicles[type].capacity >= passengers
   );
+
+  // Apply preferred vehicle filtering if enabled
+  const availableVehicles = (!showAllVehicles && preferredVehicle && vehiclesWithCapacity.includes(preferredVehicle))
+    ? [preferredVehicle]
+    : vehiclesWithCapacity;
+
+  // Check if we have more vehicles available than currently shown
+  const hasMoreVehicles = !showAllVehicles && preferredVehicle && vehiclesWithCapacity.length > 1;
 
   // Format pickup date/time
   const formatPickupDateTime = () => {
@@ -604,6 +615,30 @@ export default function VehicleComparisonGrid({
             </div>
           );
         })}
+
+        {/* Show "View other options" toggle when filtering to preferred vehicle */}
+        {hasMoreVehicles && (
+          <button
+            type="button"
+            onClick={() => setShowAllVehicles(true)}
+            className="w-full flex items-center justify-center gap-2 p-4 text-sm font-medium text-sage-dark hover:text-sage-dark/80 transition-colors"
+          >
+            <ChevronDown className="w-4 h-4" />
+            View {vehiclesWithCapacity.length - 1} other vehicle option{vehiclesWithCapacity.length > 2 ? 's' : ''}
+          </button>
+        )}
+
+        {/* Show "Show fewer options" when expanded from filtered state */}
+        {showAllVehicles && filterToPreferred && preferredVehicle && vehiclesWithCapacity.includes(preferredVehicle) && vehiclesWithCapacity.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setShowAllVehicles(false)}
+            className="w-full flex items-center justify-center gap-2 p-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronUp className="w-4 h-4" />
+            Show fewer options
+          </button>
+        )}
 
         {availableVehicles.length === 0 && (
           <div className="bg-card rounded-2xl p-8 shadow-mobile border-2 border-sage-light text-center">

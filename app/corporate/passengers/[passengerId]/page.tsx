@@ -50,11 +50,14 @@ export default function PassengerDetailPage({ params }: PageProps) {
     lastName: '',
     alias: '',
     referToAs: '',
+    contactName: '',
     email: '',
     phone: '',
     driverInstructions: '',
     bookerNotes: '',
   });
+
+  const [isRepresentative, setIsRepresentative] = useState(false);
 
   const [refreshments, setRefreshments] = useState<RefreshmentsState>({
     stillWater: false,
@@ -75,6 +78,14 @@ export default function PassengerDetailPage({ params }: PageProps) {
     }
   }, [searchParams]);
 
+  // Sync contact name with passenger name when not representative
+  useEffect(() => {
+    if (!isRepresentative && isEditing) {
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      setFormData((prev) => ({ ...prev, contactName: fullName }));
+    }
+  }, [formData.firstName, formData.lastName, isRepresentative, isEditing]);
+
   useEffect(() => {
     if (user && passengerId) {
       getPassenger(passengerId)
@@ -87,11 +98,13 @@ export default function PassengerDetailPage({ params }: PageProps) {
             lastName: p.lastName,
             alias: p.alias || '',
             referToAs: p.referToAs || '',
+            contactName: p.contactName || `${p.firstName} ${p.lastName}`.trim(),
             email: p.email || '',
             phone: p.phone || '',
             driverInstructions: p.driverInstructions || '',
             bookerNotes: p.bookerNotes || '',
           });
+          setIsRepresentative(p.isRepresentative || false);
           setRefreshments({
             stillWater: p.refreshments?.stillWater || false,
             sparklingWater: p.refreshments?.sparklingWater || false,
@@ -156,6 +169,8 @@ export default function PassengerDetailPage({ params }: PageProps) {
         title: formData.title ? (formData.title as typeof VALID_TITLES[number]) : null,
         alias: formData.alias.trim() || null,
         referToAs: formData.referToAs.trim() || null,
+        contactName: formData.contactName.trim() || null,
+        isRepresentative: isRepresentative || null,
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
         driverInstructions: formData.driverInstructions.trim() || null,
@@ -196,6 +211,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
         lastName: passenger.lastName,
         alias: passenger.alias || '',
         referToAs: passenger.referToAs || '',
+        contactName: passenger.contactName || `${passenger.firstName} ${passenger.lastName}`.trim(),
         email: passenger.email || '',
         phone: passenger.phone || '',
         driverInstructions: passenger.driverInstructions || '',
@@ -208,6 +224,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
         coffee: passenger.refreshments?.coffee || false,
         other: passenger.refreshments?.other || '',
       });
+      setIsRepresentative(passenger.isRepresentative || false);
     }
     setErrors({});
     setIsEditing(false);
@@ -419,7 +436,45 @@ export default function PassengerDetailPage({ params }: PageProps) {
             {/* Contact Information Section */}
             <div className="corp-card rounded-lg p-6 mb-6">
               <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
+
+              {/* Representative Checkbox */}
+              <div className="mb-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isRepresentative}
+                    onChange={(e) => setIsRepresentative(e.target.checked)}
+                    className="corp-checkbox w-4 h-4 rounded"
+                  />
+                  <span className="text-sm">Passenger&apos;s representative (different contact person)</span>
+                </label>
+                <p className="mt-1 text-xs opacity-50 ml-6">
+                  Check this if the contact person is not the passenger themselves
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Contact Name */}
+                <div className="sm:col-span-2">
+                  <label htmlFor="contactName" className="block text-sm font-medium mb-1">
+                    Contact Name
+                  </label>
+                  <input
+                    type="text"
+                    id="contactName"
+                    value={formData.contactName}
+                    onChange={(e) => handleChange('contactName', e.target.value)}
+                    disabled={!isRepresentative}
+                    className={`corp-input w-full px-3 py-2 rounded-lg ${!isRepresentative ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    placeholder="Contact person's name"
+                  />
+                  {!isRepresentative && (
+                    <p className="mt-1 text-xs opacity-50">
+                      Automatically set to passenger name. Enable representative to change.
+                    </p>
+                  )}
+                </div>
+
                 {/* Email */}
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
@@ -559,10 +614,19 @@ export default function PassengerDetailPage({ params }: PageProps) {
             </div>
 
             {/* View Mode - Contact Information */}
-            {(passenger.email || passenger.phone) && (
+            {(passenger.contactName || passenger.email || passenger.phone) && (
               <div className="corp-card rounded-lg p-6 mb-6">
                 <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
+                {passenger.isRepresentative && (
+                  <p className="text-xs corp-badge corp-badge-info inline-block mb-4">Representative contact</p>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {passenger.contactName && (
+                    <div>
+                      <dt className="text-sm font-medium opacity-70">Contact Name</dt>
+                      <dd className="mt-1 text-sm">{passenger.contactName}</dd>
+                    </div>
+                  )}
                   {passenger.email && (
                     <div>
                       <dt className="text-sm font-medium opacity-70">Email</dt>

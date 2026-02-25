@@ -1220,3 +1220,65 @@
 [data-theme="dark"] .corp-layout .bg-\[var\(--cream\)\] {
   background-color: var(--corp-bg-secondary) !important;
 }
+
+/* ============================================
+   Checkbox Card (Refreshments, Preferences)
+   Toggle cards for multi-select options
+   ============================================ */
+.corp-checkbox-card {
+  display: flex;
+  align-items: center;
+  gap: var(--corp-space-2);
+  padding: var(--corp-space-3) var(--corp-space-4);
+  border: 1px solid var(--corp-border-default);
+  border-radius: var(--corp-radius-md);
+  cursor: pointer;
+  transition: all var(--corp-transition-fast);
+  background: var(--corp-bg-secondary);
+  user-select: none;
+}
+
+.corp-checkbox-card:hover {
+  border-color: var(--corp-accent);
+  background: var(--corp-bg-hover);
+}
+
+.corp-checkbox-card-selected {
+  border-color: var(--corp-accent);
+  background: var(--corp-accent-muted);
+}
+
+.corp-checkbox-card-selected:hover {
+  background: var(--corp-bg-active);
+}
+
+/* Checkbox indicator inside card */
+.corp-checkbox-card .corp-checkbox-indicator {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--corp-border-strong);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--corp-transition-fast);
+}
+
+.corp-checkbox-card-selected .corp-checkbox-indicator {
+  background: var(--corp-accent);
+  border-color: var(--corp-accent);
+}
+
+.corp-checkbox-card-selected .corp-checkbox-indicator svg {
+  color: var(--corp-accent-text);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .corp-checkbox-card {
+  background: var(--corp-bg-elevated);
+}
+
+[data-theme="dark"] .corp-checkbox-card-selected {
+  background: rgba(183, 213, 185, 0.12);
+}

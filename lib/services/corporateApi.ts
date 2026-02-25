@@ -570,6 +570,8 @@ export interface Passenger {
   displayName: string;
   alias: string | null;
   referToAs: string | null;
+  contactName: string | null;
+  isRepresentative: boolean | null;
   email: string | null;
   phone: string | null;
   refreshments: RefreshmentPreferences | null;
@@ -590,7 +592,10 @@ export interface PassengerListItem {
   lastName: string;
   displayName: string;
   alias: string | null;
+  contactName: string | null;
+  isRepresentative: boolean | null;
   email: string | null;
+  phone: string | null;
   usageCount: number;
   lastUsedAt: string | null;
 }
@@ -606,6 +611,8 @@ export interface CreatePassengerData {
   title?: PassengerTitle;
   alias?: string;
   referToAs?: string;
+  contactName?: string;
+  isRepresentative?: boolean;
   email?: string;
   phone?: string;
   refreshments?: RefreshmentPreferences;
@@ -619,6 +626,8 @@ export interface UpdatePassengerData {
   title?: PassengerTitle | null;
   alias?: string | null;
   referToAs?: string | null;
+  contactName?: string | null;
+  isRepresentative?: boolean | null;
   email?: string | null;
   phone?: string | null;
   refreshments?: RefreshmentPreferences | null;

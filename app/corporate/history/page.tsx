@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { History, Calendar, MapPin, Car, Search, Filter, ChevronDown, RotateCw } from 'lucide-react';
+import { History, Calendar, MapPin, Car, Search, Filter, ChevronDown, RotateCw, Eye, Edit2, XCircle } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import { getDashboard } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
@@ -212,6 +212,34 @@ export default function BookingHistoryPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {/* TODO: Open booking details modal */}}
+                        className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4 corp-icon" />
+                      </button>
+                      {booking.status === 'confirmed' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {/* TODO: Open edit booking modal */}}
+                            className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
+                            title="Edit Booking"
+                          >
+                            <Edit2 className="w-4 h-4 corp-icon" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {/* TODO: Open cancel booking modal */}}
+                            className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-500"
+                            title="Cancel Booking"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                       {(booking.status === 'completed' || booking.status === 'confirmed') && (
                         <Link
                           href={`/corporate/quote`}

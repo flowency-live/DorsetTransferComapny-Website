@@ -456,15 +456,15 @@ export default function QuickBookPage() {
                               >
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-navy truncate">{trip.label}</p>
+                                    <p className="text-sm font-medium text-navy">{trip.label}</p>
                                     <div className="mt-2 space-y-1">
                                       <div className="flex items-start gap-2 text-sm text-navy-light/70">
                                         <MapPin className="h-4 w-4 text-sage flex-shrink-0 mt-0.5" />
-                                        <span className="truncate">{trip.pickupLocation.address}</span>
+                                        <span className="break-words">{trip.pickupLocation.address}</span>
                                       </div>
                                       <div className="flex items-start gap-2 text-sm text-navy-light/70">
                                         <MapPin className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-                                        <span className="truncate">{trip.dropoffLocation.address}</span>
+                                        <span className="break-words">{trip.dropoffLocation.address}</span>
                                       </div>
                                     </div>
                                     {(trip.passengers || trip.luggage) && (
@@ -552,11 +552,11 @@ export default function QuickBookPage() {
                                     <div className="mt-2 space-y-1">
                                       <div className="flex items-start gap-2 text-sm text-navy-light/70">
                                         <MapPin className="h-4 w-4 text-sage flex-shrink-0 mt-0.5" />
-                                        <span className="truncate">{journey.pickup}</span>
+                                        <span className="break-words">{journey.pickup}</span>
                                       </div>
                                       <div className="flex items-start gap-2 text-sm text-navy-light/70">
                                         <MapPin className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-                                        <span className="truncate">{journey.dropoff}</span>
+                                        <span className="break-words">{journey.dropoff}</span>
                                       </div>
                                     </div>
                                     <div className="mt-2 flex items-center gap-3 text-xs text-navy-light/50">
@@ -587,39 +587,66 @@ export default function QuickBookPage() {
 
               {/* Step 3: Date/Time Selection */}
               {currentStep === 'datetime' && (
-                <div className="bg-white rounded-lg shadow-sm border border-sage/20 p-6">
-                  <h2 className="text-lg font-semibold text-navy mb-4">When do you need the transfer?</h2>
+                <div className="bg-white rounded-xl shadow-sm border border-sage/20 p-8">
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sage/10 mb-4">
+                      <Calendar className="h-7 w-7 text-sage" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-navy">When do you need this transfer?</h2>
+                    <p className="text-sm text-navy-light/70 mt-1">Select your preferred pickup date and time</p>
+                  </div>
 
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-navy mb-1">
+                      <label className="block text-sm font-medium text-navy mb-2">
                         Pickup Date
                       </label>
                       <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-light/50 pointer-events-none" />
+                        <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-sage pointer-events-none" />
                         <input
                           type="date"
                           value={pickupDate}
                           onChange={(e) => setPickupDate(e.target.value)}
                           min={getMinDate()}
-                          className="w-full pl-10 pr-4 py-3 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                          className="w-full pl-12 pr-4 py-4 text-lg border-2 border-sage/30 rounded-xl shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy font-medium"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-navy mb-1">
+                      <label className="block text-sm font-medium text-navy mb-2">
                         Pickup Time
                       </label>
                       <div className="relative">
-                        <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-navy-light/50 pointer-events-none" />
+                        <Clock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-sage pointer-events-none" />
                         <input
                           type="time"
                           value={pickupTime}
                           onChange={(e) => setPickupTime(e.target.value)}
-                          className="w-full pl-10 pr-4 py-3 border border-sage/30 rounded-lg shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy"
+                          className="w-full pl-12 pr-4 py-4 text-lg border-2 border-sage/30 rounded-xl shadow-sm focus:ring-2 focus:ring-sage focus:border-sage text-navy font-medium"
                         />
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Quick time presets */}
+                  <div className="mt-6 pt-6 border-t border-sage/10">
+                    <p className="text-xs font-medium text-navy-light/70 uppercase tracking-wider mb-3">Quick Select Time</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['06:00', '07:00', '08:00', '09:00', '12:00', '14:00', '17:00', '19:00'].map((time) => (
+                        <button
+                          key={time}
+                          type="button"
+                          onClick={() => setPickupTime(time)}
+                          className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                            pickupTime === time
+                              ? 'bg-sage text-white border-sage'
+                              : 'border-sage/30 text-navy hover:bg-sage/10 hover:border-sage'
+                          }`}
+                        >
+                          {time}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>

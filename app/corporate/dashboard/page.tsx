@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -189,6 +189,7 @@ export default function CorporateDashboardPage() {
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell">Booked By</th>
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell">Route</th>
                         <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y corp-border">
@@ -207,9 +208,43 @@ export default function CorporateDashboardPage() {
                             {booking.pickup} → {booking.dropoff}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <span className="corp-badge corp-badge-success text-xs">
+                            <span className={`corp-badge text-xs ${
+                              booking.status === 'confirmed' ? 'corp-badge-success' :
+                              booking.status === 'completed' ? 'corp-badge-info' :
+                              booking.status === 'cancelled' ? 'corp-badge-danger' :
+                              'corp-badge-neutral'
+                            }`}>
                               {booking.status}
                             </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Link
+                                href={`/corporate/history?booking=${booking.id}`}
+                                className="p-1.5 rounded-md hover:bg-sage/10 transition-colors"
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4 corp-icon" />
+                              </Link>
+                              {booking.status === 'confirmed' && (
+                                <>
+                                  <Link
+                                    href={`/corporate/history?booking=${booking.id}&edit=true`}
+                                    className="p-1.5 rounded-md hover:bg-sage/10 transition-colors"
+                                    title="Edit Booking"
+                                  >
+                                    <Edit2 className="w-4 h-4 corp-icon" />
+                                  </Link>
+                                  <Link
+                                    href={`/corporate/history?booking=${booking.id}&cancel=true`}
+                                    className="p-1.5 rounded-md hover:bg-red-50 transition-colors text-red-500"
+                                    title="Cancel Booking"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                  </Link>
+                                </>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}

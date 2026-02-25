@@ -19,6 +19,8 @@ export interface SelectedPassenger {
   lastName?: string;
   title?: string | null;
   alias?: string | null;
+  contactName?: string | null;
+  isRepresentative?: boolean | null;
   email?: string | null;
   phone?: string | null;
   driverInstructions?: string | null;
@@ -107,6 +109,8 @@ export default function PassengerSelector({
         lastName: fullPassenger.lastName,
         title: fullPassenger.title,
         alias: fullPassenger.alias,
+        contactName: fullPassenger.contactName,
+        isRepresentative: fullPassenger.isRepresentative,
         email: fullPassenger.email,
         phone: fullPassenger.phone,
         driverInstructions: fullPassenger.driverInstructions,
@@ -122,7 +126,10 @@ export default function PassengerSelector({
         lastName: passenger.lastName,
         title: passenger.title,
         alias: passenger.alias,
+        contactName: passenger.contactName,
+        isRepresentative: passenger.isRepresentative,
         email: passenger.email,
+        phone: passenger.phone,
       });
     }
     setUseManualEntry(false);

@@ -219,14 +219,30 @@ function CorporateQuotePageContent() {
         setSelectedPassenger({
           passengerId: passenger.passengerId,
           displayName,
+          firstName: passenger.firstName,
+          lastName: passenger.lastName,
+          title: passenger.title,
+          alias: passenger.alias,
+          contactName: passenger.contactName,
+          isRepresentative: passenger.isRepresentative,
           email: passenger.email || undefined,
           phone: passenger.phone || undefined,
+          driverInstructions: passenger.driverInstructions,
+          refreshments: passenger.refreshments,
         });
 
         // Auto-fill special requests with driver instructions
         if (passenger.driverInstructions) {
           setSpecialRequests(passenger.driverInstructions);
         }
+
+        // Pre-fill contact details from passenger record
+        const contactName = passenger.contactName || displayName;
+        setContactDetails({
+          name: contactName,
+          email: passenger.email || '',
+          phone: passenger.phone || '',
+        });
       } catch (err) {
         console.error('Failed to load passenger for rebook:', err);
       }
@@ -1036,6 +1052,7 @@ function CorporateQuotePageContent() {
               onSelect={handleVehicleSelect}
               journeyType={journeyType}
               preferredVehicle={loadedTrip?.vehicleType}
+              filterToPreferred={!!loadedTrip?.vehicleType}
             />
           </div>
         ) : (
@@ -1049,6 +1066,15 @@ function CorporateQuotePageContent() {
                   // Auto-fill special requests with driver instructions when passenger selected
                   if (passenger?.driverInstructions) {
                     setSpecialRequests(passenger.driverInstructions);
+                  }
+                  // Pre-fill contact details from passenger record
+                  if (passenger) {
+                    const contactName = passenger.contactName || passenger.displayName;
+                    setContactDetails({
+                      name: contactName,
+                      email: passenger.email || '',
+                      phone: passenger.phone || '',
+                    });
                   }
                 }}
                 manualName={manualPassengerName}
