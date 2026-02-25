@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Users, Mail, Edit2, Trash2, AlertTriangle, CheckCircle, Eye } from 'lucide-react';
+import { Plus, Search, Users, Mail, Trash2, AlertTriangle, CheckCircle, MoreVertical, Pencil, Eye } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassengers,
@@ -19,6 +19,19 @@ export default function PassengersPage() {
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; passengerId: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type });
@@ -150,7 +163,7 @@ export default function PassengersPage() {
                 key={passenger.passengerId}
                 className="corp-card p-5 rounded-lg hover:shadow-md transition-shadow"
               >
-                {/* Header with name and menu */}
+                {/* Header with name and 3-dot menu */}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0 pr-2">
                     <h3 className="font-semibold text-lg truncate">
@@ -162,21 +175,44 @@ export default function PassengersPage() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Link
-                      href={`/corporate/passengers/${passenger.passengerId}?edit=true`}
-                      className="p-1.5 rounded-md hover:bg-[var(--corp-bg-hover)] transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 className="h-4 w-4 opacity-60 hover:opacity-100" />
-                    </Link>
+                  <div className="relative" ref={openMenuId === passenger.passengerId ? menuRef : null}>
                     <button
-                      onClick={() => handleDeleteClick(passenger.passengerId, passenger.firstName, passenger.lastName)}
-                      className="p-1.5 rounded-md hover:bg-red-50 transition-colors text-red-600"
-                      title="Delete"
+                      onClick={() => setOpenMenuId(openMenuId === passenger.passengerId ? null : passenger.passengerId)}
+                      className="p-1 opacity-50 hover:opacity-100 rounded-md hover:bg-[var(--corp-bg-hover)] transition-colors"
                     >
-                      <Trash2 className="h-4 w-4 opacity-60 hover:opacity-100" />
+                      <MoreVertical className="h-5 w-5" />
                     </button>
+
+                    {openMenuId === passenger.passengerId && (
+                      <div className="absolute right-0 mt-1 w-36 corp-card rounded-md shadow-lg py-1 z-10">
+                        <Link
+                          href={`/corporate/passengers/${passenger.passengerId}`}
+                          onClick={() => setOpenMenuId(null)}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--corp-bg-hover)]"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Link>
+                        <Link
+                          href={`/corporate/passengers/${passenger.passengerId}?edit=true`}
+                          onClick={() => setOpenMenuId(null)}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--corp-bg-hover)]"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setOpenMenuId(null);
+                            handleDeleteClick(passenger.passengerId, passenger.firstName, passenger.lastName);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -197,21 +233,13 @@ export default function PassengersPage() {
                   </span>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <Link
-                    href={`/corporate/quote?passengerId=${passenger.passengerId}`}
-                    className="flex-1 text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors"
-                  >
-                    Quick Book
-                  </Link>
-                  <Link
-                    href={`/corporate/passengers/${passenger.passengerId}`}
-                    className="px-4 py-2.5 border border-[var(--corp-border-default)] font-medium rounded-lg hover:bg-[var(--corp-bg-hover)] transition-colors"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Link>
-                </div>
+                {/* Book Now button */}
+                <Link
+                  href={`/corporate/quote?passengerId=${passenger.passengerId}`}
+                  className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors"
+                >
+                  Book Now
+                </Link>
               </div>
             ))}
           </div>

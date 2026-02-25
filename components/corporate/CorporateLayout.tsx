@@ -7,10 +7,9 @@ import CorporateNav from './CorporateNav';
 interface CorporateLayoutProps {
   children: ReactNode;
   pageTitle?: string;
-  welcomeMessage?: string;
 }
 
-export default function CorporateLayout({ children, pageTitle, welcomeMessage }: CorporateLayoutProps) {
+export default function CorporateLayout({ children, pageTitle }: CorporateLayoutProps) {
   const { user, isLoading, isAdmin, logout } = useRequireCorporateAuth();
   const [navOpen, setNavOpen] = useState(false);
 
@@ -21,6 +20,9 @@ export default function CorporateLayout({ children, pageTitle, welcomeMessage }:
       </div>
     );
   }
+
+  // Always show welcome message in header
+  const welcomeMessage = `Welcome back, ${user?.name || 'Guest'}`;
 
   return (
     <div className="corp-layout min-h-screen">
@@ -37,16 +39,10 @@ export default function CorporateLayout({ children, pageTitle, welcomeMessage }:
 
       {/* Main Content Area */}
       <main className="lg:ml-64 min-h-screen flex flex-col">
-        {/* Fixed Header Bar - matches public site style */}
+        {/* Fixed Header Bar - always shows welcome message */}
         <header className="corp-main-header h-20 flex items-center px-6 lg:pl-6 pl-16 shadow-sm">
           <div className="flex-1">
-            {welcomeMessage ? (
-              <h1 className="text-xl font-semibold corp-header-title">{welcomeMessage}</h1>
-            ) : pageTitle ? (
-              <h1 className="text-xl font-semibold corp-header-title">{pageTitle}</h1>
-            ) : (
-              <span className="corp-header-subtitle text-sm">Corporate Portal</span>
-            )}
+            <h1 className="text-xl font-semibold corp-header-title">{welcomeMessage}</h1>
           </div>
         </header>
         {/* Sage accent bar - matches public site header */}

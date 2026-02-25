@@ -62,7 +62,7 @@ export default function CorporateDashboardPage() {
   }, [user]);
 
   return (
-    <CorporateLayout welcomeMessage={`Welcome back, ${user?.name || 'Guest'}`}>
+    <CorporateLayout>
       <div className="max-w-6xl mx-auto">
         {/* Stats Grid - 3 columns */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

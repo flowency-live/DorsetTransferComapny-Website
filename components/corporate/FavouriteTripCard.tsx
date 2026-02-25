@@ -59,11 +59,11 @@ export default function FavouriteTripCard({
 
   if (compact) {
     return (
-      <div className="bg-white rounded-lg border border-sage/20 p-4 hover:shadow-md transition-shadow">
+      <div className="corp-card rounded-lg p-4 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-navy truncate">{trip.label}</h3>
-            <div className="mt-1 flex items-center text-xs text-navy-light/70 gap-2">
+            <h3 className="font-medium truncate">{trip.label}</h3>
+            <div className="mt-1 flex items-center text-xs opacity-70 gap-2">
               {trip.vehicleType && (
                 <span className="flex items-center gap-1">
                   <Car className="h-3 w-3" />
@@ -80,7 +80,7 @@ export default function FavouriteTripCard({
           </div>
           <Link
             href={`/corporate/quote?tripId=${trip.tripId}`}
-            className="ml-2 px-3 py-1.5 text-xs font-medium bg-sage text-white rounded-md hover:bg-sage-dark transition-colors"
+            className="ml-2 px-3 py-1.5 text-xs font-medium bg-[var(--corp-sage)] text-white rounded-md hover:bg-[var(--corp-sage-dark)] transition-colors"
           >
             Book
           </Link>
@@ -90,12 +90,12 @@ export default function FavouriteTripCard({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-sage/20 p-5 hover:shadow-md transition-shadow">
+    <div className="corp-card rounded-lg p-5 hover:shadow-md transition-shadow">
       {/* Header with label and menu */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0 pr-2">
-          <h3 className="font-semibold text-navy text-lg truncate">{trip.label}</h3>
-          <p className="text-xs text-navy-light/60 mt-0.5">
+          <h3 className="font-semibold text-lg truncate">{trip.label}</h3>
+          <p className="text-xs opacity-60 mt-0.5">
             {formatLastUsed(trip.lastUsedAt)}
             {trip.usageCount && trip.usageCount > 0 && ` (${trip.usageCount} bookings)`}
           </p>
@@ -105,20 +105,20 @@ export default function FavouriteTripCard({
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1 text-navy-light/50 hover:text-navy rounded-md hover:bg-sage/10 transition-colors"
+              className="p-1 opacity-50 hover:opacity-100 rounded-md hover:bg-[var(--corp-bg-hover)] transition-colors"
             >
               <MoreVertical className="h-5 w-5" />
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 mt-1 w-36 bg-white rounded-md shadow-lg border border-sage/20 py-1 z-10">
+              <div className="absolute right-0 mt-1 w-36 corp-card rounded-md shadow-lg py-1 z-10">
                 {onEdit && (
                   <button
                     onClick={() => {
                       setShowMenu(false);
                       onEdit(trip);
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-navy hover:bg-sage/10"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--corp-bg-hover)]"
                   >
                     <Pencil className="h-4 w-4" />
                     Edit
@@ -130,7 +130,7 @@ export default function FavouriteTripCard({
                       setShowMenu(false);
                       onDelete(trip.tripId);
                     }}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete
@@ -146,17 +146,17 @@ export default function FavouriteTripCard({
       <div className="space-y-2 mb-4">
         <div className="flex items-start gap-2">
           <div className="flex-shrink-0 mt-1">
-            <div className="h-2 w-2 rounded-full bg-sage" />
+            <div className="h-2 w-2 rounded-full bg-[var(--corp-sage)]" />
           </div>
-          <p className="text-sm text-navy-light/80" title={trip.pickupLocation.address}>
+          <p className="text-sm opacity-80" title={trip.pickupLocation.address}>
             {truncateAddress(trip.pickupLocation.address)}
           </p>
         </div>
 
         {trip.waypoints && trip.waypoints.length > 0 && (
           <div className="flex items-center gap-2 ml-0.5">
-            <div className="h-4 border-l-2 border-dashed border-sage/40" />
-            <p className="text-xs text-navy-light/60">
+            <div className="h-4 border-l-2 border-dashed border-[var(--corp-sage)]/40" />
+            <p className="text-xs opacity-60">
               +{trip.waypoints.length} stop{trip.waypoints.length > 1 ? 's' : ''}
             </p>
           </div>
@@ -164,9 +164,9 @@ export default function FavouriteTripCard({
 
         <div className="flex items-start gap-2">
           <div className="flex-shrink-0 mt-1">
-            <MapPin className="h-3 w-3 text-navy" />
+            <MapPin className="h-3 w-3" />
           </div>
-          <p className="text-sm text-navy-light/80" title={trip.dropoffLocation.address}>
+          <p className="text-sm opacity-80" title={trip.dropoffLocation.address}>
             {truncateAddress(trip.dropoffLocation.address)}
           </p>
         </div>
@@ -175,25 +175,25 @@ export default function FavouriteTripCard({
       {/* Preferences */}
       <div className="flex flex-wrap gap-2 mb-4">
         {trip.vehicleType && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+          <span className="corp-badge corp-badge-neutral inline-flex items-center gap-1 text-xs">
             <Car className="h-3 w-3" />
             {vehicleLabels[trip.vehicleType]}
           </span>
         )}
         {trip.passengers && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+          <span className="corp-badge corp-badge-neutral inline-flex items-center gap-1 text-xs">
             <Users className="h-3 w-3" />
             {trip.passengers} pax
           </span>
         )}
         {trip.luggage && trip.luggage > 0 && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+          <span className="corp-badge corp-badge-neutral inline-flex items-center gap-1 text-xs">
             <Briefcase className="h-3 w-3" />
             {trip.luggage} bags
           </span>
         )}
         {trip.waypoints && trip.waypoints.some(w => w.waitTime && w.waitTime > 0) && (
-          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-sage/10 text-sage-dark rounded-md">
+          <span className="corp-badge corp-badge-neutral inline-flex items-center gap-1 text-xs">
             <Clock className="h-3 w-3" />
             Wait time
           </span>
@@ -203,7 +203,7 @@ export default function FavouriteTripCard({
       {/* Book button */}
       <Link
         href={`/corporate/quote?tripId=${trip.tripId}`}
-        className="block w-full text-center px-4 py-2.5 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors"
+        className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors"
       >
         Book Now
       </Link>
