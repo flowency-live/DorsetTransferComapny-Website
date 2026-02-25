@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { History, Calendar, MapPin, Car, Search, Filter, ChevronDown, RotateCw, Eye, Edit2, XCircle } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import { getDashboard } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
+import BookingDetailsModal from '@/components/corporate/BookingDetailsModal';
+import CancelBookingModal from '@/components/corporate/CancelBookingModal';
 
 interface Booking {
   id: string;
@@ -17,15 +20,62 @@ interface Booking {
   status: string;
   vehicleType?: string;
   pricePence?: number;
+  magicToken?: string | null;
 }
 
-export default function BookingHistoryPage() {
+type ModalMode = 'view' | 'edit' | 'cancel' | null;
+
+// Redirect component for editing - navigates to full edit page
+function EditRedirectModal({ bookingId, magicToken }: { bookingId: string; magicToken: string }) {
+  useEffect(() => {
+    // Redirect to the public booking page which has the full edit functionality
+    window.location.href = `/booking/${bookingId}?token=${encodeURIComponent(magicToken)}`;
+  }, [bookingId, magicToken]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+      <div className="corp-card rounded-xl p-8 text-center">
+        <div className="corp-loading-spinner w-10 h-10 border-4 rounded-full animate-spin mx-auto" />
+        <p className="mt-4 text-sm">Redirecting to edit booking...</p>
+      </div>
+    </div>
+  );
+}
+
+function BookingHistoryContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useRequireCorporateAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
+
+  // Modal state
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+
+  // Read URL params for deep linking to booking actions
+  useEffect(() => {
+    const bookingId = searchParams.get('booking');
+    const isEdit = searchParams.get('edit') === 'true';
+    const isCancel = searchParams.get('cancel') === 'true';
+
+    if (bookingId && bookings.length > 0) {
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking) {
+        setSelectedBooking(booking);
+        if (isCancel) {
+          setModalMode('cancel');
+        } else if (isEdit) {
+          setModalMode('edit');
+        } else {
+          setModalMode('view');
+        }
+      }
+    }
+  }, [searchParams, bookings]);
 
   useEffect(() => {
     if (user) {
@@ -72,6 +122,43 @@ export default function BookingHistoryPage() {
   });
 
   const uniqueStatuses = ['all', ...Array.from(new Set(bookings.map(b => b.status)))];
+
+  const openModal = (booking: Booking, mode: ModalMode) => {
+    setSelectedBooking(booking);
+    setModalMode(mode);
+    // Update URL without navigation for deep linking support
+    const params = new URLSearchParams();
+    params.set('booking', booking.id);
+    if (mode === 'edit') params.set('edit', 'true');
+    if (mode === 'cancel') params.set('cancel', 'true');
+    router.replace(`/corporate/history?${params.toString()}`, { scroll: false });
+  };
+
+  const closeModal = () => {
+    setSelectedBooking(null);
+    setModalMode(null);
+    // Clear URL params
+    router.replace('/corporate/history', { scroll: false });
+  };
+
+  const handleCancelled = () => {
+    // Refresh bookings after cancellation
+    if (user) {
+      getDashboard()
+        .then((data) => {
+          setBookings(data.recentBookings || []);
+        })
+        .catch(console.error);
+    }
+  };
+
+  const handleEditClick = () => {
+    // For edit, redirect to the public booking page with the magic token
+    // This uses the existing full edit functionality
+    if (selectedBooking?.magicToken) {
+      window.location.href = `/booking/${selectedBooking.id}?token=${encodeURIComponent(selectedBooking.magicToken)}`;
+    }
+  };
 
   return (
     <CorporateLayout pageTitle="Booking History">
@@ -214,17 +301,17 @@ export default function BookingHistoryPage() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => {/* TODO: Open booking details modal */}}
+                        onClick={() => openModal(booking, 'view')}
                         className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
                         title="View Details"
                       >
                         <Eye className="w-4 h-4 corp-icon" />
                       </button>
-                      {booking.status === 'confirmed' && (
+                      {booking.status === 'confirmed' && booking.magicToken && (
                         <>
                           <button
                             type="button"
-                            onClick={() => {/* TODO: Open edit booking modal */}}
+                            onClick={() => openModal(booking, 'edit')}
                             className="p-2 rounded-lg hover:bg-sage/10 transition-colors"
                             title="Edit Booking"
                           >
@@ -232,7 +319,7 @@ export default function BookingHistoryPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {/* TODO: Open cancel booking modal */}}
+                            onClick={() => openModal(booking, 'cancel')}
                             className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-500"
                             title="Cancel Booking"
                           >
@@ -257,6 +344,51 @@ export default function BookingHistoryPage() {
           )}
         </div>
       </div>
+
+      {/* View Details Modal */}
+      {modalMode === 'view' && selectedBooking && (
+        <BookingDetailsModal
+          bookingId={selectedBooking.id}
+          magicToken={selectedBooking.magicToken || undefined}
+          onClose={closeModal}
+          onEdit={selectedBooking.status === 'confirmed' && selectedBooking.magicToken ? handleEditClick : undefined}
+          onCancel={selectedBooking.status === 'confirmed' && selectedBooking.magicToken ? () => setModalMode('cancel') : undefined}
+        />
+      )}
+
+      {/* Edit Modal - Shows loading and redirects */}
+      {modalMode === 'edit' && selectedBooking && selectedBooking.magicToken && (
+        <EditRedirectModal
+          bookingId={selectedBooking.id}
+          magicToken={selectedBooking.magicToken}
+        />
+      )}
+
+      {/* Cancel Modal */}
+      {modalMode === 'cancel' && selectedBooking && (
+        <CancelBookingModal
+          bookingId={selectedBooking.id}
+          magicToken={selectedBooking.magicToken || undefined}
+          onClose={closeModal}
+          onCancelled={handleCancelled}
+        />
+      )}
     </CorporateLayout>
+  );
+}
+
+export default function BookingHistoryPage() {
+  return (
+    <Suspense fallback={
+      <CorporateLayout pageTitle="Booking History">
+        <div className="max-w-6xl mx-auto">
+          <div className="corp-card rounded-lg p-8 text-center">
+            <div className="corp-loading-spinner w-8 h-8 border-4 rounded-full animate-spin mx-auto" />
+          </div>
+        </div>
+      </CorporateLayout>
+    }>
+      <BookingHistoryContent />
+    </Suspense>
   );
 }

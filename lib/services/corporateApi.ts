@@ -71,6 +71,7 @@ interface DashboardResponse {
     pickup: string;
     dropoff: string;
     status: string;
+    magicToken?: string | null;
   }>;
 }
 
