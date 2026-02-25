@@ -321,92 +321,298 @@ export default function PassengerDetailPage({ params }: PageProps) {
         </div>
 
         {/* Details / Edit Form */}
-        <div className="corp-card rounded-lg p-6 mb-6">
-          <h2 className="corp-section-title text-lg font-semibold mb-4">Passenger Details</h2>
+        {isEditing ? (
+          <>
+            {/* Passenger Details Section */}
+            <div className="corp-card rounded-lg p-6 mb-6">
+              <h2 className="corp-section-title text-lg font-semibold mb-4">Passenger Details</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Title */}
+                <div className="sm:col-span-1">
+                  <label htmlFor="title" className="block text-sm font-medium mb-1">Title</label>
+                  <select
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleChange('title', e.target.value)}
+                    className="corp-input w-full px-3 py-2 rounded-lg"
+                  >
+                    <option value="">Select...</option>
+                    {VALID_TITLES.map((title) => (
+                      <option key={title} value={title}>{title}</option>
+                    ))}
+                  </select>
+                </div>
 
-          {isEditing ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title</label>
-                <select value={formData.title} onChange={(e) => handleChange('title', e.target.value)} className="corp-input w-full px-3 py-2 rounded-lg">
-                  <option value="">Select...</option>
-                  {VALID_TITLES.map((title) => <option key={title} value={title}>{title}</option>)}
-                </select>
+                {/* Empty space for alignment */}
+                <div className="hidden sm:block" />
+
+                {/* First Name */}
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => handleChange('firstName', e.target.value)}
+                    className={`corp-input w-full px-3 py-2 rounded-lg ${errors.firstName ? 'border-red-500' : ''}`}
+                    placeholder="John"
+                  />
+                  {errors.firstName && (
+                    <p className="mt-1 text-xs text-red-500">{errors.firstName}</p>
+                  )}
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => handleChange('lastName', e.target.value)}
+                    className={`corp-input w-full px-3 py-2 rounded-lg ${errors.lastName ? 'border-red-500' : ''}`}
+                    placeholder="Smith"
+                  />
+                  {errors.lastName && (
+                    <p className="mt-1 text-xs text-red-500">{errors.lastName}</p>
+                  )}
+                </div>
+
+                {/* Alias */}
+                <div>
+                  <label htmlFor="alias" className="block text-sm font-medium mb-1">
+                    Alias / Nickname
+                  </label>
+                  <input
+                    type="text"
+                    id="alias"
+                    value={formData.alias}
+                    onChange={(e) => handleChange('alias', e.target.value)}
+                    className="corp-input w-full px-3 py-2 rounded-lg"
+                    placeholder="Johnny"
+                  />
+                  <p className="mt-1 text-xs opacity-50">Visible to driver if set</p>
+                </div>
+
+                {/* Refer To As */}
+                <div>
+                  <label htmlFor="referToAs" className="block text-sm font-medium mb-1">
+                    Refer To As
+                  </label>
+                  <input
+                    type="text"
+                    id="referToAs"
+                    value={formData.referToAs}
+                    onChange={(e) => handleChange('referToAs', e.target.value)}
+                    className="corp-input w-full px-3 py-2 rounded-lg"
+                    placeholder="Dr Smith"
+                  />
+                  <p className="mt-1 text-xs opacity-50">How the driver should address them</p>
+                </div>
               </div>
-              <div />
-              <div>
-                <label className="block text-sm font-medium mb-1">First Name <span className="text-red-500">*</span></label>
-                <input type="text" value={formData.firstName} onChange={(e) => handleChange('firstName', e.target.value)} className={`corp-input w-full px-3 py-2 rounded-lg ${errors.firstName ? 'border-red-300' : ''}`} />
-                {errors.firstName && <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>}
+            </div>
+
+            {/* Contact Information Section */}
+            <div className="corp-card rounded-lg p-6 mb-6">
+              <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    className={`corp-input w-full px-3 py-2 rounded-lg ${errors.email ? 'border-red-500' : ''}`}
+                    placeholder="john.smith@example.com"
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    className="corp-input w-full px-3 py-2 rounded-lg"
+                    placeholder="+44 7700 900000"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Last Name <span className="text-red-500">*</span></label>
-                <input type="text" value={formData.lastName} onChange={(e) => handleChange('lastName', e.target.value)} className={`corp-input w-full px-3 py-2 rounded-lg ${errors.lastName ? 'border-red-300' : ''}`} />
-                {errors.lastName && <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Alias</label>
-                <input type="text" value={formData.alias} onChange={(e) => handleChange('alias', e.target.value)} className="corp-input w-full px-3 py-2 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Refer To As</label>
-                <input type="text" value={formData.referToAs} onChange={(e) => handleChange('referToAs', e.target.value)} className="corp-input w-full px-3 py-2 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input type="email" value={formData.email} onChange={(e) => handleChange('email', e.target.value)} className={`corp-input w-full px-3 py-2 rounded-lg ${errors.email ? 'border-red-300' : ''}`} />
-                {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
-                <input type="tel" value={formData.phone} onChange={(e) => handleChange('phone', e.target.value)} className="corp-input w-full px-3 py-2 rounded-lg" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-2">Refreshments</label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                  {[{ key: 'stillWater', label: 'Still Water' }, { key: 'sparklingWater', label: 'Sparkling' }, { key: 'tea', label: 'Tea' }, { key: 'coffee', label: 'Coffee' }].map(({ key, label }) => (
-                    <label key={key} className={`corp-checkbox-card flex items-center justify-center px-3 py-2 border rounded-lg cursor-pointer ${refreshments[key as keyof RefreshmentsState] ? 'corp-checkbox-card-selected' : ''}`}>
-                      <input type="checkbox" checked={refreshments[key as keyof RefreshmentsState] as boolean} onChange={(e) => handleRefreshmentChange(key as keyof RefreshmentsState, e.target.checked)} className="sr-only" />
+            </div>
+
+            {/* Preferences Section */}
+            <div className="corp-card rounded-lg p-6 mb-6">
+              <h2 className="corp-section-title text-lg font-semibold mb-4">Preferences</h2>
+
+              {/* Refreshments */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Refreshment Preferences</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { key: 'stillWater', label: 'Still Water' },
+                    { key: 'sparklingWater', label: 'Sparkling Water' },
+                    { key: 'tea', label: 'Tea' },
+                    { key: 'coffee', label: 'Coffee' },
+                  ].map(({ key, label }) => (
+                    <label
+                      key={key}
+                      className={`corp-checkbox-card flex items-center justify-center px-3 py-2 border rounded-lg cursor-pointer transition-colors ${
+                        refreshments[key as keyof RefreshmentsState]
+                          ? 'corp-checkbox-card-selected'
+                          : ''
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={refreshments[key as keyof RefreshmentsState] as boolean}
+                        onChange={(e) => handleRefreshmentChange(key as keyof RefreshmentsState, e.target.checked)}
+                        className="sr-only"
+                      />
                       <span className="text-sm">{label}</span>
                     </label>
                   ))}
                 </div>
-                <input type="text" value={refreshments.other} onChange={(e) => handleRefreshmentChange('other', e.target.value)} placeholder="Other..." className="corp-input w-full px-3 py-2 rounded-lg" />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Driver Instructions</label>
-                <textarea value={formData.driverInstructions} onChange={(e) => handleChange('driverInstructions', e.target.value)} rows={3} maxLength={500} className="corp-input w-full px-3 py-2 rounded-lg" />
-                <p className="mt-1 text-xs opacity-50">{formData.driverInstructions.length}/500</p>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium mb-1">Booker Notes</label>
-                <textarea value={formData.bookerNotes} onChange={(e) => handleChange('bookerNotes', e.target.value)} rows={3} maxLength={500} className="corp-input w-full px-3 py-2 rounded-lg" />
-                <p className="mt-1 text-xs opacity-50">{formData.bookerNotes.length}/500</p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div><dt className="text-sm font-medium opacity-70">Full Name</dt><dd className="mt-1 text-sm">{formatPassengerName()}</dd></div>
-              {passenger.alias && <div><dt className="text-sm font-medium opacity-70">Alias</dt><dd className="mt-1 text-sm">{passenger.alias}</dd></div>}
-              {passenger.email && <div><dt className="text-sm font-medium opacity-70">Email</dt><dd className="mt-1 text-sm">{passenger.email}</dd></div>}
-              {passenger.phone && <div><dt className="text-sm font-medium opacity-70">Phone</dt><dd className="mt-1 text-sm">{passenger.phone}</dd></div>}
-              {passenger.refreshments && (
-                <div className="sm:col-span-2">
-                  <dt className="text-sm font-medium opacity-70">Refreshments</dt>
-                  <dd className="mt-1 flex flex-wrap gap-2">
-                    {passenger.refreshments.stillWater && <span className="corp-badge corp-badge-success text-xs">Still Water</span>}
-                    {passenger.refreshments.sparklingWater && <span className="corp-badge corp-badge-success text-xs">Sparkling</span>}
-                    {passenger.refreshments.tea && <span className="corp-badge corp-badge-success text-xs">Tea</span>}
-                    {passenger.refreshments.coffee && <span className="corp-badge corp-badge-success text-xs">Coffee</span>}
-                    {passenger.refreshments.other && <span className="corp-badge corp-badge-success text-xs">{passenger.refreshments.other}</span>}
-                  </dd>
+                <div className="mt-3">
+                  <input
+                    type="text"
+                    value={refreshments.other}
+                    onChange={(e) => handleRefreshmentChange('other', e.target.value)}
+                    className="corp-input w-full px-3 py-2 rounded-lg"
+                    placeholder="Other refreshment preferences..."
+                  />
                 </div>
-              )}
-              {passenger.driverInstructions && <div className="sm:col-span-2"><dt className="text-sm font-medium opacity-70">Driver Instructions</dt><dd className="mt-1 text-sm whitespace-pre-wrap">{passenger.driverInstructions}</dd></div>}
-              {passenger.bookerNotes && <div className="sm:col-span-2"><dt className="text-sm font-medium opacity-70">Booker Notes</dt><dd className="mt-1 text-sm whitespace-pre-wrap">{passenger.bookerNotes}</dd></div>}
+              </div>
+
+              {/* Driver Instructions */}
+              <div className="mb-4">
+                <label htmlFor="driverInstructions" className="block text-sm font-medium mb-1">
+                  Driver Instructions
+                </label>
+                <textarea
+                  id="driverInstructions"
+                  value={formData.driverInstructions}
+                  onChange={(e) => handleChange('driverInstructions', e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                  placeholder="E.g., Prefers quiet journeys, uses wheelchair..."
+                />
+                <p className="mt-1 text-xs opacity-50">
+                  {formData.driverInstructions.length}/500 characters - Visible to driver
+                </p>
+              </div>
+
+              {/* Booker Notes */}
+              <div>
+                <label htmlFor="bookerNotes" className="block text-sm font-medium mb-1">
+                  Booker Notes
+                </label>
+                <textarea
+                  id="bookerNotes"
+                  value={formData.bookerNotes}
+                  onChange={(e) => handleChange('bookerNotes', e.target.value)}
+                  rows={3}
+                  maxLength={500}
+                  className="corp-input w-full px-3 py-2 rounded-lg"
+                  placeholder="Internal notes for bookers..."
+                />
+                <p className="mt-1 text-xs opacity-50">
+                  {formData.bookerNotes.length}/500 characters - Only visible to bookers
+                </p>
+              </div>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <>
+            {/* View Mode - Passenger Details */}
+            <div className="corp-card rounded-lg p-6 mb-6">
+              <h2 className="corp-section-title text-lg font-semibold mb-4">Passenger Details</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <dt className="text-sm font-medium opacity-70">Full Name</dt>
+                  <dd className="mt-1 text-sm">{formatPassengerName()}</dd>
+                </div>
+                {passenger.alias && (
+                  <div>
+                    <dt className="text-sm font-medium opacity-70">Alias / Nickname</dt>
+                    <dd className="mt-1 text-sm">{passenger.alias}</dd>
+                  </div>
+                )}
+                {passenger.referToAs && (
+                  <div>
+                    <dt className="text-sm font-medium opacity-70">Refer To As</dt>
+                    <dd className="mt-1 text-sm">{passenger.referToAs}</dd>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* View Mode - Contact Information */}
+            {(passenger.email || passenger.phone) && (
+              <div className="corp-card rounded-lg p-6 mb-6">
+                <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {passenger.email && (
+                    <div>
+                      <dt className="text-sm font-medium opacity-70">Email</dt>
+                      <dd className="mt-1 text-sm">{passenger.email}</dd>
+                    </div>
+                  )}
+                  {passenger.phone && (
+                    <div>
+                      <dt className="text-sm font-medium opacity-70">Phone</dt>
+                      <dd className="mt-1 text-sm">{passenger.phone}</dd>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* View Mode - Preferences */}
+            {(passenger.refreshments || passenger.driverInstructions || passenger.bookerNotes) && (
+              <div className="corp-card rounded-lg p-6 mb-6">
+                <h2 className="corp-section-title text-lg font-semibold mb-4">Preferences</h2>
+                <div className="space-y-4">
+                  {passenger.refreshments && (
+                    <div>
+                      <dt className="text-sm font-medium opacity-70 mb-2">Refreshment Preferences</dt>
+                      <dd className="flex flex-wrap gap-2">
+                        {passenger.refreshments.stillWater && <span className="corp-badge corp-badge-success text-xs">Still Water</span>}
+                        {passenger.refreshments.sparklingWater && <span className="corp-badge corp-badge-success text-xs">Sparkling Water</span>}
+                        {passenger.refreshments.tea && <span className="corp-badge corp-badge-success text-xs">Tea</span>}
+                        {passenger.refreshments.coffee && <span className="corp-badge corp-badge-success text-xs">Coffee</span>}
+                        {passenger.refreshments.other && <span className="corp-badge corp-badge-success text-xs">{passenger.refreshments.other}</span>}
+                      </dd>
+                    </div>
+                  )}
+                  {passenger.driverInstructions && (
+                    <div>
+                      <dt className="text-sm font-medium opacity-70 mb-1">Driver Instructions</dt>
+                      <dd className="text-sm whitespace-pre-wrap">{passenger.driverInstructions}</dd>
+                    </div>
+                  )}
+                  {passenger.bookerNotes && (
+                    <div>
+                      <dt className="text-sm font-medium opacity-70 mb-1">Booker Notes</dt>
+                      <dd className="text-sm whitespace-pre-wrap">{passenger.bookerNotes}</dd>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Journey History */}
         <div className="corp-card rounded-lg">
