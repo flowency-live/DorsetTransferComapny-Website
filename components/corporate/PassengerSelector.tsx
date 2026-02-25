@@ -71,20 +71,16 @@ export default function PassengerSelector({
     fetchPassengers();
   }, [fetchPassengers]);
 
-  // Debounced search
+  // Debounced search - only triggers when searchQuery changes, not when dropdown opens
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || searchQuery === '') return;
 
     const timer = setTimeout(() => {
-      if (searchQuery) {
-        fetchPassengers(searchQuery);
-      } else {
-        fetchPassengers();
-      }
+      fetchPassengers(searchQuery);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, isOpen, fetchPassengers]);
+  }, [searchQuery, fetchPassengers, isOpen]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -233,7 +229,7 @@ export default function PassengerSelector({
 
       {/* Dropdown */}
       {isOpen && !selectedPassenger && (
-        <div className="absolute z-50 mt-1 w-full corp-card border border-[var(--corp-border-default)] rounded-lg shadow-lg max-h-64 overflow-auto">
+        <div className="absolute z-50 mt-1 w-full bg-[var(--corp-bg-secondary)] border-2 border-[var(--corp-accent)] rounded-lg max-h-64 overflow-auto shadow-[0_4px_20px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)]">
           {isLoading ? (
             <div className="p-4 text-center">
               <div className="corp-loading-spinner h-5 w-5 border-2 rounded-full animate-spin mx-auto" />
