@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, MapPin, Calendar, Users, Briefcase, Car, CreditCard, Clock, Plane, Train, FileText } from 'lucide-react';
+import { X, MapPin, Calendar, Users, Briefcase, Car, CreditCard, Clock, Plane, Train, FileText, Activity, CheckCircle, AlertCircle, XCircle, PlusCircle } from 'lucide-react';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { getTenantHeaders } from '@/lib/config/tenant';
 
@@ -91,10 +91,80 @@ function getStatusColor(status: string): string {
   }
 }
 
+type TabType = 'details' | 'activity';
+
+interface ActivityEvent {
+  type: 'created' | 'confirmed' | 'status_change' | 'modified' | 'cancelled' | 'completed';
+  timestamp: string;
+  description: string;
+  details?: string;
+}
+
+function getActivityIcon(type: ActivityEvent['type']) {
+  switch (type) {
+    case 'created':
+      return <PlusCircle className="w-4 h-4 text-[var(--corp-accent)]" />;
+    case 'confirmed':
+      return <CheckCircle className="w-4 h-4 text-[var(--corp-success)]" />;
+    case 'completed':
+      return <CheckCircle className="w-4 h-4 text-[var(--corp-info)]" />;
+    case 'cancelled':
+      return <XCircle className="w-4 h-4 text-[var(--corp-error)]" />;
+    case 'modified':
+      return <AlertCircle className="w-4 h-4 text-[var(--corp-warning)]" />;
+    default:
+      return <Activity className="w-4 h-4 text-[var(--corp-text-secondary)]" />;
+  }
+}
+
+function generateActivityEvents(booking: BookingData): ActivityEvent[] {
+  const events: ActivityEvent[] = [];
+
+  // Booking created event - always present
+  events.push({
+    type: 'created',
+    timestamp: booking.createdAt,
+    description: 'Booking created',
+    details: `${booking.journeyType === 'round-trip' ? 'Return' : booking.journeyType === 'by-the-hour' ? 'Hourly' : 'One-way'} transfer for ${booking.passengers} passenger${booking.passengers > 1 ? 's' : ''}`,
+  });
+
+  // Status-based events (future: these will come from statusHistory array)
+  if (booking.status === 'confirmed') {
+    events.push({
+      type: 'confirmed',
+      timestamp: booking.createdAt, // TODO: Replace with actual confirmation timestamp from statusHistory
+      description: 'Booking confirmed',
+      details: 'Your booking has been confirmed',
+    });
+  } else if (booking.status === 'completed') {
+    events.push({
+      type: 'confirmed',
+      timestamp: booking.createdAt,
+      description: 'Booking confirmed',
+    });
+    events.push({
+      type: 'completed',
+      timestamp: booking.pickupTime, // TODO: Replace with actual completion timestamp
+      description: 'Journey completed',
+      details: 'Thank you for travelling with us',
+    });
+  } else if (booking.status === 'cancelled') {
+    events.push({
+      type: 'cancelled',
+      timestamp: booking.createdAt, // TODO: Replace with actual cancellation timestamp
+      description: 'Booking cancelled',
+    });
+  }
+
+  // Sort by timestamp descending (most recent first)
+  return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
 export default function BookingDetailsModal({ bookingId, magicToken, onClose, onEdit, onCancel }: Props) {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>('details');
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -164,8 +234,36 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
           </button>
         </div>
 
+        {/* Tabs */}
+        {booking && !loading && !error && (
+          <div className="flex border-b corp-border bg-[var(--corp-bg-surface)]">
+            <button
+              onClick={() => setActiveTab('details')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'details'
+                  ? 'text-[var(--corp-accent)] border-b-2 border-[var(--corp-accent)] bg-[var(--corp-bg-elevated)]'
+                  : 'corp-page-subtitle hover:text-[var(--corp-text-primary)] hover:bg-[var(--corp-bg-hover)]'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              Details
+            </button>
+            <button
+              onClick={() => setActiveTab('activity')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'activity'
+                  ? 'text-[var(--corp-accent)] border-b-2 border-[var(--corp-accent)] bg-[var(--corp-bg-elevated)]'
+                  : 'corp-page-subtitle hover:text-[var(--corp-text-primary)] hover:bg-[var(--corp-bg-hover)]'
+              }`}
+            >
+              <Activity className="w-4 h-4" />
+              Activity
+            </button>
+          </div>
+        )}
+
         {/* Content - scrollable */}
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 180px)' }}>
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 220px)' }}>
           {loading && (
             <div className="text-center py-12">
               <div className="corp-loading-spinner w-10 h-10 border-4 rounded-full animate-spin mx-auto" />
@@ -184,7 +282,7 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
             </div>
           )}
 
-          {booking && !loading && !error && (
+          {booking && !loading && !error && activeTab === 'details' && (
             <div className="space-y-6">
               {/* Status */}
               <div className="flex items-center justify-between p-4 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border">
@@ -347,6 +445,57 @@ export default function BookingDetailsModal({ bookingId, magicToken, onClose, on
                 <span className="text-xl font-bold text-[var(--corp-accent)]">
                   {formatPrice(booking.pricing?.totalPrice || 0)}
                 </span>
+              </div>
+            </div>
+          )}
+
+          {/* Activity Tab */}
+          {booking && !loading && !error && activeTab === 'activity' && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="w-5 h-5 text-[var(--corp-accent)]" />
+                <h3 className="font-medium">Booking Activity</h3>
+              </div>
+
+              {/* Activity Timeline */}
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-[var(--corp-border-default)]" />
+
+                {/* Activity Events */}
+                <div className="space-y-4">
+                  {generateActivityEvents(booking).map((event, index) => (
+                    <div key={index} className="relative flex gap-4">
+                      {/* Icon with background */}
+                      <div className="relative z-10 flex-shrink-0 w-8 h-8 rounded-full bg-[var(--corp-bg-surface)] border-2 corp-border flex items-center justify-center">
+                        {getActivityIcon(event.type)}
+                      </div>
+
+                      {/* Event content */}
+                      <div className="flex-1 p-3 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-sm">{event.description}</p>
+                          <span className="text-xs corp-page-subtitle whitespace-nowrap">
+                            {formatDate(event.timestamp)}
+                          </span>
+                        </div>
+                        {event.details && (
+                          <p className="text-sm corp-page-subtitle mt-1">{event.details}</p>
+                        )}
+                        <p className="text-xs corp-page-subtitle mt-2">
+                          {formatTime(event.timestamp)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Future status updates note */}
+              <div className="mt-6 p-4 rounded-lg bg-[var(--corp-bg-elevated)] border corp-border border-dashed">
+                <p className="text-sm corp-page-subtitle text-center">
+                  Status updates will appear here when your booking is being fulfilled
+                </p>
               </div>
             </div>
           )}
