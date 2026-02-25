@@ -77,16 +77,10 @@ export default function PassengersPage() {
   };
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle="Passengers">
       <div className="max-w-6xl mx-auto">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="corp-page-title text-2xl font-bold">Passenger Directory</h1>
-            <p className="corp-page-subtitle mt-1">
-              Manage your frequent passengers for faster bookings
-            </p>
-          </div>
+        {/* Actions Row */}
+        <div className="flex justify-end mb-6">
           <Link
             href="/corporate/passengers/new"
             className="corp-btn corp-btn-primary inline-flex items-center justify-center px-4 py-2 rounded-full text-sm font-medium"

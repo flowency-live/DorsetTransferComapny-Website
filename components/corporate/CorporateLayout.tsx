@@ -7,9 +7,10 @@ import CorporateNav from './CorporateNav';
 interface CorporateLayoutProps {
   children: ReactNode;
   pageTitle?: string;
+  welcomeMessage?: string;
 }
 
-export default function CorporateLayout({ children, pageTitle }: CorporateLayoutProps) {
+export default function CorporateLayout({ children, pageTitle, welcomeMessage }: CorporateLayoutProps) {
   const { user, isLoading, isAdmin, logout } = useRequireCorporateAuth();
   const [navOpen, setNavOpen] = useState(false);
 
@@ -35,16 +36,24 @@ export default function CorporateLayout({ children, pageTitle }: CorporateLayout
       />
 
       {/* Main Content Area */}
-      <main className="lg:ml-64 min-h-screen">
-        {/* Page Header (optional) */}
-        {pageTitle && (
-          <header className="corp-page-header h-16 flex items-center px-6 border-b lg:pl-6 pl-16">
-            <h1 className="text-xl font-semibold">{pageTitle}</h1>
-          </header>
-        )}
+      <main className="lg:ml-64 min-h-screen flex flex-col">
+        {/* Fixed Header Bar - matches public site style */}
+        <header className="corp-main-header h-20 flex items-center px-6 lg:pl-6 pl-16 shadow-sm">
+          <div className="flex-1">
+            {welcomeMessage ? (
+              <h1 className="text-xl font-semibold corp-header-title">{welcomeMessage}</h1>
+            ) : pageTitle ? (
+              <h1 className="text-xl font-semibold corp-header-title">{pageTitle}</h1>
+            ) : (
+              <span className="corp-header-subtitle text-sm">Corporate Portal</span>
+            )}
+          </div>
+        </header>
+        {/* Sage accent bar - matches public site header */}
+        <div className="h-1 bg-sage-light flex-shrink-0" />
 
         {/* Page Content */}
-        <div className="p-6">
+        <div className="flex-1 p-6">
           {children}
         </div>
       </main>

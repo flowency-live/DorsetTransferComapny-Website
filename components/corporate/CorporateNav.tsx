@@ -161,19 +161,21 @@ export default function CorporateNav({
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        {/* Logo */}
-        <div className="corp-sidebar-header flex items-center justify-center h-20 px-4 border-b">
+        {/* Logo - matching public site header height and logo size */}
+        <div className="corp-sidebar-header flex items-center justify-center h-20 px-4">
           <Link href="/corporate/dashboard" onClick={onClose}>
             <Image
               src="/dtc-letterhead-logo.png"
               alt="The Dorset Transfer Company"
-              width={160}
-              height={48}
-              className="h-10 w-auto"
+              width={200}
+              height={56}
+              className="h-14 w-auto"
               priority
             />
           </Link>
         </div>
+        {/* Sage accent bar - matches public site header */}
+        <div className="h-1 bg-sage-light" />
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto px-3 py-6">

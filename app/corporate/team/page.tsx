@@ -135,20 +135,14 @@ export default function CorporateTeamPage() {
   };
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle="Team Management">
       <div className="max-w-6xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="corp-badge corp-badge-admin">
-              <UserCog className="w-4 h-4 mr-1 inline" />
-              Admin Only
-            </div>
+        {/* Admin Badge */}
+        <div className="mb-6">
+          <div className="corp-badge corp-badge-admin inline-flex">
+            <UserCog className="w-4 h-4 mr-1 inline" />
+            Admin Only
           </div>
-          <h1 className="corp-page-title text-2xl font-bold">Team Members</h1>
-          <p className="corp-page-subtitle mt-1">
-            Manage who can book transfers on behalf of your company
-          </p>
         </div>
 
         {/* Team Members Card */}

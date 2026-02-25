@@ -175,15 +175,8 @@ export default function PreferencesPage() {
   };
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle="Account Preferences">
       <div className="max-w-3xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="corp-page-title text-2xl font-bold">Account Preferences</h1>
-          <p className="corp-page-subtitle mt-1">
-            Customise name boards, default refreshments, and driver instructions
-          </p>
-        </div>
 
         {isLoading ? (
           <div className="corp-card rounded-lg p-6">

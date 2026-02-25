@@ -993,7 +993,7 @@ function CorporateQuotePageContent() {
   };
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle="Book a Transfer">
       <div className="max-w-6xl mx-auto">
         {renderContent()}
       </div>

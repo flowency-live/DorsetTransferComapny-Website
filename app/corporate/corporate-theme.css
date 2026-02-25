@@ -172,11 +172,16 @@
 }
 
 .corp-nav-header {
-  height: var(--corp-header-height);
+  height: 80px; /* Match public site header h-20 */
   padding: 0 var(--corp-space-5);
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--corp-border-subtle);
+}
+
+/* Sidebar header in corporate layout */
+.corp-sidebar-header {
+  background: var(--corp-bg-nav);
+  transition: background-color var(--corp-transition-slow);
 }
 
 .corp-nav-logo {
@@ -292,6 +297,23 @@
   display: flex;
   align-items: center;
   gap: var(--corp-space-3);
+}
+
+/* Main Content Header - matches public site header style */
+.corp-main-header {
+  background: var(--corp-bg-secondary);
+  transition: background-color var(--corp-transition-slow);
+}
+
+.corp-main-header .corp-header-title {
+  font-size: var(--corp-text-xl);
+  font-weight: 600;
+  color: var(--corp-text-primary);
+}
+
+.corp-main-header .corp-header-subtitle {
+  font-size: var(--corp-text-sm);
+  color: var(--corp-text-muted);
 }
 
 .corp-mobile-menu-btn {

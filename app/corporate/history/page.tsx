@@ -74,22 +74,8 @@ export default function BookingHistoryPage() {
   const uniqueStatuses = ['all', ...Array.from(new Set(bookings.map(b => b.status)))];
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle="Booking History">
       <div className="max-w-6xl mx-auto">
-        {/* Page Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="corp-icon-wrapper p-2 rounded-lg">
-              <History className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="corp-page-title text-2xl font-bold">Booking History</h1>
-              <p className="corp-page-subtitle text-sm">
-                View all bookings made by your company
-              </p>
-            </div>
-          </div>
-        </div>
 
         {/* Search & Filters */}
         <div className="corp-card p-4 mb-6 rounded-lg">

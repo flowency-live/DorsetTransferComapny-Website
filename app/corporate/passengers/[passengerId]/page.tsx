@@ -259,7 +259,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
 
   if (isLoading || !passenger) {
     return (
-      <CorporateLayout>
+      <CorporateLayout pageTitle="Loading...">
         <div className="flex items-center justify-center py-12">
           <div className="corp-loading-spinner w-8 h-8 border-4 rounded-full animate-spin" />
         </div>
@@ -268,16 +268,15 @@ export default function PassengerDetailPage({ params }: PageProps) {
   }
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle={formatPassengerName()}>
       <div className="max-w-4xl mx-auto">
-        {/* Page Header */}
+        {/* Page Subheader with Alias */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
             <div className="corp-user-avatar h-12 w-12 rounded-full flex items-center justify-center">
               <User className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="corp-page-title text-2xl font-bold">{formatPassengerName()}</h1>
               {passenger.alias && (
                 <p className="corp-page-subtitle text-sm">&ldquo;{passenger.alias}&rdquo;</p>
               )}

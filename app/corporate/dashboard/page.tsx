@@ -62,18 +62,8 @@ export default function CorporateDashboardPage() {
   }, [user]);
 
   return (
-    <CorporateLayout>
+    <CorporateLayout welcomeMessage={`Welcome back, ${user?.name || 'Guest'}`}>
       <div className="max-w-6xl mx-auto">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="corp-page-title text-2xl font-bold">
-            Welcome back, {user?.name}
-          </h1>
-          <p className="corp-page-subtitle mt-1">
-            Manage your corporate transfers and team
-          </p>
-        </div>
-
         {/* Stats Grid - 3 columns */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="corp-card corp-stat-card p-5">

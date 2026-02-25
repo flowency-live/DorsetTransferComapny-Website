@@ -136,7 +136,7 @@ export default function TripsManagementPage() {
   };
 
   return (
-    <CorporateLayout>
+    <CorporateLayout pageTitle="Favourite Trips">
       <div className="max-w-6xl mx-auto">
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
