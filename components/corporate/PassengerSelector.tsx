@@ -143,7 +143,12 @@ export default function PassengerSelector({
   const handleManualEntry = () => {
     setUseManualEntry(true);
     onSelect(null);
+    // Transfer the search query to manual name if user typed something
+    if (searchQuery.trim()) {
+      onManualNameChange?.(searchQuery);
+    }
     setIsOpen(false);
+    setSearchQuery('');
     // Focus the manual input after a short delay
     setTimeout(() => inputRef.current?.focus(), 50);
   };

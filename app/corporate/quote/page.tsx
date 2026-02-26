@@ -1,33 +1,30 @@
 'use client';
 
-import { ArrowLeft, Heart, X, UserPlus } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowLeft, Heart, UserPlus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback } from 'react';
 
+import BookingConfirmationModal from '@/components/corporate/BookingConfirmationModal';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 import PassengerSelector, { SelectedPassenger } from '@/components/corporate/PassengerSelector';
-import PreferencesReviewStep, { BookingPreferences } from '@/components/corporate/PreferencesReviewStep';
 import SavePassengerModal from '@/components/corporate/SavePassengerModal';
 import SaveTripModal from '@/components/corporate/SaveTripModal';
 import { Button } from '@/components/ui/button';
-import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
-import { getCompany, getFavouriteTrips, markTripUsed, FavouriteTrip, getPassenger, type Passenger } from '@/lib/services/corporateApi';
+import { getCompany, getFavouriteTrips, markTripUsed, FavouriteTrip, getPassenger } from '@/lib/services/corporateApi';
 
 // Reuse components from public quote flow
 import AllInputsStep from '../../quote/components/AllInputsStep';
 import BookingConfirmation from '../../quote/components/BookingConfirmation';
-import ContactDetailsForm, { ContactDetails } from '../../quote/components/ContactDetailsForm';
+import { ContactDetails } from '../../quote/components/ContactDetailsForm';
 import LoadingState from '../../quote/components/LoadingState';
-import PaymentForm, { PaymentDetails } from '../../quote/components/PaymentForm';
 import QuoteResult from '../../quote/components/QuoteResult';
 import VehicleComparisonGrid from '../../quote/components/VehicleComparisonGrid';
 import { calculateMultiVehicleQuote, saveQuote } from '../../quote/lib/api';
 import { Extras, JourneyType, QuoteResponse, Location, Waypoint, MultiVehicleQuoteResponse } from '../../quote/lib/types';
 
 type Step = 1 | 2;
-type BookingStage = 'quote' | 'contact' | 'preferences' | 'payment' | 'confirmation';
+type BookingStage = 'quote' | 'confirmation';
 
 interface CompanyData {
   companyName: string;
@@ -110,12 +107,9 @@ function CorporateQuotePageContent() {
   // Booking flow state
   const [bookingStage, setBookingStage] = useState<BookingStage>('quote');
   const [contactDetails, setContactDetails] = useState<ContactDetails | null>(null);
-  const [bookingPreferences, setBookingPreferences] = useState<BookingPreferences | null>(null);
-  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
   const [bookingId, setBookingId] = useState<string>('');
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
   const [magicToken, setMagicToken] = useState<string | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   // Fetch company data on mount
   useEffect(() => {
@@ -357,9 +351,9 @@ function CorporateQuotePageContent() {
             setQuote({ ...quoteData, quoteId: savedQuote.quoteId });
             setMagicToken(savedQuote.token);
 
-            // Skip to contact stage
+            // Open confirmation modal for instant booking
             setCurrentStep(2);
-            setBookingStage('contact');
+            setShowConfirmationModal(true);
           }
         }
       } catch (err) {
@@ -385,16 +379,21 @@ function CorporateQuotePageContent() {
     user?.corpAccountId,
   ]);
 
-  // Pre-fill contact details from user profile
+  // Pre-fill contact details from user profile when no passenger is selected
   useEffect(() => {
-    if (user && !contactDetails) {
+    // Only pre-fill from user if:
+    // 1. User is logged in
+    // 2. No passenger is selected
+    // 3. No manual passenger name entered
+    // 4. Contact details are empty/null
+    if (user && !selectedPassenger && !manualPassengerName && !contactDetails) {
       setContactDetails({
         name: user.name,
         email: user.email,
-        phone: '', // User may need to add phone
+        phone: '', // Phone not available in user profile yet
       });
     }
-  }, [user, contactDetails]);
+  }, [user, selectedPassenger, manualPassengerName, contactDetails]);
 
   // Validation for Step 1
   const canProceedFromStep1 = () => {
@@ -579,123 +578,29 @@ function CorporateQuotePageContent() {
     setMultiQuote(null);
     setError(null);
     setBookingStage('quote');
-    setPaymentDetails(null);
     setBookingId('');
     setMagicToken(null);
+    setShowConfirmationModal(false);
   };
 
   // Booking flow handlers
   const handleConfirmBooking = () => {
-    setBookingStage('contact');
+    // Open the confirmation modal instead of multi-step flow
+    setShowConfirmationModal(true);
   };
 
-  const handleContactSubmit = (details: ContactDetails) => {
-    setContactDetails(details);
-    // Go to preferences review step
-    setBookingStage('preferences');
-  };
+  // Called when booking is confirmed via modal
+  const handleBookingConfirmed = (newBookingId: string) => {
+    setBookingId(newBookingId);
+    setShowConfirmationModal(false);
+    setBookingStage('confirmation');
 
-  const handlePreferencesBack = () => {
-    setBookingStage('contact');
-  };
-
-  const handlePreferencesContinue = () => {
-    // Check payment terms - skip payment if on account
-    const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
-
-    if (isPayOnAccount && contactDetails) {
-      // Skip payment, go straight to creating the booking
-      handleCreateBooking(contactDetails);
-    } else {
-      setBookingStage('payment');
+    // Mark trip as used if loaded from favourite
+    if (loadedTrip) {
+      markTripUsed(loadedTrip.tripId).catch(console.error);
     }
   };
 
-  const handleContactBack = () => {
-    setBookingStage('quote');
-  };
-
-  const handlePaymentSubmit = async (details: PaymentDetails) => {
-    setPaymentDetails(details);
-    await handleCreateBooking(contactDetails!);
-  };
-
-  const handleCreateBooking = async (contact: ContactDetails) => {
-    setBookingLoading(true);
-    setBookingError(null);
-
-    try {
-      if (!quote) {
-        throw new Error('Missing quote');
-      }
-
-      // CRITICAL: Ensure magicToken is available for booking
-      if (!magicToken || !quote.quoteId) {
-        throw new Error('Quote session expired. Please start a new quote.');
-      }
-
-      // CRITICAL: Ensure corporate account ID is available
-      if (!user?.corpAccountId) {
-        console.error('Corporate booking failed: corpAccountId is missing from user object', { user });
-        throw new Error('Session error: Please log out and log back in to complete your booking');
-      }
-
-      const isPayOnAccount = company?.paymentTerms && company.paymentTerms !== 'immediate';
-
-      const bookingData = {
-        quoteId: quote.quoteId,
-        magicToken: magicToken,
-        customerName: contact.name,
-        customerEmail: contact.email,
-        customerPhone: contact.phone,
-        // Corporate-specific fields
-        corporateAccountId: user.corpAccountId,
-        passengerName: selectedPassenger?.displayName || manualPassengerName || contact.name,
-        passengerId: selectedPassenger?.passengerId || undefined,
-        bookedBy: user?.email,
-        // Passenger preferences - use bookingPreferences (from PreferencesReviewStep) if available,
-        // fall back to selectedPassenger values (from directory)
-        passengerAlias: selectedPassenger?.alias || undefined,
-        passengerDriverInstructions:
-          bookingPreferences?.driverInstructions ||
-          selectedPassenger?.driverInstructions ||
-          undefined,
-        passengerRefreshments:
-          bookingPreferences?.refreshments ||
-          selectedPassenger?.refreshments ||
-          undefined,
-        // Payment
-        paymentMethod: isPayOnAccount ? 'invoice' : 'card',
-        specialRequests: specialRequests || '',
-      };
-
-      const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.bookings}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(bookingData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to create booking');
-      }
-
-      const data = await response.json();
-      setBookingId(data.booking.bookingId);
-      setBookingStage('confirmation');
-    } catch (err) {
-      console.error('Booking error:', err);
-      setBookingError(err instanceof Error ? err.message : 'Failed to create booking');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
-
-  const handlePaymentBack = () => {
-    setBookingStage('contact');
-  };
 
   // Render content based on booking stage
   const renderContent = () => {
@@ -723,13 +628,20 @@ function CorporateQuotePageContent() {
       );
     }
 
-    // Booking confirmation
-    if (bookingStage === 'confirmation' && quote && contactDetails && bookingId) {
+    // Booking confirmation (after modal completes booking)
+    if (bookingStage === 'confirmation' && quote && bookingId) {
+      // Create contactDetails for BookingConfirmation from available data
+      const confirmationContactDetails = contactDetails || {
+        name: selectedPassenger?.displayName || manualPassengerName || user?.name || '',
+        email: selectedPassenger?.email || user?.email || '',
+        phone: selectedPassenger?.phone || '',
+      };
+
       return (
         <div className="max-w-2xl mx-auto">
           <BookingConfirmation
             quote={quote}
-            contactDetails={contactDetails}
+            contactDetails={confirmationContactDetails}
             bookingId={bookingId}
             specialRequests={specialRequests}
             returnUrl="/corporate/dashboard"
@@ -754,13 +666,13 @@ function CorporateQuotePageContent() {
           )}
 
           {/* Save Passenger Option - only show if passenger was entered manually (not from directory) */}
-          {!selectedPassenger && (manualPassengerName || contactDetails.name !== user?.name) && (
+          {!selectedPassenger && manualPassengerName && (
             <div className="mt-4 p-4 corp-card rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Save passenger for future bookings?</p>
                   <p className="text-xs corp-page-subtitle mt-0.5">
-                    Add {manualPassengerName || contactDetails.name} to your passenger directory
+                    Add {manualPassengerName} to your passenger directory
                   </p>
                 </div>
                 <button
@@ -781,9 +693,9 @@ function CorporateQuotePageContent() {
               console.log('Passenger saved to directory');
             }}
             initialData={{
-              name: manualPassengerName || contactDetails.name,
-              email: contactDetails.email,
-              phone: contactDetails.phone,
+              name: manualPassengerName || confirmationContactDetails.name,
+              email: confirmationContactDetails.email,
+              phone: confirmationContactDetails.phone,
             }}
           />
 
@@ -825,153 +737,6 @@ function CorporateQuotePageContent() {
       );
     }
 
-    // Payment form (only for immediate payment accounts)
-    if (bookingStage === 'payment' && quote && contactDetails) {
-      return (
-        <div className="max-w-2xl mx-auto">
-          {/* Show loading state */}
-          {bookingLoading && (
-            <div className="mb-4 p-4 bg-[var(--corp-bg-hover)] rounded-lg text-center">
-              <div className="corp-loading-spinner h-5 w-5 border-2 rounded-full mx-auto mb-2 animate-spin" />
-              <p className="text-sm">Processing payment...</p>
-            </div>
-          )}
-
-          {/* Show error state */}
-          {bookingError && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {bookingError}
-            </div>
-          )}
-
-          <PaymentForm
-            onSubmit={(details) => {
-              handlePaymentSubmit(details);
-            }}
-            onBack={handlePaymentBack}
-          />
-        </div>
-      );
-    }
-
-    // Contact details form
-    if (bookingStage === 'contact' && quote) {
-      // Check if passenger has contact info - if so, show simplified view
-      const passengerHasContactInfo = selectedPassenger && selectedPassenger.email && selectedPassenger.phone;
-
-      return (
-        <div className="max-w-2xl mx-auto">
-          {/* Simplified view when passenger has full contact info */}
-          {passengerHasContactInfo ? (
-            <div className="corp-card rounded-lg shadow-sm p-6">
-              <h2 className="text-lg font-semibold mb-4">Confirm Passenger Details</h2>
-
-              <div className="space-y-4">
-                <div className="p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)] rounded-lg">
-                  <p className="text-sm font-medium corp-page-subtitle mb-1">Passenger</p>
-                  <p className="font-medium text-lg">{selectedPassenger.displayName}</p>
-                  {selectedPassenger.alias && (
-                    <p className="text-sm corp-page-subtitle">&ldquo;{selectedPassenger.alias}&rdquo;</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium corp-page-subtitle mb-1">Email</p>
-                    <p>{selectedPassenger.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium corp-page-subtitle mb-1">Phone</p>
-                    <p>{selectedPassenger.phone}</p>
-                  </div>
-                </div>
-
-                {selectedPassenger.driverInstructions && (
-                  <div>
-                    <p className="text-sm font-medium corp-page-subtitle mb-1">Driver Instructions</p>
-                    <p className="text-sm">{selectedPassenger.driverInstructions}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleContactBack}
-                  className="corp-btn corp-btn-secondary flex-1 px-4 py-3 rounded-lg font-medium"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleContactSubmit({
-                    name: selectedPassenger.displayName,
-                    email: selectedPassenger.email!,
-                    phone: selectedPassenger.phone!,
-                  })}
-                  className="corp-btn corp-btn-primary flex-1 px-4 py-3 rounded-lg font-medium"
-                >
-                  Continue to Preferences
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* Full form when no passenger selected or passenger missing contact info */
-            <>
-              {/* Show selected passenger summary if present but missing contact info */}
-              {(selectedPassenger || manualPassengerName) && (
-                <div className="mb-6 p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-accent)] rounded-lg">
-                  <p className="text-sm font-medium corp-page-subtitle mb-1">Booking for:</p>
-                  <p className="font-medium">
-                    {selectedPassenger?.displayName || manualPassengerName}
-                  </p>
-                  {selectedPassenger && !selectedPassenger.email && !selectedPassenger.phone && (
-                    <p className="text-xs text-[var(--corp-warning)] mt-1">Please enter contact details below</p>
-                  )}
-                </div>
-              )}
-
-              <ContactDetailsForm
-                onSubmit={handleContactSubmit}
-                onBack={handleContactBack}
-                initialValues={contactDetails || undefined}
-                submitLabel="Continue to Preferences"
-                isCorporate={true}
-                passengerName={selectedPassenger?.displayName || manualPassengerName}
-              />
-            </>
-          )}
-
-          {isPayOnAccount && (
-            <div className="mt-4 p-3 bg-[var(--corp-info-bg)] border border-[var(--corp-info)] rounded-lg">
-              <p className="text-sm text-[var(--corp-info)]">
-                <span className="font-medium">Payment on Account:</span> No payment required at checkout. This booking will be invoiced to your company.
-              </p>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // Preferences review step
-    if (bookingStage === 'preferences' && quote && contactDetails) {
-      return (
-        <PreferencesReviewStep
-          passengerName={selectedPassenger?.displayName || manualPassengerName || contactDetails.name}
-          passengerPreferences={selectedPassenger ? {
-            refreshments: selectedPassenger.refreshments,
-            driverInstructions: selectedPassenger.driverInstructions,
-          } : undefined}
-          accountDefaults={undefined}
-          specialRequests={specialRequests}
-          onSpecialRequestsChange={setSpecialRequests}
-          onPreferencesChange={setBookingPreferences}
-          onBack={handlePreferencesBack}
-          onContinue={handlePreferencesContinue}
-        />
-      );
-    }
-
     // Main quote flow
     return (
       <>
@@ -1007,6 +772,7 @@ function CorporateQuotePageContent() {
               onNewQuote={handleNewQuote}
               onConfirmBooking={handleConfirmBooking}
               specialRequests={specialRequests}
+              hideMap={showSaveTripModal}
             />
 
             {/* Save as Favourite button - only show if not already loaded from a favourite */}
@@ -1132,6 +898,7 @@ function CorporateQuotePageContent() {
               onReturnToPickupChange={setReturnToPickup}
               specialRequests={specialRequests}
               onSpecialRequestsChange={setSpecialRequests}
+              lockedLocations={!!loadedTrip}
             />
 
             {/* Get Prices Button */}
@@ -1215,6 +982,21 @@ function CorporateQuotePageContent() {
       <div className="max-w-6xl mx-auto">
         {renderContent()}
       </div>
+
+      {/* Booking Confirmation Modal - streamlined 2-click booking flow */}
+      {quote && magicToken && user && company && (
+        <BookingConfirmationModal
+          isOpen={showConfirmationModal}
+          onClose={() => setShowConfirmationModal(false)}
+          onConfirm={handleBookingConfirmed}
+          quote={quote}
+          magicToken={magicToken}
+          selectedPassenger={selectedPassenger}
+          manualPassengerName={manualPassengerName}
+          user={user}
+          company={company}
+        />
+      )}
     </CorporateLayout>
   );
 }

@@ -29,9 +29,10 @@ interface QuoteResultProps {
   transportDetails?: TransportDetails;
   specialRequests?: string;
   magicToken?: string;
+  hideMap?: boolean; // Hide map to prevent Leaflet crash when modal is open
 }
 
-export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails, specialRequests, magicToken }: QuoteResultProps) {
+export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBooking, transportDetails, specialRequests, magicToken, hideMap = false }: QuoteResultProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -157,14 +158,16 @@ export default function QuoteResult({ quote, onNewQuote, onBack, onConfirmBookin
                 </div>
               )}
 
-              {/* Route Map */}
-              <MapPreview
-                pickup={quote.pickupLocation}
-                dropoff={quote.dropoffLocation}
-                waypoints={quote.waypoints}
-                pickupTime={new Date(quote.pickupTime)}
-                journey={quote.journey}
-              />
+              {/* Route Map - hidden when modal open to prevent Leaflet crash */}
+              {!hideMap && (
+                <MapPreview
+                  pickup={quote.pickupLocation}
+                  dropoff={quote.dropoffLocation}
+                  waypoints={quote.waypoints}
+                  pickupTime={new Date(quote.pickupTime)}
+                  journey={quote.journey}
+                />
+              )}
             </div>
           </div>
 

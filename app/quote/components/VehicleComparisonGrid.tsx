@@ -45,10 +45,12 @@ export default function VehicleComparisonGrid({
     }
   }, [preferredVehicle, multiQuote.vehicles, passengers]);
 
-  // Scroll to top when vehicle comparison grid appears
+  // Scroll to top when vehicle comparison grid appears (skip for favourite trip instant book)
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+    if (!preferredVehicle) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [preferredVehicle]);
 
   // Check if journey is outside service area
   const isOutOfServiceArea = multiQuote.outOfServiceArea === true;

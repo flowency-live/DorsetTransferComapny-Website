@@ -347,7 +347,7 @@ export async function addTeamMember(data: {
  */
 export async function updateTeamMember(
   userId: string,
-  data: { name?: string; role?: 'admin' | 'booker'; status?: 'active' | 'inactive'; requiresApproval?: boolean }
+  data: { name?: string; phone?: string; role?: 'admin' | 'booker'; status?: 'active' | 'inactive'; requiresApproval?: boolean }
 ): Promise<{ success: boolean; message: string }> {
   return authenticatedFetch(`${API_ENDPOINTS.corporateUsers}/${userId}`, {
     method: 'PUT',

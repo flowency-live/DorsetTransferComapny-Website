@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, CheckCircle, Copy, Plus, UserCog } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Copy, Pencil, Plus, UserCog } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getTeamMembers,
@@ -17,6 +17,7 @@ interface TeamMember {
   userId: string;
   email: string;
   name: string;
+  phone?: string;
   role: 'admin' | 'booker';
   requiresApproval?: boolean;
   status: string;
@@ -38,7 +39,9 @@ export default function CorporateTeamPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newMember, setNewMember] = useState<{ email: string; name: string; role: 'admin' | 'booker'; requiresApproval: boolean }>({ email: '', name: '', role: 'booker', requiresApproval: false });
+  const [newMember, setNewMember] = useState<{ email: string; name: string; phone: string; role: 'admin' | 'booker'; requiresApproval: boolean }>({ email: '', name: '', phone: '', role: 'booker', requiresApproval: false });
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successResult, setSuccessResult] = useState<AddMemberResult | null>(null);
@@ -77,7 +80,7 @@ export default function CorporateTeamPage() {
       if (result.success && result.user) {
         setMembers([...members, result.user]);
         setShowAddModal(false);
-        setNewMember({ email: '', name: '', role: 'booker', requiresApproval: false });
+        setNewMember({ email: '', name: '', phone: '', role: 'booker', requiresApproval: false });
         setSuccessResult(result);
       } else {
         setError(result.message || 'Failed to add team member');
@@ -96,6 +99,38 @@ export default function CorporateTeamPage() {
       showToast('Role updated successfully');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Failed to update role', 'error');
+    }
+  };
+
+  const handleEditClick = (member: TeamMember) => {
+    setEditingMember(member);
+    setShowEditModal(true);
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      await updateTeamMember(editingMember.userId, {
+        name: editingMember.name,
+        phone: editingMember.phone || undefined,
+        role: editingMember.role,
+        requiresApproval: editingMember.requiresApproval,
+      });
+      setMembers(members.map((m) =>
+        m.userId === editingMember.userId ? editingMember : m
+      ));
+      setShowEditModal(false);
+      setEditingMember(null);
+      showToast('Team member updated successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update team member');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -220,6 +255,13 @@ export default function CorporateTeamPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm space-x-3">
                         {member.userId !== user?.userId && (
                           <>
+                            <button
+                              onClick={() => handleEditClick(member)}
+                              className="corp-link font-medium inline-flex items-center gap-1"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              Edit
+                            </button>
                             {member.status === 'pending' && (
                               <button
                                 onClick={() => handleResendInvite(member.userId)}
@@ -281,6 +323,17 @@ export default function CorporateTeamPage() {
                     />
                   </div>
                   <div>
+                    <label htmlFor="phone" className="block text-sm font-medium">Phone Number <span className="opacity-50 font-normal">(optional)</span></label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      value={newMember.phone}
+                      onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
+                      placeholder="+44 7xxx xxx xxx"
+                      className="corp-input mt-1 block w-full px-3 py-2 rounded-lg"
+                    />
+                  </div>
+                  <div>
                     <label htmlFor="role" className="block text-sm font-medium">Role</label>
                     <select
                       id="role"
@@ -336,6 +389,115 @@ export default function CorporateTeamPage() {
                     className="corp-btn corp-btn-primary px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
                   >
                     {isSubmitting ? 'Adding...' : 'Add & Send Invite'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Member Modal */}
+      {showEditModal && editingMember && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black/50 transition-opacity"
+              onClick={() => { setShowEditModal(false); setEditingMember(null); setError(''); }}
+            />
+            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-4">Edit Team Member</h3>
+              <form onSubmit={handleEditSave}>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="edit-name" className="block text-sm font-medium">Name</label>
+                    <input
+                      type="text"
+                      id="edit-name"
+                      required
+                      value={editingMember.name}
+                      onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                      className="corp-input mt-1 block w-full px-3 py-2 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-email" className="block text-sm font-medium">Email</label>
+                    <input
+                      type="email"
+                      id="edit-email"
+                      disabled
+                      value={editingMember.email}
+                      className="corp-input mt-1 block w-full px-3 py-2 rounded-lg opacity-50 cursor-not-allowed"
+                    />
+                    <p className="text-xs opacity-50 mt-1">Email cannot be changed</p>
+                  </div>
+                  <div>
+                    <label htmlFor="edit-phone" className="block text-sm font-medium">Phone Number <span className="opacity-50 font-normal">(optional)</span></label>
+                    <input
+                      type="tel"
+                      id="edit-phone"
+                      value={editingMember.phone || ''}
+                      onChange={(e) => setEditingMember({ ...editingMember, phone: e.target.value })}
+                      placeholder="+44 7xxx xxx xxx"
+                      className="corp-input mt-1 block w-full px-3 py-2 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="edit-role" className="block text-sm font-medium">Role</label>
+                    <select
+                      id="edit-role"
+                      value={editingMember.role}
+                      onChange={(e) =>
+                        setEditingMember({ ...editingMember, role: e.target.value as 'admin' | 'booker', requiresApproval: false })
+                      }
+                      className="corp-input mt-1 block w-full px-3 py-2 rounded-lg"
+                    >
+                      <option value="booker">Booker - Can book transfers</option>
+                      <option value="admin">Admin - Full access including team management</option>
+                    </select>
+                  </div>
+
+                  {editingMember.role === 'booker' && (
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5">
+                        <input
+                          id="edit-requiresApproval"
+                          type="checkbox"
+                          checked={editingMember.requiresApproval || false}
+                          onChange={(e) => setEditingMember({ ...editingMember, requiresApproval: e.target.checked })}
+                          className="h-4 w-4 rounded"
+                        />
+                      </div>
+                      <div className="ml-3 text-sm">
+                        <label htmlFor="edit-requiresApproval" className="font-medium">Requires approval</label>
+                        <p className="opacity-70">
+                          Bookings from this user will need admin approval before being confirmed.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="corp-alert corp-alert-error rounded-md p-3">
+                      <p className="text-sm">{error}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setShowEditModal(false); setEditingMember(null); setError(''); }}
+                    className="corp-btn corp-btn-secondary px-4 py-2 text-sm font-medium rounded-full"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="corp-btn corp-btn-primary px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
               </form>

@@ -64,30 +64,6 @@ export default function CorporateDashboardPage() {
   return (
     <CorporateLayout>
       <div className="max-w-6xl mx-auto">
-        {/* Stats Grid - 3 columns */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="corp-card corp-stat-card p-5">
-            <p className="corp-stat-label text-sm font-medium">Team Members</p>
-            <p className="corp-stat-value mt-2 text-3xl font-bold">
-              {isLoading ? '-' : dashboard?.stats.teamMembers || 0}
-            </p>
-          </div>
-          <div className="corp-card corp-stat-card p-5">
-            <p className="corp-stat-label text-sm font-medium">Total Bookings</p>
-            <p className="corp-stat-value mt-2 text-3xl font-bold">
-              {isLoading ? '-' : dashboard?.stats.totalBookings || 0}
-            </p>
-          </div>
-          <div className="corp-card corp-stat-card p-5">
-            <p className="corp-stat-label text-sm font-medium">Account Status</p>
-            <div className="mt-2">
-              <span className={`corp-badge ${dashboard?.company?.status === 'active' ? 'corp-badge-success' : 'corp-badge-neutral'}`}>
-                {isLoading ? '-' : (dashboard?.company?.status || 'active')}
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* Quick Actions Grid */}
         <div className="mb-8">
           <h2 className="corp-section-title text-lg font-semibold mb-4">Quick Actions</h2>
@@ -250,16 +226,14 @@ export default function CorporateDashboardPage() {
                       ))}
                     </tbody>
                   </table>
-                  {dashboard.recentBookings.length > 5 && (
-                    <div className="mt-4 text-center">
-                      <Link
-                        href="/corporate/history"
-                        className="corp-link text-sm font-medium"
-                      >
-                        View all bookings →
-                      </Link>
-                    </div>
-                  )}
+                  <div className="mt-4 text-center">
+                    <Link
+                      href="/corporate/history"
+                      className="corp-link text-sm font-medium"
+                    >
+                      View all bookings →
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">

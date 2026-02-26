@@ -48,6 +48,7 @@ interface AllInputsStepProps {
   onReturnToPickupChange: (value: boolean) => void;
   specialRequests: string;
   onSpecialRequestsChange: (value: string) => void;
+  lockedLocations?: boolean;
 }
 
 export default function AllInputsStep({
@@ -83,6 +84,7 @@ export default function AllInputsStep({
   onReturnToPickupChange,
   specialRequests,
   onSpecialRequestsChange,
+  lockedLocations = false,
 }: AllInputsStepProps) {
   const isHourly = journeyType === 'hourly';
   const isRoundTrip = journeyType === 'round-trip';
