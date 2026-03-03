@@ -1,11 +1,11 @@
 'use client';
 
-import { ArrowLeft, Heart, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback } from 'react';
 
-import BookingConfirmationModal from '@/components/corporate/BookingConfirmationModal';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
+import CorporateQuoteResult from '@/components/corporate/CorporateQuoteResult';
 import PassengerSelector, { SelectedPassenger } from '@/components/corporate/PassengerSelector';
 import SavePassengerModal from '@/components/corporate/SavePassengerModal';
 import SaveTripModal from '@/components/corporate/SaveTripModal';
@@ -18,7 +18,6 @@ import AllInputsStep from '../../quote/components/AllInputsStep';
 import BookingConfirmation from '../../quote/components/BookingConfirmation';
 import { ContactDetails } from '../../quote/components/ContactDetailsForm';
 import LoadingState from '../../quote/components/LoadingState';
-import QuoteResult from '../../quote/components/QuoteResult';
 import VehicleComparisonGrid from '../../quote/components/VehicleComparisonGrid';
 import { calculateMultiVehicleQuote, saveQuote } from '../../quote/lib/api';
 import { Extras, JourneyType, QuoteResponse, Location, Waypoint, MultiVehicleQuoteResponse } from '../../quote/lib/types';
@@ -109,7 +108,6 @@ function CorporateQuotePageContent() {
   const [contactDetails, setContactDetails] = useState<ContactDetails | null>(null);
   const [bookingId, setBookingId] = useState<string>('');
   const [magicToken, setMagicToken] = useState<string | null>(null);
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   // Fetch company data on mount
   useEffect(() => {
@@ -351,9 +349,8 @@ function CorporateQuotePageContent() {
             setQuote({ ...quoteData, quoteId: savedQuote.quoteId });
             setMagicToken(savedQuote.token);
 
-            // Open confirmation modal for instant booking
+            // Go to quote result (now shows inline confirmation)
             setCurrentStep(2);
-            setShowConfirmationModal(true);
           }
         }
       } catch (err) {
@@ -580,19 +577,11 @@ function CorporateQuotePageContent() {
     setBookingStage('quote');
     setBookingId('');
     setMagicToken(null);
-    setShowConfirmationModal(false);
   };
 
-  // Booking flow handlers
-  const handleConfirmBooking = () => {
-    // Open the confirmation modal instead of multi-step flow
-    setShowConfirmationModal(true);
-  };
-
-  // Called when booking is confirmed via modal
+  // Called when booking is confirmed via CorporateQuoteResult
   const handleBookingConfirmed = (newBookingId: string) => {
     setBookingId(newBookingId);
-    setShowConfirmationModal(false);
     setBookingStage('confirmation');
 
     // Mark trip as used if loaded from favourite
@@ -765,41 +754,21 @@ function CorporateQuotePageContent() {
 
         {loadingQuotes || tripLoading ? (
           <LoadingState />
-        ) : quote ? (
-          <div className="max-w-2xl mx-auto">
-            <QuoteResult
-              quote={quote}
-              onNewQuote={handleNewQuote}
-              onConfirmBooking={handleConfirmBooking}
-              specialRequests={specialRequests}
-              hideMap={showSaveTripModal}
-            />
-
-            {/* Save as Favourite button - only show if not already loaded from a favourite */}
-            {!loadedTrip && (
-              <div className="mt-6 p-4 bg-[var(--corp-accent-muted)] border border-[var(--corp-border-default)] rounded-xl">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[var(--corp-bg-hover)] rounded-lg">
-                      <Heart className="h-5 w-5 text-[var(--corp-accent)]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Save this route?</p>
-                      <p className="text-xs corp-page-subtitle">Quick book this trip again anytime</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowSaveTripModal(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--corp-accent)] text-[var(--corp-accent)] font-medium text-sm rounded-lg hover:bg-[var(--corp-accent)] hover:text-white transition-colors"
-                  >
-                    <Heart className="h-4 w-4" />
-                    Save as Favourite
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+        ) : quote && magicToken && user && company ? (
+          <CorporateQuoteResult
+            quote={quote}
+            magicToken={magicToken}
+            onNewQuote={handleNewQuote}
+            onBack={handlePreviousStep}
+            onBookingConfirmed={handleBookingConfirmed}
+            specialRequests={specialRequests}
+            selectedPassenger={selectedPassenger}
+            manualPassengerName={manualPassengerName}
+            user={user}
+            company={company}
+            isFromFavourite={!!loadedTrip}
+            onSaveToFavourites={() => setShowSaveTripModal(true)}
+          />
         ) : currentStep === 2 && multiQuote ? (
           <div className="max-w-4xl mx-auto">
             <div className="mb-4">
@@ -982,21 +951,6 @@ function CorporateQuotePageContent() {
       <div className="max-w-6xl mx-auto">
         {renderContent()}
       </div>
-
-      {/* Booking Confirmation Modal - streamlined 2-click booking flow */}
-      {quote && magicToken && user && company && (
-        <BookingConfirmationModal
-          isOpen={showConfirmationModal}
-          onClose={() => setShowConfirmationModal(false)}
-          onConfirm={handleBookingConfirmed}
-          quote={quote}
-          magicToken={magicToken}
-          selectedPassenger={selectedPassenger}
-          manualPassengerName={manualPassengerName}
-          user={user}
-          company={company}
-        />
-      )}
     </CorporateLayout>
   );
 }
