@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, MoreHorizontal } from 'lucide-react';
+import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -201,6 +201,13 @@ export default function CorporateDashboardPage() {
                                 title="View Details"
                               >
                                 <Eye className="w-4 h-4 corp-icon" />
+                              </Link>
+                              <Link
+                                href={`/corporate/quote?pickupAddress=${encodeURIComponent(booking.pickup)}&dropoffAddress=${encodeURIComponent(booking.dropoff)}`}
+                                className="p-1.5 rounded-md hover:bg-sage/10 transition-colors"
+                                title="Rebook This Trip"
+                              >
+                                <RefreshCcw className="w-4 h-4 corp-icon" />
                               </Link>
                               {booking.status === 'confirmed' && (
                                 <>
