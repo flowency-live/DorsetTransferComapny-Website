@@ -166,12 +166,15 @@ export default function CreateTripModal({
       {/* Modal */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-trip-modal-title"
           className="corp-card rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-5 border-b corp-border bg-[var(--corp-bg-elevated)]">
-            <h2 className="text-xl font-semibold">Create Favourite Trip</h2>
+            <h2 id="create-trip-modal-title" className="text-xl font-semibold">Create Favourite Trip</h2>
             <button
               type="button"
               onClick={onClose}
@@ -203,34 +206,32 @@ export default function CreateTripModal({
 
             {/* Pickup Location */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-[var(--corp-sage)]" />
-                  Pickup Location
-                </div>
-              </label>
+              <div className="flex items-center gap-2 text-sm font-medium mb-2" id="pickup-label">
+                <div className="h-2 w-2 rounded-full bg-[var(--corp-sage)]" aria-hidden="true" />
+                <span>Pickup Location</span>
+              </div>
               <LocationInput
                 value={pickupAddress}
                 onSelect={handlePickupSelect}
                 placeholder="Enter pickup address"
                 hideCurrentLocation={true}
+                aria-labelledby="pickup-label"
               />
             </div>
 
             {/* Dropoff Location */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-3 w-3" />
-                  Drop-off Location
-                </div>
-              </label>
+              <div className="flex items-center gap-2 text-sm font-medium mb-2" id="dropoff-label">
+                <MapPin className="h-3 w-3" aria-hidden="true" />
+                <span>Drop-off Location</span>
+              </div>
               <LocationInput
                 value={dropoffAddress}
                 onSelect={handleDropoffSelect}
                 placeholder="Enter drop-off address"
                 hideCurrentLocation={true}
                 isDropoff={true}
+                aria-labelledby="dropoff-label"
               />
             </div>
 
@@ -305,9 +306,9 @@ export default function CreateTripModal({
               when you create a new booking from this trip.
             </div>
 
-            {/* Error message */}
+            {/* Error message - announced to screen readers */}
             {error && (
-              <div className="corp-alert corp-alert-error">
+              <div className="corp-alert corp-alert-error" role="alert" aria-live="assertive">
                 <p className="text-sm">{error}</p>
               </div>
             )}

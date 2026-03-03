@@ -228,18 +228,19 @@ export default function DateTimePickerMobile({
 
       {/* Time Picker - Hour / Minute / AM-PM (remains on page) */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">
+        <label id="time-label" className="block text-sm font-medium text-foreground">
           Time *
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="group" aria-labelledby="time-label">
           <div className="flex-shrink-0">
-            <Clock className="w-5 h-5 text-muted-foreground" />
+            <Clock className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
           </div>
 
           {/* Hour */}
           <select
             value={getHour12()}
             onChange={(e) => handleTimeChange(parseInt(e.target.value), getMinute(), getAmPm())}
+            aria-label="Hour"
             className="flex-1 px-3 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground text-base cursor-pointer appearance-none text-center"
           >
             {HOURS.map((h) => (
@@ -247,12 +248,13 @@ export default function DateTimePickerMobile({
             ))}
           </select>
 
-          <span className="text-lg font-medium text-muted-foreground">:</span>
+          <span className="text-lg font-medium text-muted-foreground" aria-hidden="true">:</span>
 
           {/* Minute */}
           <select
             value={getMinute()}
             onChange={(e) => handleTimeChange(getHour12(), parseInt(e.target.value), getAmPm())}
+            aria-label="Minute"
             className="flex-1 px-3 py-3 rounded-xl border border-border focus:outline-none focus:ring-2 focus:ring-sage-dark bg-background text-foreground text-base cursor-pointer appearance-none text-center"
           >
             {MINUTES.map((m) => (
@@ -261,9 +263,11 @@ export default function DateTimePickerMobile({
           </select>
 
           {/* AM/PM */}
-          <div className="flex rounded-xl border border-border overflow-hidden">
+          <div className="flex rounded-xl border border-border overflow-hidden" role="radiogroup" aria-label="AM or PM">
             <button
               type="button"
+              role="radio"
+              aria-checked={getAmPm() === 'AM'}
               onClick={() => handleTimeChange(getHour12(), getMinute(), 'AM')}
               className={`px-4 py-3 text-sm font-medium transition-colors ${
                 getAmPm() === 'AM'
@@ -275,6 +279,8 @@ export default function DateTimePickerMobile({
             </button>
             <button
               type="button"
+              role="radio"
+              aria-checked={getAmPm() === 'PM'}
               onClick={() => handleTimeChange(getHour12(), getMinute(), 'PM')}
               className={`px-4 py-3 text-sm font-medium transition-colors ${
                 getAmPm() === 'PM'
@@ -289,7 +295,7 @@ export default function DateTimePickerMobile({
       </div>
 
       {error && (
-        <p className="text-sm text-error">{error}</p>
+        <p className="text-sm text-error" role="alert" aria-live="polite">{error}</p>
       )}
       <p className="text-xs text-muted-foreground">
         Bookings must be made at least 24 hours in advance

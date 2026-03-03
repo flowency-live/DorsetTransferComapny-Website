@@ -202,15 +202,16 @@ export default function PassengerSelector({
           <button
             type="button"
             onClick={handleClear}
+            aria-label="Clear selected passenger"
             className="p-1.5 corp-page-subtitle hover:text-[var(--corp-text-primary)] hover:bg-[var(--corp-bg-hover)] rounded-full transition-colors"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       ) : (
         /* Input Field */
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--corp-text-muted)] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[var(--corp-text-muted)] pointer-events-none" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
@@ -218,15 +219,21 @@ export default function PassengerSelector({
             onChange={handleInputChange}
             onFocus={handleInputFocus}
             placeholder={placeholder}
+            role="combobox"
+            aria-expanded={isOpen}
+            aria-controls="passenger-listbox"
+            aria-haspopup="listbox"
+            aria-autocomplete="list"
             className="corp-input w-full pl-10 pr-4 py-3 rounded-lg"
           />
           {(searchQuery || (useManualEntry && manualName)) && (
             <button
               type="button"
               onClick={handleClear}
+              aria-label="Clear search"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 corp-page-subtitle hover:text-[var(--corp-text-primary)]"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -234,7 +241,12 @@ export default function PassengerSelector({
 
       {/* Dropdown */}
       {isOpen && !selectedPassenger && (
-        <div className="absolute z-50 mt-1 w-full bg-[var(--corp-bg-secondary)] border-2 border-[var(--corp-accent)] rounded-lg max-h-64 overflow-auto shadow-[0_4px_20px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)]">
+        <div
+          id="passenger-listbox"
+          role="listbox"
+          aria-label="Passenger suggestions"
+          className="absolute z-50 mt-1 w-full bg-[var(--corp-bg-secondary)] border-2 border-[var(--corp-accent)] rounded-lg max-h-64 overflow-auto shadow-[0_4px_20px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.05)]"
+        >
           {isLoading ? (
             <div className="p-4 text-center">
               <div className="corp-loading-spinner h-5 w-5 border-2 rounded-full animate-spin mx-auto" />
@@ -248,6 +260,7 @@ export default function PassengerSelector({
                     <button
                       key={passenger.passengerId}
                       type="button"
+                      role="option"
                       onClick={() => handlePassengerSelect(passenger)}
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[var(--corp-bg-hover)] transition-colors"
                     >

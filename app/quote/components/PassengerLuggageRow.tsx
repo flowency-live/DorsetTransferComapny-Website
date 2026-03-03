@@ -23,62 +23,66 @@ export default function PassengerLuggageRow({
     <div className="flex gap-3">
       {/* Passengers */}
       <div className="flex-1">
-        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+        <label id="passengers-label" className="block text-xs font-medium text-muted-foreground mb-1.5">
           Passengers
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="group" aria-labelledby="passengers-label">
           <button
             type="button"
             onClick={() => passengers > 1 && onPassengersChange(passengers - 1)}
             disabled={passengers <= 1}
+            aria-label={`Decrease passengers, currently ${passengers}`}
             className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:border-sage-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-4 h-4" aria-hidden="true" />
           </button>
 
           <div className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-sage-dark bg-sage-dark/5">
-            <Users className="w-4 h-4 text-sage-dark" />
-            <span className="text-lg font-semibold text-foreground">{passengers}</span>
+            <Users className="w-4 h-4 text-sage-dark" aria-hidden="true" />
+            <span className="text-lg font-semibold text-foreground" aria-live="polite">{passengers}</span>
           </div>
 
           <button
             type="button"
             onClick={() => passengers < maxPassengers && onPassengersChange(passengers + 1)}
             disabled={passengers >= maxPassengers}
+            aria-label={`Increase passengers, currently ${passengers}`}
             className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:border-sage-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
 
       {/* Luggage */}
       <div className="flex-1">
-        <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+        <label id="luggage-label" className="block text-xs font-medium text-muted-foreground mb-1.5">
           Large Bags
         </label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="group" aria-labelledby="luggage-label">
           <button
             type="button"
             onClick={() => luggage > 0 && onLuggageChange(luggage - 1)}
             disabled={luggage <= 0}
+            aria-label={`Decrease luggage, currently ${luggage}`}
             className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:border-sage-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Minus className="w-4 h-4" />
+            <Minus className="w-4 h-4" aria-hidden="true" />
           </button>
 
           <div className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-sage-dark bg-sage-dark/5">
-            <Luggage className="w-4 h-4 text-sage-dark" />
-            <span className="text-lg font-semibold text-foreground">{luggage}</span>
+            <Luggage className="w-4 h-4 text-sage-dark" aria-hidden="true" />
+            <span className="text-lg font-semibold text-foreground" aria-live="polite">{luggage}</span>
           </div>
 
           <button
             type="button"
             onClick={() => luggage < maxLuggage && onLuggageChange(luggage + 1)}
             disabled={luggage >= maxLuggage}
+            aria-label={`Increase luggage, currently ${luggage}`}
             className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:border-sage-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
