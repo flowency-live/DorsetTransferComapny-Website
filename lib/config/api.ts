@@ -34,6 +34,9 @@ export const API_ENDPOINTS = {
   corporateForgotPassword: '/corporate/auth/forgot-password',
   corporateLogout: '/corporate/auth/logout',
 
+  // Corporate Public Endpoints (no auth required)
+  corporateApply: '/corporate/apply',
+
   // Corporate Portal API (served from /corporate API, not /v2)
   corporateMe: '/corporate/me',
   corporateNotifications: '/corporate/me/notifications',
