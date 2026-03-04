@@ -23,12 +23,22 @@ interface CompanySearchResult {
   } | null;
 }
 
+interface BillingAddress {
+  line1: string;
+  line2: string;
+  city: string;
+  region: string;
+  postcode: string;
+  country: string;
+}
+
 interface FormData {
   companyName: string;
   companyNumber: string;
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  billingAddress: BillingAddress | null;
 }
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
@@ -40,6 +50,7 @@ export default function CorporateApplyPage() {
     contactName: '',
     contactEmail: '',
     contactPhone: '',
+    billingAddress: null,
   });
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -106,6 +117,14 @@ export default function CorporateApplyPage() {
       ...prev,
       companyName: company.companyName,
       companyNumber: company.companyNumber,
+      billingAddress: company.address ? {
+        line1: company.address.line1 || '',
+        line2: company.address.line2 || '',
+        city: company.address.city || '',
+        region: company.address.region || '',
+        postcode: company.address.postcode || '',
+        country: company.address.country || 'United Kingdom',
+      } : null,
     }));
     setSearchQuery('');
     setShowResults(false);
@@ -143,6 +162,7 @@ export default function CorporateApplyPage() {
           contactName: formData.contactName.trim(),
           contactEmail: formData.contactEmail.trim().toLowerCase(),
           contactPhone: formData.contactPhone.trim() || undefined,
+          billingAddress: formData.billingAddress || undefined,
         }),
       });
 
