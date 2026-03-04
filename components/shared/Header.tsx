@@ -14,6 +14,7 @@ const navLinks = [
   { href: '/faq', label: 'FAQ' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/contact', label: 'Contact' },
+  { href: '/corporate/apply', label: 'Corporate' },
 ];
 
 export default function Header() {

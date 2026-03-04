@@ -1,11 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Building2, User, Mail, Phone, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Building2, User, Mail, Phone, CheckCircle, AlertCircle, Loader2, Search } from 'lucide-react';
 import Header from '@/components/shared/Header';
 import Footer from '@/components/shared/Footer';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
+
+interface CompanySearchResult {
+  companyNumber: string;
+  companyName: string;
+  companyStatus: string;
+  companyType: string;
+  dateOfCreation: string;
+  address: {
+    line1: string;
+    line2: string;
+    city: string;
+    region: string;
+    postcode: string;
+    country: string;
+  } | null;
+}
 
 interface FormData {
   companyName: string;
@@ -27,6 +43,83 @@ export default function CorporateApplyPage() {
   });
   const [status, setStatus] = useState<FormStatus>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Companies House search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<CompanySearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setShowResults(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}${API_ENDPOINTS.corporateCompaniesHouseSearch}?q=${encodeURIComponent(searchQuery)}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setSearchResults(data.companies || []);
+          setShowResults(true);
+        }
+      } catch (err) {
+        console.error('Company search error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  const handleSelectCompany = (company: CompanySearchResult) => {
+    setFormData(prev => ({
+      ...prev,
+      companyName: company.companyName,
+      companyNumber: company.companyNumber,
+    }));
+    setSearchQuery('');
+    setShowResults(false);
+  };
+
+  const formatCompanyStatus = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      active: { label: 'Active', className: 'bg-green-100 text-green-800' },
+      dissolved: { label: 'Dissolved', className: 'bg-red-100 text-red-800' },
+      liquidation: { label: 'Liquidation', className: 'bg-orange-100 text-orange-800' },
+      receivership: { label: 'Receivership', className: 'bg-yellow-100 text-yellow-800' },
+    };
+    return statusMap[status] || { label: status, className: 'bg-gray-100 text-gray-800' };
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -131,6 +224,75 @@ export default function CorporateApplyPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Companies House Search */}
+                <div ref={searchRef} className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Search Companies House <span className="text-gray-400">(UK registered companies)</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Start typing company name to search..."
+                      className="block w-full pl-10 pr-10 py-2.5 border border-sage/50 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-sage focus:border-sage sm:text-sm bg-sage/5"
+                    />
+                    {isSearching && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-5 w-5 text-sage animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Selecting a company will auto-fill the fields below
+                  </p>
+
+                  {/* Search Results Dropdown */}
+                  {showResults && searchResults.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                      {searchResults.map((company) => {
+                        const companyStatus = formatCompanyStatus(company.companyStatus);
+                        return (
+                          <button
+                            key={company.companyNumber}
+                            type="button"
+                            onClick={() => handleSelectCompany(company)}
+                            className="w-full px-4 py-3 text-left hover:bg-sage/5 border-b border-gray-100 last:border-b-0 transition-colors"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-900 truncate">
+                                  {company.companyName}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {company.companyNumber}
+                                  {company.address && (
+                                    <span className="ml-2">
+                                      - {company.address.city}{company.address.postcode ? `, ${company.address.postcode}` : ''}
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                              <span className={`shrink-0 px-2 py-0.5 text-xs font-medium rounded-full ${companyStatus.className}`}>
+                                {companyStatus.label}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {showResults && searchResults.length === 0 && searchQuery.length >= 2 && !isSearching && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-4 text-center text-gray-500 text-sm">
+                      No companies found matching &quot;{searchQuery}&quot;
+                    </div>
+                  )}
+                </div>
+
                 {/* Company Name */}
                 <div>
                   <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">

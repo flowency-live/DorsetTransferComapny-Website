@@ -36,6 +36,7 @@ export const API_ENDPOINTS = {
 
   // Corporate Public Endpoints (no auth required)
   corporateApply: '/corporate/apply',
+  corporateCompaniesHouseSearch: '/corporate/companies-house/search',
 
   // Corporate Portal API (served from /corporate API, not /v2)
   corporateMe: '/corporate/me',
