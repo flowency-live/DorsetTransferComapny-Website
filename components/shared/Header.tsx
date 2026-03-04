@@ -51,7 +51,7 @@ export default function Header() {
           <div className="hidden md:flex items-center gap-4">
             <Link
               href="/corporate/apply"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className={buttonVariants({ variant: "outline-dark", size: "default" })}
             >
               Open Corporate Account
             </Link>
@@ -102,7 +102,7 @@ export default function Header() {
               <Link
                 href="/corporate/apply"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                className={buttonVariants({ variant: "outline-dark", size: "default", className: "mt-2" })}
               >
                 Open Corporate Account
               </Link>
