@@ -14,7 +14,6 @@ const navLinks = [
   { href: '/faq', label: 'FAQ' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/contact', label: 'Contact' },
-  { href: '/corporate/apply', label: 'Open Corporate Account' },
 ];
 
 export default function Header() {
@@ -50,6 +49,12 @@ export default function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/corporate/apply"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Open Corporate Account
+            </Link>
             <Link
               href="/corporate/login"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -94,6 +99,13 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href="/corporate/apply"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-base font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+              >
+                Open Corporate Account
+              </Link>
               <Link
                 href="/corporate/login"
                 onClick={() => setMobileMenuOpen(false)}
