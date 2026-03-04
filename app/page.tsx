@@ -215,6 +215,12 @@ export default function Home() {
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-4">
               <a
+                href="/corporate/apply"
+                className={buttonVariants({ variant: "outline-dark", size: "default" })}
+              >
+                Open Corporate Account
+              </a>
+              <a
                 href="/corporate/login"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
@@ -287,6 +293,13 @@ export default function Home() {
                   Contact
                 </a>
                 <div className="border-t border-border pt-4 mt-2 flex flex-col gap-3">
+                  <a
+                    href="/corporate/apply"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={buttonVariants({ variant: "outline-dark", size: "default", className: "w-full" })}
+                  >
+                    Open Corporate Account
+                  </a>
                   <a
                     href="/corporate/login"
                     onClick={() => setMobileMenuOpen(false)}
