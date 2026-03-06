@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, RefreshCcw } from 'lucide-react';
+import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, RefreshCcw, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -258,9 +258,36 @@ export default function CorporateDashboardPage() {
           )}
         </div>
 
-        {/* Admin Quick Link */}
+        {/* Admin Section */}
         {isAdmin && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-4">
+            {/* Pending Approvals Card */}
+            {dashboard?.stats?.pendingApprovals !== undefined && dashboard.stats.pendingApprovals > 0 && (
+              <Link
+                href="/corporate/approvals"
+                className="corp-card p-4 flex items-center justify-between rounded-lg border-l-4 border-l-amber-500 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                    <ClipboardCheck className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Pending Approvals</p>
+                    <p className="text-sm text-[var(--corp-text-muted)]">
+                      {dashboard.stats.pendingApprovals} booking{dashboard.stats.pendingApprovals !== 1 ? 's' : ''} awaiting review
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="corp-badge bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                    {dashboard.stats.pendingApprovals}
+                  </span>
+                  <ChevronDown className="w-5 h-5 -rotate-90 corp-icon" />
+                </div>
+              </Link>
+            )}
+
+            {/* Manage Team Link */}
             <Link
               href="/corporate/team"
               className="corp-card corp-card-admin p-4 flex items-center justify-between rounded-lg"

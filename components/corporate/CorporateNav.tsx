@@ -14,6 +14,8 @@ import {
   LogOut,
   X,
   Menu,
+  MapPin,
+  ClipboardCheck,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
@@ -46,12 +48,14 @@ const NAV_SECTIONS = {
     items: [
       { href: '/corporate/quote', label: 'New Booking', icon: <CalendarPlus className="w-5 h-5" /> },
       { href: '/corporate/trips', label: 'Favourite Trips', icon: <Star className="w-5 h-5" /> },
+      { href: '/corporate/places', label: 'Saved Locations', icon: <MapPin className="w-5 h-5" /> },
     ],
   },
   manage: {
     label: 'Manage',
     items: [
       { href: '/corporate/passengers', label: 'Passengers', icon: <Users className="w-5 h-5" /> },
+      { href: '/corporate/approvals', label: 'Approvals', icon: <ClipboardCheck className="w-5 h-5" />, adminOnly: true },
       { href: '/corporate/team', label: 'Team', icon: <UserCog className="w-5 h-5" />, adminOnly: true },
     ],
   },

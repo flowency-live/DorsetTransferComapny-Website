@@ -6,7 +6,7 @@ import { useState, useEffect, Suspense, useCallback } from 'react';
 
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 import CorporateQuoteResult from '@/components/corporate/CorporateQuoteResult';
-import PassengerSelector, { SelectedPassenger } from '@/components/corporate/PassengerSelector';
+import PassengerAutocomplete, { SelectedPassenger } from '@/components/corporate/PassengerAutocomplete';
 import SavePassengerModal from '@/components/corporate/SavePassengerModal';
 import SaveTripModal from '@/components/corporate/SaveTripModal';
 import { Button } from '@/components/ui/button';
@@ -794,7 +794,7 @@ function CorporateQuotePageContent() {
           <div className="max-w-3xl mx-auto">
             {/* Passenger Selection - first field before journey details */}
             <div className="mb-6 p-4 corp-card rounded-lg">
-              <PassengerSelector
+              <PassengerAutocomplete
                 selectedPassenger={selectedPassenger}
                 onSelect={(passenger) => {
                   setSelectedPassenger(passenger);
@@ -812,6 +812,8 @@ function CorporateQuotePageContent() {
                     });
                   }
                 }}
+                pickupPostcode={pickupLocation?.address}
+                dropoffPostcode={dropoffLocation?.address}
                 manualName={manualPassengerName}
                 onManualNameChange={setManualPassengerName}
                 label="Who is travelling?"

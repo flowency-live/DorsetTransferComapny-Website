@@ -2,7 +2,7 @@
 
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
@@ -35,11 +35,21 @@ interface BookingPricing {
 
 interface BookingData {
   bookingId: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'pending_approval' | 'denied';
   customer: {
     name: string;
     email: string;
     phone: string;
+  };
+  // Approval-related fields
+  approval?: {
+    status: 'pending_approval' | 'approved' | 'denied';
+    requestedAt?: string;
+    approvedAt?: string;
+    deniedAt?: string;
+    approvedBy?: { name: string; email: string };
+    deniedBy?: { name: string; email: string };
+    reason?: string;
   };
   pickupTime: string;
   pickupLocation: BookingLocation;
@@ -149,11 +159,15 @@ function getStatusBadgeClass(status: string): string {
   switch (status) {
     case 'pending':
       return 'corp-badge corp-badge-warning';
+    case 'pending_approval':
+      return 'corp-badge bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300';
     case 'confirmed':
+    case 'approved':
       return 'corp-badge corp-badge-success';
     case 'completed':
       return 'corp-badge corp-badge-info';
     case 'cancelled':
+    case 'denied':
       return 'corp-badge corp-badge-danger';
     default:
       return 'corp-badge corp-badge-neutral';
@@ -164,12 +178,17 @@ function getStatusLabel(status: string): string {
   switch (status) {
     case 'pending':
       return 'Awaiting Confirmation';
+    case 'pending_approval':
+      return 'Awaiting Approval';
     case 'confirmed':
+    case 'approved':
       return 'Confirmed';
     case 'completed':
       return 'Completed';
     case 'cancelled':
       return 'Cancelled';
+    case 'denied':
+      return 'Denied';
     default:
       return status;
   }
@@ -498,7 +517,7 @@ function CorporateBookingContent() {
   }
 
   const totalPrice = booking.pricing?.totalPrice || 0;
-  const canModify = booking.status !== 'cancelled' && booking.status !== 'completed';
+  const canModify = booking.status !== 'cancelled' && booking.status !== 'completed' && booking.status !== 'denied' && booking.status !== 'pending_approval';
 
   return (
     <CorporateLayout pageTitle="Booking Details">
@@ -524,6 +543,76 @@ function CorporateBookingContent() {
           <p className="text-sm corp-page-subtitle mb-1">Booking Reference</p>
           <p className="text-2xl font-bold text-[var(--corp-accent)]">{booking.bookingId}</p>
         </div>
+
+        {/* Approval Status Card */}
+        {booking.approval && (
+          <div className={`corp-card rounded-lg p-6 mb-6 border-l-4 ${
+            booking.approval.status === 'pending_approval' ? 'border-l-amber-500' :
+            booking.approval.status === 'approved' ? 'border-l-green-500' :
+            'border-l-red-500'
+          }`}>
+            <div className="flex items-start gap-4">
+              <div className={`p-2 rounded-full ${
+                booking.approval.status === 'pending_approval' ? 'bg-amber-100 dark:bg-amber-900/30' :
+                booking.approval.status === 'approved' ? 'bg-green-100 dark:bg-green-900/30' :
+                'bg-red-100 dark:bg-red-900/30'
+              }`}>
+                {booking.approval.status === 'pending_approval' && (
+                  <Clock className={`w-5 h-5 text-amber-600 dark:text-amber-400`} />
+                )}
+                {booking.approval.status === 'approved' && (
+                  <CheckCircle className={`w-5 h-5 text-green-600 dark:text-green-400`} />
+                )}
+                {booking.approval.status === 'denied' && (
+                  <XCircle className={`w-5 h-5 text-red-600 dark:text-red-400`} />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold mb-1">
+                  {booking.approval.status === 'pending_approval' && 'Awaiting Approval'}
+                  {booking.approval.status === 'approved' && 'Booking Approved'}
+                  {booking.approval.status === 'denied' && 'Booking Denied'}
+                </h3>
+
+                {booking.approval.status === 'pending_approval' && (
+                  <p className="text-sm text-[var(--corp-text-muted)]">
+                    This booking requires approval from an administrator before it can be confirmed.
+                  </p>
+                )}
+
+                {booking.approval.status === 'approved' && booking.approval.approvedBy && (
+                  <div className="text-sm text-[var(--corp-text-muted)]">
+                    <p>
+                      Approved by {booking.approval.approvedBy.name}
+                      {booking.approval.approvedAt && (
+                        <span> on {formatDate(booking.approval.approvedAt)}</span>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {booking.approval.status === 'denied' && (
+                  <div className="text-sm">
+                    {booking.approval.deniedBy && (
+                      <p className="text-[var(--corp-text-muted)] mb-2">
+                        Denied by {booking.approval.deniedBy.name}
+                        {booking.approval.deniedAt && (
+                          <span> on {formatDate(booking.approval.deniedAt)}</span>
+                        )}
+                      </p>
+                    )}
+                    {booking.approval.reason && (
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 mt-2">
+                        <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-1">Reason:</p>
+                        <p className="text-sm text-red-600 dark:text-red-400">{booking.approval.reason}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Journey Details */}
         <div className="corp-card rounded-lg mb-6 overflow-hidden">

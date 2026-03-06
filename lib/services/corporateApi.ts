@@ -40,6 +40,12 @@ interface ProfileResponse {
     role: 'admin' | 'booker';
     status: string;
     notifications: Record<string, boolean>;
+    channels?: {
+      email: boolean;
+      sms: boolean;
+      whatsapp: boolean;
+    };
+    phone?: string | null;
     lastLogin?: string;
     createdAt: string;
   };
@@ -282,15 +288,43 @@ export async function getProfile(): Promise<ProfileResponse> {
   return authenticatedFetch(API_ENDPOINTS.corporateMe);
 }
 
+// ============================================================================
+// COMMUNICATION PREFERENCES (Feature 4)
+// ============================================================================
+
+export interface CommunicationChannels {
+  email: boolean;
+  sms: boolean;
+  whatsapp: boolean;
+}
+
+export interface NotificationPreferences {
+  emailBookingConfirmations?: boolean;
+  emailWeeklyDigest?: boolean;
+  emailMarketingUpdates?: boolean;
+  channels?: CommunicationChannels;
+  phone?: string | null;
+}
+
+export interface NotificationPreferencesResponse {
+  success: boolean;
+  message: string;
+  channels?: CommunicationChannels;
+  phone?: string | null;
+  emailBookingConfirmations?: boolean;
+  emailWeeklyDigest?: boolean;
+  emailMarketingUpdates?: boolean;
+}
+
 /**
- * Update notification preferences
+ * Update notification preferences including communication channels
  */
 export async function updateNotifications(
-  notifications: Record<string, boolean>
-): Promise<{ success: boolean; message: string }> {
+  preferences: NotificationPreferences
+): Promise<NotificationPreferencesResponse> {
   return authenticatedFetch(API_ENDPOINTS.corporateNotifications, {
     method: 'PUT',
-    body: JSON.stringify(notifications),
+    body: JSON.stringify(preferences),
   });
 }
 
@@ -683,6 +717,40 @@ export async function getPassengers(search?: string): Promise<PassengerListRespo
   return authenticatedFetch(endpoint);
 }
 
+// ============================================================================
+// PASSENGER AUTO-SUGGEST (Feature 3)
+// ============================================================================
+
+export interface SuggestedPassenger extends PassengerListItem {
+  matchReason: 'route' | 'frequency';
+  score: number;
+}
+
+interface SuggestedPassengersResponse {
+  passengers: SuggestedPassenger[];
+  total: number;
+}
+
+/**
+ * Get suggested passengers based on route matching
+ * Returns passengers who have previously traveled similar routes
+ */
+export async function getSuggestedPassengers(
+  pickupPostcode: string,
+  dropoffPostcode: string,
+  limit?: number
+): Promise<SuggestedPassengersResponse> {
+  const params = new URLSearchParams({
+    suggest: 'route',
+    pickupPostcode,
+    dropoffPostcode,
+  });
+  if (limit) {
+    params.append('limit', limit.toString());
+  }
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePassengers}?${params.toString()}`);
+}
+
 /**
  * Get passenger details
  */
@@ -737,4 +805,185 @@ export async function getPassengerJourneys(
     ? `${API_ENDPOINTS.corporatePassengers}/${passengerId}/journeys?limit=${limit}`
     : `${API_ENDPOINTS.corporatePassengers}/${passengerId}/journeys`;
   return authenticatedFetch(endpoint);
+}
+
+// ============================================================================
+// PLACES (Feature 2)
+// ============================================================================
+
+export type PlaceType = 'personal' | 'office';
+
+export interface Place {
+  placeId: string;
+  type: PlaceType;
+  label: string;
+  address: string;
+  placeIdGoogle?: string;
+  lat: number;
+  lng: number;
+  postcode?: string;
+  createdBy: string;
+  createdAt: string;
+  usageCount: number;
+  lastUsedAt: string | null;
+}
+
+interface PlacesResponse {
+  places: Place[];
+  total: number;
+}
+
+export interface CreatePlaceData {
+  type: PlaceType;
+  label: string;
+  address: string;
+  placeIdGoogle?: string;
+  lat: number;
+  lng: number;
+  postcode?: string;
+}
+
+export interface UpdatePlaceData {
+  type?: PlaceType;
+  label?: string;
+  address?: string;
+  placeIdGoogle?: string;
+  lat?: number;
+  lng?: number;
+  postcode?: string;
+}
+
+/**
+ * Get list of places (personal + office)
+ */
+export async function getPlaces(): Promise<PlacesResponse> {
+  return authenticatedFetch(API_ENDPOINTS.corporatePlaces);
+}
+
+/**
+ * Create a new place
+ */
+export async function createPlace(
+  data: CreatePlaceData
+): Promise<{ success: boolean; message: string; place: Place }> {
+  return authenticatedFetch(API_ENDPOINTS.corporatePlaces, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Update a place
+ */
+export async function updatePlace(
+  placeId: string,
+  data: UpdatePlaceData
+): Promise<{ success: boolean; message: string; place: Place }> {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePlaces}/${placeId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a place
+ */
+export async function deletePlace(
+  placeId: string
+): Promise<{ success: boolean; message: string }> {
+  return authenticatedFetch(`${API_ENDPOINTS.corporatePlaces}/${placeId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============================================================================
+// APPROVALS (Feature 1)
+// ============================================================================
+
+export interface ApprovalRequest {
+  bookingId: string;
+  requestedAt: string;
+  requestedBy: {
+    userId: string;
+    name: string;
+    email: string;
+  };
+  pickupTime: string;
+  pickupLocation: {
+    address: string;
+  };
+  dropoffLocation: {
+    address: string;
+  };
+  vehicleType: string;
+  estimatedPrice: number;
+  status: 'pending_approval' | 'approved' | 'denied';
+}
+
+interface ApprovalsResponse {
+  approvals: ApprovalRequest[];
+  total: number;
+}
+
+export interface BookingEdits {
+  vehicleType?: string;
+  pickupTime?: string;
+  pickupLocation?: { address: string; lat?: number; lng?: number };
+  dropoffLocation?: { address: string; lat?: number; lng?: number };
+}
+
+export interface ApprovalAction {
+  action: 'approve' | 'edit_approve' | 'deny';
+  reason?: string;
+  edits?: BookingEdits;
+}
+
+export interface ApprovalResult {
+  bookingId: string;
+  status: 'confirmed' | 'denied';
+  approvedAt?: string;
+  approvedBy?: string;
+  deniedAt?: string;
+  deniedBy?: string;
+  reason?: string;
+}
+
+/**
+ * Get list of pending approvals (for approvers only)
+ */
+export async function getApprovals(status?: string): Promise<ApprovalsResponse> {
+  const endpoint = status
+    ? `${API_ENDPOINTS.corporateApprovals}?status=${encodeURIComponent(status)}`
+    : API_ENDPOINTS.corporateApprovals;
+  return authenticatedFetch(endpoint);
+}
+
+/**
+ * Approve a booking
+ */
+export async function approveBooking(
+  bookingId: string,
+  edits?: BookingEdits
+): Promise<ApprovalResult> {
+  const action: ApprovalAction = edits
+    ? { action: 'edit_approve', edits }
+    : { action: 'approve' };
+  return authenticatedFetch(`${API_ENDPOINTS.corporateApprovals}/${bookingId}`, {
+    method: 'POST',
+    body: JSON.stringify(action),
+  });
+}
+
+/**
+ * Deny a booking
+ */
+export async function denyBooking(
+  bookingId: string,
+  reason: string
+): Promise<ApprovalResult> {
+  const action: ApprovalAction = { action: 'deny', reason };
+  return authenticatedFetch(`${API_ENDPOINTS.corporateApprovals}/${bookingId}`, {
+    method: 'POST',
+    body: JSON.stringify(action),
+  });
 }

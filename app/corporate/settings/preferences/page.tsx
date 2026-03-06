@@ -2,17 +2,20 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { Upload, Trash2, CheckCircle, AlertTriangle, Eye } from 'lucide-react';
+import { Upload, Trash2, CheckCircle, AlertTriangle, Eye, Mail, MessageSquare, Phone } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPreferences,
   updatePreferences,
+  updateNotifications,
   getLogoUploadUrl,
   uploadLogoToS3,
   confirmLogoUpload,
   deleteLogo,
+  getProfile,
   type NameBoardFormat,
   type AccountPreferences,
+  type CommunicationChannels,
 } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 
@@ -78,6 +81,16 @@ export default function PreferencesPage() {
   });
   const [defaultDriverInstructions, setDefaultDriverInstructions] = useState('');
 
+  // Communication channels state
+  const [channels, setChannels] = useState<CommunicationChannels>({
+    email: true,
+    sms: false,
+    whatsapp: false,
+  });
+  const [phone, setPhone] = useState('');
+  const [isSavingChannels, setIsSavingChannels] = useState(false);
+  const [channelsError, setChannelsError] = useState<string | null>(null);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(null), 3000);
@@ -85,8 +98,8 @@ export default function PreferencesPage() {
 
   useEffect(() => {
     if (user) {
-      getPreferences()
-        .then((prefsData) => {
+      Promise.all([getPreferences(), getProfile()])
+        .then(([prefsData, profileData]) => {
           setPreferences(prefsData.preferences);
           setSelectedFormat(prefsData.preferences.nameBoardFormat || 'title-initial-surname');
           setCustomText(prefsData.preferences.nameBoardCustomText || '');
@@ -101,6 +114,13 @@ export default function PreferencesPage() {
           }
           if (prefsData.preferences.defaultDriverInstructions) {
             setDefaultDriverInstructions(prefsData.preferences.defaultDriverInstructions);
+          }
+          // Load communication channels from profile
+          if (profileData.user.channels) {
+            setChannels(profileData.user.channels);
+          }
+          if (profileData.user.phone) {
+            setPhone(profileData.user.phone);
           }
         })
         .catch((err) => {
@@ -193,6 +213,35 @@ export default function PreferencesPage() {
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleSaveChannels = async () => {
+    // Validate: phone required if SMS or WhatsApp enabled
+    if ((channels.sms || channels.whatsapp) && !phone.trim()) {
+      setChannelsError('Phone number is required when SMS or WhatsApp is enabled');
+      return;
+    }
+    setChannelsError(null);
+    setIsSavingChannels(true);
+    try {
+      await updateNotifications({
+        channels,
+        phone: phone.trim() || null,
+      });
+      showToast('Communication preferences saved successfully');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to save communication preferences', 'error');
+    } finally {
+      setIsSavingChannels(false);
+    }
+  };
+
+  const handleChannelToggle = (channel: keyof CommunicationChannels) => {
+    setChannels((prev) => ({ ...prev, [channel]: !prev[channel] }));
+    // Clear error if user is making changes
+    if (channelsError) {
+      setChannelsError(null);
     }
   };
 
@@ -424,6 +473,117 @@ export default function PreferencesPage() {
                   className="corp-btn corp-btn-primary inline-flex items-center px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50"
                 >
                   {isSaving ? 'Saving...' : 'Save Preferences'}
+                </button>
+              </div>
+            </div>
+
+            {/* Communication Channels Section */}
+            <div className="corp-card rounded-lg p-6 mt-6">
+              <h2 className="corp-section-title text-lg font-semibold mb-4">Communication Channels</h2>
+              <p className="corp-page-subtitle text-sm mb-4">
+                Choose how you&apos;d like to receive booking confirmations and notifications.
+              </p>
+
+              <div className="space-y-4 mb-6">
+                {/* Email Channel */}
+                <label
+                  className={`corp-checkbox-card flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    channels.email ? 'corp-checkbox-card-selected' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={channels.email}
+                    onChange={() => handleChannelToggle('email')}
+                    className="sr-only"
+                  />
+                  <Mail className="w-5 h-5 mr-3 opacity-70" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">Email</span>
+                    <p className="text-xs opacity-60 mt-0.5">Receive notifications via email</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${channels.email ? 'bg-sage' : 'bg-gray-300'} relative`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${channels.email ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </div>
+                </label>
+
+                {/* SMS Channel */}
+                <label
+                  className={`corp-checkbox-card flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    channels.sms ? 'corp-checkbox-card-selected' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={channels.sms}
+                    onChange={() => handleChannelToggle('sms')}
+                    className="sr-only"
+                  />
+                  <MessageSquare className="w-5 h-5 mr-3 opacity-70" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">SMS</span>
+                    <p className="text-xs opacity-60 mt-0.5">Receive text message notifications</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${channels.sms ? 'bg-sage' : 'bg-gray-300'} relative`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${channels.sms ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </div>
+                </label>
+
+                {/* WhatsApp Channel */}
+                <label
+                  className={`corp-checkbox-card flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    channels.whatsapp ? 'corp-checkbox-card-selected' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={channels.whatsapp}
+                    onChange={() => handleChannelToggle('whatsapp')}
+                    className="sr-only"
+                  />
+                  <MessageSquare className="w-5 h-5 mr-3 opacity-70" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">WhatsApp</span>
+                    <p className="text-xs opacity-60 mt-0.5">Receive WhatsApp message notifications</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${channels.whatsapp ? 'bg-sage' : 'bg-gray-300'} relative`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${channels.whatsapp ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </div>
+                </label>
+              </div>
+
+              {/* Phone Number Input - shown when SMS or WhatsApp enabled */}
+              {(channels.sms || channels.whatsapp) && (
+                <div className="mb-6">
+                  <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                    <Phone className="w-4 h-4 inline mr-1" />
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value);
+                      if (channelsError) setChannelsError(null);
+                    }}
+                    placeholder="+44 7700 900123"
+                    className={`corp-input w-full px-3 py-2 rounded-lg ${channelsError ? 'border-red-500' : ''}`}
+                  />
+                  <p className="mt-1 text-xs opacity-50">Required for SMS and WhatsApp notifications</p>
+                  {channelsError && (
+                    <p className="mt-1 text-xs text-red-500">{channelsError}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSaveChannels}
+                  disabled={isSavingChannels}
+                  className="corp-btn corp-btn-primary inline-flex items-center px-6 py-2 rounded-full text-sm font-medium disabled:opacity-50"
+                >
+                  {isSavingChannels ? 'Saving...' : 'Save Communication Preferences'}
                 </button>
               </div>
             </div>
