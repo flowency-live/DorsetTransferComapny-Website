@@ -9,7 +9,7 @@ import { buttonVariants } from '@/components/ui/button';
 
 export default function ContactPage() {
   const quoteUrl = 'https://durdle.co.uk/quote';
-  const driversUrl = 'https://durdle.co.uk/drivers';
+  const driversUrl = 'https://durdle.co.uk/driver/apply';
 
   const contactInfo = {
     name: 'The Dorset Transfer Company',
@@ -249,7 +249,7 @@ END:VCARD`;
                 </button>
 
                 <Link
-                  href="/drivers"
+                  href="/driver/apply"
                   className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-amber-700 transition-all shadow-lg active:scale-95"
                 >
                   Apply to Drive

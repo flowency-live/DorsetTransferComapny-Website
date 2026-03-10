@@ -66,6 +66,10 @@ export const API_ENDPOINTS = {
   driverAvailability: '/driver/availability',
   driverLicenseCheck: '/driver/license-check',
 
+  // Driver Public Application (no auth required)
+  driverApply: '/v2/driver/apply',
+  authoritiesSearch: '/v2/authorities/search',
+
   // Chat Widget (AI Booking Assistant)
   chatSession: '/v2/chat/session',
   chatMessage: '/v2/chat/message',
