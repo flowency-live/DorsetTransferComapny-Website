@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, UserPlus, User } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense, useCallback } from 'react';
 
@@ -248,6 +248,81 @@ function CorporateQuotePageContent() {
   useEffect(() => {
     loadRebook();
   }, [loadRebook]);
+
+  // Feature 5C: Self-booking auto-select for linked bookers
+  // Auto-select the user's linked passenger when they don't have a passenger selected
+  const [isSelfBooking, setIsSelfBooking] = useState(false);
+  const loadSelfPassenger = useCallback(async () => {
+    // Skip if:
+    // - User not loaded
+    // - User has no linked passenger
+    // - Passenger already selected (from rebook, trip, or manual selection)
+    // - Loading a specific passenger via URL params
+    if (!user || !user.linkedPassengerId || selectedPassenger || rebookPassengerId) {
+      return;
+    }
+
+    try {
+      const { passenger } = await getPassenger(user.linkedPassengerId);
+      const nameParts = [passenger.title, passenger.firstName, passenger.lastName].filter(Boolean);
+      const displayName = nameParts.join(' ');
+
+      setSelectedPassenger({
+        passengerId: passenger.passengerId,
+        displayName,
+        firstName: passenger.firstName,
+        lastName: passenger.lastName,
+        title: passenger.title,
+        alias: passenger.alias,
+        contactName: passenger.contactName,
+        isRepresentative: passenger.isRepresentative,
+        email: passenger.email || undefined,
+        phone: passenger.phone || undefined,
+        driverInstructions: passenger.driverInstructions,
+        refreshments: passenger.refreshments,
+      });
+
+      // Auto-fill special requests with driver instructions
+      if (passenger.driverInstructions) {
+        setSpecialRequests(passenger.driverInstructions);
+      }
+
+      // Pre-fill contact details from passenger record
+      const contactName = passenger.contactName || displayName;
+      setContactDetails({
+        name: contactName,
+        email: passenger.email || '',
+        phone: passenger.phone || '',
+      });
+
+      setIsSelfBooking(true);
+    } catch (err) {
+      console.error('Failed to load linked passenger for self-booking:', err);
+    }
+  }, [user, selectedPassenger, rebookPassengerId]);
+
+  useEffect(() => {
+    loadSelfPassenger();
+  }, [loadSelfPassenger]);
+
+  // Clear self-booking flag when user changes passenger
+  const handlePassengerChange = (passenger: SelectedPassenger | null) => {
+    setSelectedPassenger(passenger);
+    // If they're selecting a different passenger, clear self-booking flag
+    if (passenger && user?.linkedPassengerId && passenger.passengerId !== user.linkedPassengerId) {
+      setIsSelfBooking(false);
+    } else if (passenger && user?.linkedPassengerId && passenger.passengerId === user.linkedPassengerId) {
+      setIsSelfBooking(true);
+    }
+  };
+
+  // Clear self-booking and passenger selection
+  const handleClearSelfBooking = () => {
+    setSelectedPassenger(null);
+    setIsSelfBooking(false);
+    setContactDetails(null);
+    setSpecialRequests('');
+  };
 
   // Instant booking params (from Quick Book)
   const instantBookParam = searchParams.get('instantBook') === 'true';
@@ -794,10 +869,26 @@ function CorporateQuotePageContent() {
           <div className="max-w-3xl mx-auto">
             {/* Passenger Selection - first field before journey details */}
             <div className="mb-6 p-4 corp-card rounded-lg">
+              {/* Self-booking indicator */}
+              {isSelfBooking && selectedPassenger && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-blue-800 text-sm">
+                    <User className="h-4 w-4" />
+                    <span>Booking for yourself</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleClearSelfBooking}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Book for someone else
+                  </button>
+                </div>
+              )}
               <PassengerAutocomplete
                 selectedPassenger={selectedPassenger}
                 onSelect={(passenger) => {
-                  setSelectedPassenger(passenger);
+                  handlePassengerChange(passenger);
                   // Auto-fill special requests with driver instructions when passenger selected
                   if (passenger?.driverInstructions) {
                     setSpecialRequests(passenger.driverInstructions);

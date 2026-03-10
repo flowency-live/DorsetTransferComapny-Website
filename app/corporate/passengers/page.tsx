@@ -2,17 +2,18 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Users, Mail, Trash2, AlertTriangle, CheckCircle, MoreVertical, Pencil, Eye } from 'lucide-react';
+import { Plus, Search, Users, Mail, Trash2, AlertTriangle, CheckCircle, MoreVertical, Pencil, Eye, UserPlus } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassengers,
   deletePassenger,
+  createAccountFromPassenger,
   type PassengerListItem,
 } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 
 export default function PassengersPage() {
-  const { user } = useRequireCorporateAuth();
+  const { user, isAdmin } = useRequireCorporateAuth();
   const [passengers, setPassengers] = useState<PassengerListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +22,15 @@ export default function PassengersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Feature 5B: Create account dialog state
+  const [createAccountDialog, setCreateAccountDialog] = useState<{
+    show: boolean;
+    passengerId: string;
+    name: string;
+    email: string;
+  } | null>(null);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -82,6 +92,47 @@ export default function PassengersPage() {
       setIsDeleting(false);
       setConfirmDialog(null);
     }
+  };
+
+  // Feature 5B: Create account handler
+  const handleCreateAccountClick = (passenger: PassengerListItem) => {
+    const name = formatPassengerName(passenger);
+    setCreateAccountDialog({
+      show: true,
+      passengerId: passenger.passengerId,
+      name,
+      email: passenger.email || '',
+    });
+  };
+
+  const handleConfirmCreateAccount = async () => {
+    if (!createAccountDialog) return;
+
+    setIsCreatingAccount(true);
+    try {
+      await createAccountFromPassenger(createAccountDialog.passengerId, {
+        role: 'booker',
+        requiresApproval: false,
+      });
+      // Update the local state to reflect the link
+      setPassengers(passengers.map((p) =>
+        p.passengerId === createAccountDialog.passengerId
+          ? { ...p, linkedUserId: 'pending' } // Mark as linked (actual ID comes from refresh)
+          : p
+      ));
+      showToast('Booking account created! Invite email sent.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create booking account';
+      showToast(message, 'error');
+    } finally {
+      setIsCreatingAccount(false);
+      setCreateAccountDialog(null);
+    }
+  };
+
+  // Check if passenger can have account created
+  const canCreateAccount = (passenger: PassengerListItem): boolean => {
+    return isAdmin && !!passenger.email && !passenger.linkedUserId;
   };
 
   const formatPassengerName = (passenger: PassengerListItem): string => {
@@ -201,6 +252,19 @@ export default function PassengersPage() {
                           <Pencil className="h-4 w-4" />
                           Edit
                         </Link>
+                        {/* Feature 5B: Create Account option */}
+                        {canCreateAccount(passenger) && (
+                          <button
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              handleCreateAccountClick(passenger);
+                            }}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-500/10"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                            Create Account
+                          </button>
+                        )}
                         <button
                           onClick={() => {
                             setOpenMenuId(null);
@@ -236,6 +300,12 @@ export default function PassengersPage() {
                   <span className="corp-badge corp-badge-neutral text-xs">
                     {passenger.usageCount || 0} booking{passenger.usageCount === 1 ? '' : 's'}
                   </span>
+                  {/* Feature 5B: Show "Has Account" badge if linked */}
+                  {passenger.linkedUserId && (
+                    <span className="corp-badge text-xs bg-green-100 text-green-800">
+                      Has Account
+                    </span>
+                  )}
                 </div>
 
                 {/* Book Now button - always at bottom */}
@@ -282,6 +352,47 @@ export default function PassengersPage() {
                   className="corp-btn corp-btn-danger flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
                 >
                   {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feature 5B: Create Account Confirmation Modal */}
+      {createAccountDialog?.show && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black/50 transition-opacity"
+              onClick={() => setCreateAccountDialog(null)}
+            />
+            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+              <div className="text-center mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                  <UserPlus className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold">Create Booking Account?</h3>
+                <p className="text-sm opacity-70 mt-2">
+                  Create a booking account for <strong>{createAccountDialog.name}</strong>?
+                </p>
+                <p className="text-sm opacity-70 mt-1">
+                  An invite email will be sent to <strong>{createAccountDialog.email}</strong>.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setCreateAccountDialog(null)}
+                  className="corp-btn corp-btn-secondary flex-1 px-4 py-2 text-sm font-medium rounded-full"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmCreateAccount}
+                  disabled={isCreatingAccount}
+                  className="corp-btn corp-btn-primary flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
+                >
+                  {isCreatingAccount ? 'Creating...' : 'Send Invite'}
                 </button>
               </div>
             </div>

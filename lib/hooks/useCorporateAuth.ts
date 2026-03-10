@@ -5,16 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   verifySession,
   logout as apiLogout,
+  CorporateUser,
 } from '@/lib/services/corporateApi';
-
-interface CorporateUser {
-  userId: string;
-  email: string;
-  name: string;
-  role: 'admin' | 'booker';
-  companyName: string;
-  corpAccountId: string;
-}
 
 interface UseCorporateAuthReturn {
   user: CorporateUser | null;

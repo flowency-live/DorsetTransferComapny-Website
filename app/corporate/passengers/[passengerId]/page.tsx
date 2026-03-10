@@ -3,12 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus } from 'lucide-react';
+import { CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus, UserPlus } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassenger,
   updatePassenger,
   getPassengerJourneys,
+  createAccountFromPassenger,
   type Passenger,
   type Journey,
   type UpdatePassengerData,
@@ -30,7 +31,7 @@ interface PageProps {
 }
 
 export default function PassengerDetailPage({ params }: PageProps) {
-  const { user } = useRequireCorporateAuth();
+  const { user, isAdmin } = useRequireCorporateAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const passengerId = params.passengerId;
@@ -67,10 +68,39 @@ export default function PassengerDetailPage({ params }: PageProps) {
     other: '',
   });
 
+  // Feature 5B: Create account state
+  const [showCreateAccountDialog, setShowCreateAccountDialog] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  // Feature 5B: Check if can create account for this passenger
+  const canCreateAccount = passenger && isAdmin && !!passenger.email && !passenger.linkedUserId;
+
+  // Feature 5B: Handle create account
+  const handleCreateAccount = async () => {
+    if (!passenger) return;
+
+    setIsCreatingAccount(true);
+    try {
+      await createAccountFromPassenger(passengerId, {
+        role: 'booker',
+        requiresApproval: false,
+      });
+      // Update local passenger state to reflect link
+      setPassenger({ ...passenger, linkedUserId: 'pending' });
+      showToast('Booking account created! Invite email sent.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create booking account';
+      showToast(message, 'error');
+    } finally {
+      setIsCreatingAccount(false);
+      setShowCreateAccountDialog(false);
+    }
+  };
 
   useEffect(() => {
     if (searchParams.get('edit') === 'true') {
@@ -300,7 +330,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
             </div>
           </div>
           {!isEditing ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Link
                 href={`/corporate/quote?passengerId=${passengerId}`}
                 className="corp-btn corp-btn-primary inline-flex items-center px-4 py-2 rounded-full text-sm font-medium"
@@ -315,6 +345,23 @@ export default function PassengerDetailPage({ params }: PageProps) {
                 <Edit2 className="h-4 w-4 mr-2" />
                 Edit
               </button>
+              {/* Feature 5B: Create Account button */}
+              {canCreateAccount && (
+                <button
+                  onClick={() => setShowCreateAccountDialog(true)}
+                  className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Create Account
+                </button>
+              )}
+              {/* Show "Has Account" badge if linked */}
+              {passenger.linkedUserId && (
+                <span className="inline-flex items-center px-3 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Has Account
+                </span>
+              )}
             </div>
           ) : (
             <div className="flex gap-2">
@@ -731,6 +778,47 @@ export default function PassengerDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Feature 5B: Create Account Confirmation Modal */}
+      {showCreateAccountDialog && passenger && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black/50 transition-opacity"
+              onClick={() => setShowCreateAccountDialog(false)}
+            />
+            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+              <div className="text-center mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
+                  <UserPlus className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold">Create Booking Account?</h3>
+                <p className="text-sm opacity-70 mt-2">
+                  Create a booking account for <strong>{formatPassengerName()}</strong>?
+                </p>
+                <p className="text-sm opacity-70 mt-1">
+                  An invite email will be sent to <strong>{passenger.email}</strong>.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCreateAccountDialog(false)}
+                  className="corp-btn corp-btn-secondary flex-1 px-4 py-2 text-sm font-medium rounded-full"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateAccount}
+                  disabled={isCreatingAccount}
+                  className="corp-btn corp-btn-primary flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
+                >
+                  {isCreatingAccount ? 'Creating...' : 'Send Invite'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast?.show && (
         <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">

@@ -8,13 +8,28 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 // Note: Corporate auth now uses httpOnly cookies instead of localStorage
 // This provides better security against XSS attacks
 
-interface CorporateUser {
+export interface CorporateUser {
   userId: string;
   email: string;
   name: string;
   role: 'admin' | 'booker';
   companyName: string;
   corpAccountId: string;
+  linkedPassengerId?: string | null;
+}
+
+// Feature 5B: Linked passenger data returned from GET /corporate/me
+export interface LinkedPassenger {
+  passengerId: string;
+  firstName: string;
+  lastName: string;
+  title?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  alias?: string | null;
+  referToAs?: string | null;
+  refreshments?: Record<string, boolean | string> | null;
+  driverInstructions?: string | null;
 }
 
 interface AuthResponse {
@@ -48,6 +63,7 @@ interface ProfileResponse {
     phone?: string | null;
     lastLogin?: string;
     createdAt: string;
+    linkedPassengerId?: string | null;
   };
   company: {
     corpAccountId: string;
@@ -55,6 +71,7 @@ interface ProfileResponse {
     discountPercentage: number;
     status: string;
   } | null;
+  linkedPassenger?: LinkedPassenger | null;
 }
 
 interface DashboardResponse {
@@ -618,6 +635,7 @@ export interface Passenger {
   updatedBy: string | null;
   usageCount: number;
   lastUsedAt: string | null;
+  linkedUserId?: string | null; // Feature 5: Linked to a corporate user account
 }
 
 export interface PassengerListItem {
@@ -633,6 +651,7 @@ export interface PassengerListItem {
   phone: string | null;
   usageCount: number;
   lastUsedAt: string | null;
+  linkedUserId?: string | null; // Feature 5: Linked to a corporate user account
 }
 
 interface PassengerListResponse {
@@ -805,6 +824,46 @@ export async function getPassengerJourneys(
     ? `${API_ENDPOINTS.corporatePassengers}/${passengerId}/journeys?limit=${limit}`
     : `${API_ENDPOINTS.corporatePassengers}/${passengerId}/journeys`;
   return authenticatedFetch(endpoint);
+}
+
+// ============================================================================
+// Feature 5B: Create Account from Passenger
+// ============================================================================
+
+export interface CreateAccountFromPassengerData {
+  role?: 'admin' | 'booker';
+  requiresApproval?: boolean;
+}
+
+export interface CreateAccountFromPassengerResponse {
+  success: boolean;
+  message: string;
+  user: {
+    userId: string;
+    email: string;
+    name: string;
+    role: 'admin' | 'booker';
+    status: string;
+    linkedPassengerId: string;
+  };
+}
+
+/**
+ * Create a booking account from an existing passenger
+ * Sends a magic link invite email and links the user to the passenger
+ * Admin only
+ */
+export async function createAccountFromPassenger(
+  passengerId: string,
+  data?: CreateAccountFromPassengerData
+): Promise<CreateAccountFromPassengerResponse> {
+  return authenticatedFetch(
+    `${API_ENDPOINTS.corporatePassengers}/${passengerId}/create-account`,
+    {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    }
+  );
 }
 
 // ============================================================================
