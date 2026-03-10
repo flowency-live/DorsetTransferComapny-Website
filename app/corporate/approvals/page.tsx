@@ -199,16 +199,11 @@ export default function ApprovalsPage() {
                 <ClipboardCheck className="h-8 w-8" />
               )}
             </div>
-            <h3 className="corp-section-title text-lg font-semibold mb-2">
+            <h3 className="corp-section-title text-lg font-semibold">
               {statusFilter === 'pending_approval'
                 ? 'All caught up!'
                 : `No ${statusFilter === 'all' ? '' : statusFilter.replace('_', ' ')} bookings`}
             </h3>
-            <p className="corp-page-subtitle max-w-md mx-auto">
-              {statusFilter === 'pending_approval'
-                ? 'There are no bookings waiting for your approval right now.'
-                : 'No bookings match the selected filter.'}
-            </p>
           </div>
         )}
 

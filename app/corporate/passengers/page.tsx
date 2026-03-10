@@ -1,47 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Users, Mail, Trash2, AlertTriangle, CheckCircle, MoreVertical, Pencil, Eye, UserPlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, Search, Users, Mail, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassengers,
-  deletePassenger,
-  createAccountFromPassenger,
   type PassengerListItem,
 } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 
 export default function PassengersPage() {
-  const { user, isAdmin } = useRequireCorporateAuth();
+  const { user } = useRequireCorporateAuth();
+  const router = useRouter();
   const [passengers, setPassengers] = useState<PassengerListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' } | null>(null);
-  const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; passengerId: string; name: string } | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  // Feature 5B: Create account dialog state
-  const [createAccountDialog, setCreateAccountDialog] = useState<{
-    show: boolean;
-    passengerId: string;
-    name: string;
-    email: string;
-  } | null>(null);
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setOpenMenuId(null);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type });
@@ -74,65 +50,8 @@ export default function PassengersPage() {
     }
   }, [searchQuery, showToast]);
 
-  const handleDeleteClick = (passengerId: string, firstName: string, lastName: string) => {
-    setConfirmDialog({ show: true, passengerId, name: `${firstName} ${lastName}` });
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!confirmDialog) return;
-
-    setIsDeleting(true);
-    try {
-      await deletePassenger(confirmDialog.passengerId);
-      setPassengers(passengers.filter((p) => p.passengerId !== confirmDialog.passengerId));
-      showToast('Passenger removed successfully');
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Failed to remove passenger', 'error');
-    } finally {
-      setIsDeleting(false);
-      setConfirmDialog(null);
-    }
-  };
-
-  // Feature 5B: Create account handler
-  const handleCreateAccountClick = (passenger: PassengerListItem) => {
-    const name = formatPassengerName(passenger);
-    setCreateAccountDialog({
-      show: true,
-      passengerId: passenger.passengerId,
-      name,
-      email: passenger.email || '',
-    });
-  };
-
-  const handleConfirmCreateAccount = async () => {
-    if (!createAccountDialog) return;
-
-    setIsCreatingAccount(true);
-    try {
-      await createAccountFromPassenger(createAccountDialog.passengerId, {
-        role: 'booker',
-        requiresApproval: false,
-      });
-      // Update the local state to reflect the link
-      setPassengers(passengers.map((p) =>
-        p.passengerId === createAccountDialog.passengerId
-          ? { ...p, linkedUserId: 'pending' } // Mark as linked (actual ID comes from refresh)
-          : p
-      ));
-      showToast('Booking account created! Invite email sent.');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create booking account';
-      showToast(message, 'error');
-    } finally {
-      setIsCreatingAccount(false);
-      setCreateAccountDialog(null);
-    }
-  };
-
-  // Check if passenger can have account created
-  const canCreateAccount = (passenger: PassengerListItem): boolean => {
-    return isAdmin && !!passenger.email && !passenger.linkedUserId;
+  const handleCardClick = (passengerId: string) => {
+    router.push(`/corporate/passengers/${passengerId}`);
   };
 
   const formatPassengerName = (passenger: PassengerListItem): string => {
@@ -196,88 +115,34 @@ export default function PassengersPage() {
             <p className="mt-4 text-sm corp-page-subtitle">
               {searchQuery ? 'No passengers found matching your search' : 'No passengers saved yet'}
             </p>
-            <p className="mt-1 text-xs opacity-50">
-              Add passengers to quickly select them when booking transfers
-            </p>
-            <Link
-              href="/corporate/passengers/new"
-              className="mt-4 inline-flex items-center text-sm font-medium corp-link"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add your first passenger
-            </Link>
+            {!searchQuery && (
+              <Link
+                href="/corporate/passengers/new"
+                className="mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium corp-btn corp-btn-primary"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Passenger
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {passengers.map((passenger) => (
               <div
                 key={passenger.passengerId}
-                className="corp-card p-5 rounded-lg hover:shadow-md transition-shadow flex flex-col h-full"
+                onClick={() => handleCardClick(passenger.passengerId)}
+                className="corp-card p-5 rounded-lg hover:shadow-md transition-shadow flex flex-col h-full cursor-pointer"
               >
-                {/* Header with name and 3-dot menu */}
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0 pr-2">
-                    <h3 className="font-semibold text-lg truncate">
-                      {formatPassengerName(passenger)}
-                    </h3>
-                    {passenger.alias && (
-                      <span className="corp-badge corp-badge-neutral text-xs mt-1 inline-block">
-                        {passenger.alias}
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative" ref={openMenuId === passenger.passengerId ? menuRef : null}>
-                    <button
-                      onClick={() => setOpenMenuId(openMenuId === passenger.passengerId ? null : passenger.passengerId)}
-                      className="p-1 opacity-50 hover:opacity-100 rounded-md hover:bg-[var(--corp-bg-hover)] transition-colors"
-                    >
-                      <MoreVertical className="h-5 w-5" />
-                    </button>
-
-                    {openMenuId === passenger.passengerId && (
-                      <div className="absolute right-0 mt-1 w-36 corp-card rounded-md shadow-lg py-1 z-10">
-                        <Link
-                          href={`/corporate/passengers/${passenger.passengerId}`}
-                          onClick={() => setOpenMenuId(null)}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--corp-bg-hover)]"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </Link>
-                        <Link
-                          href={`/corporate/passengers/${passenger.passengerId}?edit=true`}
-                          onClick={() => setOpenMenuId(null)}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--corp-bg-hover)]"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </Link>
-                        {/* Feature 5B: Create Account option */}
-                        {canCreateAccount(passenger) && (
-                          <button
-                            onClick={() => {
-                              setOpenMenuId(null);
-                              handleCreateAccountClick(passenger);
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-500/10"
-                          >
-                            <UserPlus className="h-4 w-4" />
-                            Create Account
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            setOpenMenuId(null);
-                            handleDeleteClick(passenger.passengerId, passenger.firstName, passenger.lastName);
-                          }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                {/* Header with name */}
+                <div className="mb-3">
+                  <h3 className="font-semibold text-lg truncate">
+                    {formatPassengerName(passenger)}
+                  </h3>
+                  {passenger.alias && (
+                    <span className="corp-badge corp-badge-neutral text-xs mt-1 inline-block">
+                      {passenger.alias}
+                    </span>
+                  )}
                 </div>
 
                 {/* Contact Info - flex-grow to push stats and button to bottom */}
@@ -311,6 +176,7 @@ export default function PassengersPage() {
                 {/* Book Now button - always at bottom */}
                 <Link
                   href={`/corporate/quote?passengerId=${passenger.passengerId}`}
+                  onClick={(e) => e.stopPropagation()}
                   className="block w-full text-center px-4 py-2.5 bg-[var(--corp-sage)] text-white font-medium rounded-lg hover:bg-[var(--corp-sage-dark)] transition-colors mt-auto"
                 >
                   Book Now
@@ -320,85 +186,6 @@ export default function PassengersPage() {
           </div>
         )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {confirmDialog?.show && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div
-              className="fixed inset-0 bg-black/50 transition-opacity"
-              onClick={() => setConfirmDialog(null)}
-            />
-            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-              <div className="text-center mb-4">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
-                </div>
-                <h3 className="text-lg font-semibold">Delete Passenger?</h3>
-                <p className="text-sm opacity-70 mt-2">
-                  Are you sure you want to remove <strong>{confirmDialog.name}</strong> from your passenger directory? This action cannot be undone.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setConfirmDialog(null)}
-                  className="corp-btn corp-btn-secondary flex-1 px-4 py-2 text-sm font-medium rounded-full"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  disabled={isDeleting}
-                  className="corp-btn corp-btn-danger flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Feature 5B: Create Account Confirmation Modal */}
-      {createAccountDialog?.show && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4">
-            <div
-              className="fixed inset-0 bg-black/50 transition-opacity"
-              onClick={() => setCreateAccountDialog(null)}
-            />
-            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-              <div className="text-center mb-4">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                  <UserPlus className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold">Create Booking Account?</h3>
-                <p className="text-sm opacity-70 mt-2">
-                  Create a booking account for <strong>{createAccountDialog.name}</strong>?
-                </p>
-                <p className="text-sm opacity-70 mt-1">
-                  An invite email will be sent to <strong>{createAccountDialog.email}</strong>.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setCreateAccountDialog(null)}
-                  className="corp-btn corp-btn-secondary flex-1 px-4 py-2 text-sm font-medium rounded-full"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmCreateAccount}
-                  disabled={isCreatingAccount}
-                  className="corp-btn corp-btn-primary flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
-                >
-                  {isCreatingAccount ? 'Creating...' : 'Send Invite'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Toast Notification */}
       {toast?.show && (

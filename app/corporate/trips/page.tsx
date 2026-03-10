@@ -196,10 +196,7 @@ export default function TripsManagementPage() {
             <div className="corp-icon-wrapper mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4">
               <Heart className="h-8 w-8" />
             </div>
-            <h3 className="corp-section-title text-lg font-semibold mb-2">No saved trips yet</h3>
-            <p className="corp-page-subtitle mb-6 max-w-md mx-auto">
-              Save your frequently used routes for quick rebooking. After getting a quote, click Save as Favourite to add it here.
-            </p>
+            <h3 className="corp-section-title text-lg font-semibold mb-4">No saved trips yet</h3>
             <Link
               href="/corporate/quote"
               className="corp-btn corp-btn-primary inline-flex items-center gap-2 px-6 py-3 font-medium rounded-lg"

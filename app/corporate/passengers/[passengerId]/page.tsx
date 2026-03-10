@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus, UserPlus } from 'lucide-react';
+import { CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus, UserPlus, Trash2 } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassenger,
   updatePassenger,
+  deletePassenger,
   getPassengerJourneys,
   createAccountFromPassenger,
   type Passenger,
@@ -72,6 +73,10 @@ export default function PassengerDetailPage({ params }: PageProps) {
   const [showCreateAccountDialog, setShowCreateAccountDialog] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
+  // Delete state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast(null), 3000);
@@ -99,6 +104,22 @@ export default function PassengerDetailPage({ params }: PageProps) {
     } finally {
       setIsCreatingAccount(false);
       setShowCreateAccountDialog(false);
+    }
+  };
+
+  // Handle delete passenger
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deletePassenger(passengerId);
+      showToast('Passenger deleted successfully');
+      router.push('/corporate/passengers');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete passenger';
+      showToast(message, 'error');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -362,6 +383,14 @@ export default function PassengerDetailPage({ params }: PageProps) {
                   Has Account
                 </span>
               )}
+              {/* Delete button */}
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </button>
             </div>
           ) : (
             <div className="flex gap-2">
@@ -813,6 +842,47 @@ export default function PassengerDetailPage({ params }: PageProps) {
                   className="corp-btn corp-btn-primary flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
                 >
                   {isCreatingAccount ? 'Creating...' : 'Send Invite'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteDialog && passenger && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4">
+            <div
+              className="fixed inset-0 bg-black/50 transition-opacity"
+              onClick={() => setShowDeleteDialog(false)}
+            />
+            <div className="corp-modal relative bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+              <div className="text-center mb-4">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold">Delete Passenger?</h3>
+                <p className="text-sm opacity-70 mt-2">
+                  Are you sure you want to delete <strong>{formatPassengerName()}</strong>?
+                </p>
+                <p className="text-sm opacity-70 mt-1">
+                  This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteDialog(false)}
+                  className="corp-btn corp-btn-secondary flex-1 px-4 py-2 text-sm font-medium rounded-full"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="corp-btn corp-btn-danger flex-1 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>
