@@ -8,14 +8,14 @@ import Header from '@/components/shared/Header';
 import { buttonVariants } from '@/components/ui/button';
 
 export default function ContactPage() {
-  const quoteUrl = 'https://durdle.co.uk/quote';
-  const driversUrl = 'https://durdle.co.uk/driver/apply';
+  const quoteUrl = 'https://dorsettransfercompany.co.uk/quote';
+  const driversUrl = 'https://dorsettransfercompany.co.uk/driver/apply';
 
   const contactInfo = {
     name: 'The Dorset Transfer Company',
     phone: '+44 1234 567890',
-    email: 'bookings@durdle.co.uk',
-    driversEmail: 'drivers@durdle.co.uk',
+    email: 'bookings@dorsettransfercompany.co.uk',
+    driversEmail: 'drivers@dorsettransfercompany.co.uk',
     address: 'Dorset, United Kingdom',
   };
 
@@ -33,7 +33,7 @@ END:VCARD`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'durdle-bookings.vcf';
+    a.download = 'dtc-bookings.vcf';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -54,7 +54,7 @@ END:VCARD`;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'durdle-drivers.vcf';
+    a.download = 'dtc-drivers.vcf';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
