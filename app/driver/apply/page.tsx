@@ -1,21 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Car, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import Header from '@/components/shared/Header';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
-// The licensing authority for this tenant's operator license
-const OPERATOR_LICENSING_AUTHORITY = 'Bournemouth, Christchurch and Poole Council';
-const OPERATOR_LICENSING_AUTHORITY_CODE = 'bournemouth-christchurch-poole';
-
 type FormState =
   | { status: 'idle' }
   | { status: 'submitting' }
   | { status: 'success'; applicationId: string }
   | { status: 'error'; message: string };
+
+type RequirementsState =
+  | { status: 'loading' }
+  | { status: 'loaded'; authorityName: string }
+  | { status: 'not_configured' }
+  | { status: 'error' };
 
 const YEARS_EXPERIENCE_OPTIONS = [
   { value: '<1', label: 'Less than 1 year' },
@@ -27,6 +29,7 @@ const YEARS_EXPERIENCE_OPTIONS = [
 
 export default function DriverApplyPage() {
   const [formState, setFormState] = useState<FormState>({ status: 'idle' });
+  const [requirements, setRequirements] = useState<RequirementsState>({ status: 'loading' });
 
   // Form fields
   const [firstName, setFirstName] = useState('');
@@ -38,8 +41,39 @@ export default function DriverApplyPage() {
   const [yearsExperience, setYearsExperience] = useState('');
   const [consentToContact, setConsentToContact] = useState(false);
 
+  // Fetch driver requirements (licensing authority) from tenant config
+  useEffect(() => {
+    const fetchRequirements = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.driverRequirements}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch requirements');
+        }
+        const data = await response.json();
+
+        if (data.configured && data.licensingAuthority?.name) {
+          setRequirements({
+            status: 'loaded',
+            authorityName: data.licensingAuthority.name,
+          });
+        } else {
+          setRequirements({ status: 'not_configured' });
+        }
+      } catch {
+        setRequirements({ status: 'error' });
+      }
+    };
+
+    fetchRequirements();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (requirements.status !== 'loaded') {
+      setFormState({ status: 'error', message: 'Driver requirements not loaded' });
+      return;
+    }
 
     if (!hasPhvLicense || hasPhvVehicle === null || !yearsExperience || !consentToContact) {
       setFormState({ status: 'error', message: 'Please complete all required fields' });
@@ -60,7 +94,7 @@ export default function DriverApplyPage() {
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
           hasPhvLicense,
-          licensingAuthority: OPERATOR_LICENSING_AUTHORITY_CODE,
+          licensingAuthority: requirements.authorityName,
           hasPhvVehicle,
           yearsExperience,
           consentToContact,
@@ -82,6 +116,54 @@ export default function DriverApplyPage() {
     }
   };
 
+  // Loading state
+  if (requirements.status === 'loading') {
+    return (
+      <div className="min-h-screen bg-background pt-20">
+        <Header />
+        <main className="py-12 md:py-20">
+          <div className="container px-4 mx-auto max-w-lg">
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Error or not configured state
+  if (requirements.status === 'error' || requirements.status === 'not_configured') {
+    return (
+      <div className="min-h-screen bg-background pt-20">
+        <Header />
+        <main className="py-12 md:py-20">
+          <div className="container px-4 mx-auto max-w-lg">
+            <div className="bg-card rounded-3xl shadow-xl overflow-hidden border-2 border-amber-200 p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+                <AlertCircle className="w-10 h-10 text-amber-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground mb-4">
+                Driver Applications Coming Soon
+              </h1>
+              <p className="text-muted-foreground mb-6">
+                We&apos;re not currently accepting driver applications online.
+                Please contact us directly if you&apos;re interested in driving with us.
+              </p>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center px-6 py-3 bg-sage-dark text-white rounded-xl font-semibold hover:bg-sage-dark/90 transition-all"
+              >
+                Contact Us
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Success state
   if (formState.status === 'success') {
     return (
       <div className="min-h-screen bg-background pt-20">
@@ -114,6 +196,8 @@ export default function DriverApplyPage() {
       </div>
     );
   }
+
+  const authorityName = requirements.authorityName;
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -223,12 +307,12 @@ export default function DriverApplyPage() {
                     className="mt-1 w-5 h-5 text-amber-600 border-border rounded focus:ring-amber-500"
                   />
                   <label htmlFor="hasPhvLicense" className="text-sm text-foreground">
-                    I hold a valid PHV (Private Hire Vehicle) driver license from <span className="font-medium">{OPERATOR_LICENSING_AUTHORITY}</span> *
+                    I hold a valid PHV (Private Hire Vehicle) driver license from <span className="font-medium">{authorityName}</span> *
                   </label>
                 </div>
 
                 <p className="text-xs text-muted-foreground">
-                  To drive with us, you must hold a PHV driver license issued by {OPERATOR_LICENSING_AUTHORITY}.
+                  To drive with us, you must hold a PHV driver license issued by {authorityName}.
                 </p>
               </div>
 

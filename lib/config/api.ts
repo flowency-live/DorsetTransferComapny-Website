@@ -67,6 +67,7 @@ export const API_ENDPOINTS = {
   driverLicenseCheck: '/driver/license-check',
 
   // Driver Public Application (no auth required)
+  driverRequirements: '/v2/driver/requirements',
   driverApply: '/v2/driver/apply',
   authoritiesSearch: '/v2/authorities/search',
 
