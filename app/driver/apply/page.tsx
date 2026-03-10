@@ -1,18 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Car, CheckCircle, Loader2, AlertCircle, Search, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { Car, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import Header from '@/components/shared/Header';
 import { API_BASE_URL, API_ENDPOINTS } from '@/lib/config/api';
 
-interface LicensingAuthority {
-  code: string;
-  name: string;
-  region: string;
-  type: string;
-}
+// The licensing authority for this tenant's operator license
+const OPERATOR_LICENSING_AUTHORITY = 'Bournemouth, Christchurch and Poole Council';
+const OPERATOR_LICENSING_AUTHORITY_CODE = 'bournemouth-christchurch-poole';
 
 type FormState =
   | { status: 'idle' }
@@ -37,55 +34,14 @@ export default function DriverApplyPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [hasPhvLicense, setHasPhvLicense] = useState(false);
-  const [licensingAuthority, setLicensingAuthority] = useState<LicensingAuthority | null>(null);
   const [hasPhvVehicle, setHasPhvVehicle] = useState<boolean | null>(null);
   const [yearsExperience, setYearsExperience] = useState('');
   const [consentToContact, setConsentToContact] = useState(false);
 
-  // Authority search
-  const [authoritySearch, setAuthoritySearch] = useState('');
-  const [authorityResults, setAuthorityResults] = useState<LicensingAuthority[]>([]);
-  const [authoritySearching, setAuthoritySearching] = useState(false);
-  const [showAuthorityDropdown, setShowAuthorityDropdown] = useState(false);
-
-  useEffect(() => {
-    const searchAuthorities = async () => {
-      if (authoritySearch.length < 2) {
-        setAuthorityResults([]);
-        return;
-      }
-
-      setAuthoritySearching(true);
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}${API_ENDPOINTS.authoritiesSearch}?q=${encodeURIComponent(authoritySearch)}&limit=10`
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setAuthorityResults(data.authorities || []);
-        }
-      } catch {
-        setAuthorityResults([]);
-      } finally {
-        setAuthoritySearching(false);
-      }
-    };
-
-    const debounce = setTimeout(searchAuthorities, 300);
-    return () => clearTimeout(debounce);
-  }, [authoritySearch]);
-
-  const selectAuthority = (authority: LicensingAuthority) => {
-    setLicensingAuthority(authority);
-    setAuthoritySearch('');
-    setShowAuthorityDropdown(false);
-    setAuthorityResults([]);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!hasPhvLicense || !licensingAuthority || hasPhvVehicle === null || !yearsExperience || !consentToContact) {
+    if (!hasPhvLicense || hasPhvVehicle === null || !yearsExperience || !consentToContact) {
       setFormState({ status: 'error', message: 'Please complete all required fields' });
       return;
     }
@@ -104,7 +60,7 @@ export default function DriverApplyPage() {
           email: email.trim().toLowerCase(),
           phone: phone.trim(),
           hasPhvLicense,
-          licensingAuthority: licensingAuthority.code,
+          licensingAuthority: OPERATOR_LICENSING_AUTHORITY_CODE,
           hasPhvVehicle,
           yearsExperience,
           consentToContact,
@@ -267,74 +223,13 @@ export default function DriverApplyPage() {
                     className="mt-1 w-5 h-5 text-amber-600 border-border rounded focus:ring-amber-500"
                   />
                   <label htmlFor="hasPhvLicense" className="text-sm text-foreground">
-                    I hold a valid PHV (Private Hire Vehicle) driver license *
+                    I hold a valid PHV (Private Hire Vehicle) driver license from <span className="font-medium">{OPERATOR_LICENSING_AUTHORITY}</span> *
                   </label>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Licensing Authority *
-                  </label>
-                  {licensingAuthority ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
-                        <div className="text-foreground font-medium">{licensingAuthority.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {licensingAuthority.region} - {licensingAuthority.type}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setLicensingAuthority(null)}
-                        className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
-                      >
-                        Change
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <input
-                          type="text"
-                          value={authoritySearch}
-                          onChange={(e) => {
-                            setAuthoritySearch(e.target.value);
-                            setShowAuthorityDropdown(true);
-                          }}
-                          onFocus={() => setShowAuthorityDropdown(true)}
-                          placeholder="Search for your licensing authority..."
-                          className="w-full pl-11 pr-10 py-3 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500"
-                        />
-                        {authoritySearching ? (
-                          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
-                      {showAuthorityDropdown && authorityResults.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-xl shadow-lg max-h-60 overflow-auto">
-                          {authorityResults.map((authority) => (
-                            <button
-                              key={authority.code}
-                              type="button"
-                              onClick={() => selectAuthority(authority)}
-                              className="w-full px-4 py-3 text-left hover:bg-amber-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
-                            >
-                              <div className="text-foreground font-medium">{authority.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {authority.region} - {authority.type}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    The council that issued your PHV driver license
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  To drive with us, you must hold a PHV driver license issued by {OPERATOR_LICENSING_AUTHORITY}.
+                </p>
               </div>
 
               {/* Experience */}
