@@ -233,7 +233,7 @@ export default function ApprovalsPage() {
         isOpen={!!denyingApproval}
         onClose={() => setDenyingApproval(null)}
         onConfirm={handleDeny}
-        bookingId={denyingApproval?.bookingId}
+        bookingId={denyingApproval?.bookingId ?? ''}
         isLoading={!!processingId}
       />
 

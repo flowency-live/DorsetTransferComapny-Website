@@ -65,10 +65,10 @@ export default function PlacesPage() {
   const officePlaces = places.filter(p => p.type === 'office');
   const personalPlaces = places.filter(p => p.type === 'personal');
 
-  const handleCreate = async (data: CreatePlaceData) => {
+  const handleCreate = async (data: CreatePlaceData | UpdatePlaceData) => {
     setIsSaving(true);
     try {
-      const result = await createPlace(data);
+      const result = await createPlace(data as CreatePlaceData);
       if (result.success && result.place) {
         setPlaces(prev => [...prev, result.place]);
         setIsCreateModalOpen(false);

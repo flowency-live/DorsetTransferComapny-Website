@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Building2, Home, MapPin } from 'lucide-react';
-import LocationInput from '@/components/quote/LocationInput';
+import LocationInput from '@/app/quote/components/LocationInput';
 import { type Place, type CreatePlaceData, type UpdatePlaceData, type PlaceType } from '@/lib/services/corporateApi';
 
 interface PlaceFormProps {
@@ -27,31 +27,29 @@ export default function PlaceForm({
   const [postcode, setPostcode] = useState(initialData?.postcode || '');
   const [error, setError] = useState<string | null>(null);
 
-  const handleLocationSelect = (location: {
-    address: string;
-    placeId?: string;
-    lat?: number;
-    lng?: number;
-  } | null) => {
-    if (location) {
-      setAddress(location.address);
-      setPlaceIdGoogle(location.placeId || '');
-      setLat(location.lat || 0);
-      setLng(location.lng || 0);
+  const handleLocationSelect = (
+    selectedAddress: string,
+    placeId: string,
+    _locationType?: unknown,
+    selectedLat?: number,
+    selectedLng?: number,
+    selectedPostcode?: string
+  ) => {
+    setAddress(selectedAddress);
+    setPlaceIdGoogle(placeId);
+    setLat(selectedLat || 0);
+    setLng(selectedLng || 0);
 
-      // Extract postcode from address (UK format - last part typically)
-      const addressParts = location.address.split(',').map(p => p.trim());
+    // Use postcode from LocationInput if provided, otherwise extract from address
+    if (selectedPostcode) {
+      setPostcode(selectedPostcode.toUpperCase());
+    } else {
+      const addressParts = selectedAddress.split(',').map(p => p.trim());
       const lastPart = addressParts[addressParts.length - 1];
       const postcodeMatch = lastPart?.match(/([A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2})/i);
       if (postcodeMatch) {
         setPostcode(postcodeMatch[1].toUpperCase());
       }
-    } else {
-      setAddress('');
-      setPlaceIdGoogle('');
-      setLat(0);
-      setLng(0);
-      setPostcode('');
     }
   };
 
@@ -144,8 +142,8 @@ export default function PlaceForm({
             Address <span className="text-red-500">*</span>
           </label>
           <LocationInput
-            value={address ? { address, placeId: placeIdGoogle, lat, lng } : null}
-            onChange={handleLocationSelect}
+            value={address}
+            onSelect={handleLocationSelect}
             placeholder="Start typing to search..."
           />
         </div>
