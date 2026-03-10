@@ -62,6 +62,7 @@ const NAV_SECTIONS = {
   account: {
     label: 'Account',
     items: [
+      { href: '/corporate/profile', label: 'My Profile', icon: <Users className="w-5 h-5" /> },
       { href: '/corporate/settings/preferences', label: 'Preferences', icon: <Settings className="w-5 h-5" /> },
       { href: '/corporate/history', label: 'Booking History', icon: <History className="w-5 h-5" /> },
     ],

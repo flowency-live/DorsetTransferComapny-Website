@@ -626,6 +626,7 @@ export interface Passenger {
   isRepresentative: boolean | null;
   email: string | null;
   phone: string | null;
+  channels: CommunicationChannels | null; // Feature 4: Communication channels
   refreshments: RefreshmentPreferences | null;
   driverInstructions: string | null;
   bookerNotes: string | null;
@@ -669,6 +670,7 @@ export interface CreatePassengerData {
   isRepresentative?: boolean;
   email?: string;
   phone?: string;
+  channels?: CommunicationChannels; // Feature 4: Communication channels
   refreshments?: RefreshmentPreferences;
   driverInstructions?: string;
   bookerNotes?: string;
@@ -684,6 +686,7 @@ export interface UpdatePassengerData {
   isRepresentative?: boolean | null;
   email?: string | null;
   phone?: string | null;
+  channels?: CommunicationChannels; // Feature 4: Communication channels
   refreshments?: RefreshmentPreferences | null;
   driverInstructions?: string | null;
   bookerNotes?: string | null;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus, UserPlus, Trash2 } from 'lucide-react';
+import { CheckCircle, AlertTriangle, User, MapPin, Calendar, Car, Edit2, History, Save, X, RotateCw, Plus, UserPlus, Trash2, Mail, MessageSquare, Phone } from 'lucide-react';
 import { useRequireCorporateAuth } from '@/lib/hooks/useCorporateAuth';
 import {
   getPassenger,
@@ -14,6 +14,7 @@ import {
   type Passenger,
   type Journey,
   type UpdatePassengerData,
+  type CommunicationChannels,
 } from '@/lib/services/corporateApi';
 import CorporateLayout from '@/components/corporate/CorporateLayout';
 
@@ -67,6 +68,13 @@ export default function PassengerDetailPage({ params }: PageProps) {
     tea: false,
     coffee: false,
     other: '',
+  });
+
+  // Feature 4: Communication channels state
+  const [channels, setChannels] = useState<CommunicationChannels>({
+    email: true,
+    sms: false,
+    whatsapp: false,
   });
 
   // Feature 5B: Create account state
@@ -163,6 +171,12 @@ export default function PassengerDetailPage({ params }: PageProps) {
             coffee: p.refreshments?.coffee || false,
             other: p.refreshments?.other || '',
           });
+          // Feature 4: Load channels
+          setChannels({
+            email: p.channels?.email ?? true,
+            sms: p.channels?.sms ?? false,
+            whatsapp: p.channels?.whatsapp ?? false,
+          });
         })
         .catch((err) => {
           console.error('Failed to load passenger:', err);
@@ -205,6 +219,10 @@ export default function PassengerDetailPage({ params }: PageProps) {
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
+    // Feature 4: Phone required for SMS/WhatsApp
+    if ((channels.sms || channels.whatsapp) && !formData.phone.trim()) {
+      newErrors.phone = 'Phone number required when SMS or WhatsApp is enabled';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -242,6 +260,9 @@ export default function PassengerDetailPage({ params }: PageProps) {
         updateData.refreshments = null;
       }
 
+      // Feature 4: Include channels in update
+      updateData.channels = channels;
+
       const result = await updatePassenger(passengerId, updateData);
       setPassenger(result.passenger);
       setIsEditing(false);
@@ -274,6 +295,12 @@ export default function PassengerDetailPage({ params }: PageProps) {
         tea: passenger.refreshments?.tea || false,
         coffee: passenger.refreshments?.coffee || false,
         other: passenger.refreshments?.other || '',
+      });
+      // Feature 4: Reset channels
+      setChannels({
+        email: passenger.channels?.email ?? true,
+        sms: passenger.channels?.sms ?? false,
+        whatsapp: passenger.channels?.whatsapp ?? false,
       });
       setIsRepresentative(passenger.isRepresentative || false);
     }
@@ -569,17 +596,105 @@ export default function PassengerDetailPage({ params }: PageProps) {
 
                 {/* Phone */}
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
+                  <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                    Phone {(channels.sms || channels.whatsapp) && <span className="text-red-500">*</span>}
+                  </label>
                   <input
                     type="tel"
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleChange('phone', e.target.value)}
-                    className="corp-input w-full px-3 py-2 rounded-lg"
+                    className={`corp-input w-full px-3 py-2 rounded-lg ${errors.phone ? 'border-red-500' : ''}`}
                     placeholder="+44 7700 900000"
                   />
+                  {errors.phone && (
+                    <p className="mt-1 text-xs text-red-500">{errors.phone}</p>
+                  )}
                 </div>
               </div>
+            </div>
+
+            {/* Communication Channels Section - Feature 4 */}
+            <div className="corp-card rounded-lg p-6 mb-6">
+              <h2 className="corp-section-title text-lg font-semibold mb-4">Communication Channels</h2>
+              <p className="corp-page-subtitle text-sm mb-4">
+                Choose how this passenger should receive booking confirmations and notifications.
+              </p>
+
+              <div className="space-y-4">
+                {/* Email Channel */}
+                <label
+                  className={`corp-checkbox-card flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    channels.email ? 'corp-checkbox-card-selected' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={channels.email}
+                    onChange={(e) => setChannels(prev => ({ ...prev, email: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <Mail className="w-5 h-5 mr-3 opacity-70" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">Email</span>
+                    <p className="text-xs opacity-60 mt-0.5">Receive notifications via email</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${channels.email ? 'bg-sage' : 'bg-gray-300'} relative`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${channels.email ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </div>
+                </label>
+
+                {/* SMS Channel */}
+                <label
+                  className={`corp-checkbox-card flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    channels.sms ? 'corp-checkbox-card-selected' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={channels.sms}
+                    onChange={(e) => setChannels(prev => ({ ...prev, sms: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <MessageSquare className="w-5 h-5 mr-3 opacity-70" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">SMS</span>
+                    <p className="text-xs opacity-60 mt-0.5">Receive text message notifications</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${channels.sms ? 'bg-sage' : 'bg-gray-300'} relative`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${channels.sms ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </div>
+                </label>
+
+                {/* WhatsApp Channel */}
+                <label
+                  className={`corp-checkbox-card flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                    channels.whatsapp ? 'corp-checkbox-card-selected' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={channels.whatsapp}
+                    onChange={(e) => setChannels(prev => ({ ...prev, whatsapp: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <MessageSquare className="w-5 h-5 mr-3 opacity-70" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">WhatsApp</span>
+                    <p className="text-xs opacity-60 mt-0.5">Receive WhatsApp message notifications</p>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${channels.whatsapp ? 'bg-sage' : 'bg-gray-300'} relative`}>
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${channels.whatsapp ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </div>
+                </label>
+              </div>
+
+              {(channels.sms || channels.whatsapp) && !formData.phone.trim() && (
+                <p className="mt-4 text-xs text-amber-600 flex items-center gap-1">
+                  <Phone className="w-3 h-3" />
+                  Phone number required for SMS/WhatsApp notifications
+                </p>
+              )}
             </div>
 
             {/* Preferences Section */}
@@ -714,6 +829,33 @@ export default function PassengerDetailPage({ params }: PageProps) {
                       <dt className="text-sm font-medium opacity-70">Phone</dt>
                       <dd className="mt-1 text-sm">{passenger.phone}</dd>
                     </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* View Mode - Communication Channels - Feature 4 */}
+            {passenger.channels && (
+              <div className="corp-card rounded-lg p-6 mb-6">
+                <h2 className="corp-section-title text-lg font-semibold mb-4">Communication Channels</h2>
+                <div className="flex flex-wrap gap-2">
+                  {passenger.channels.email && (
+                    <span className="corp-badge corp-badge-success text-xs flex items-center gap-1">
+                      <Mail className="w-3 h-3" /> Email
+                    </span>
+                  )}
+                  {passenger.channels.sms && (
+                    <span className="corp-badge corp-badge-success text-xs flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> SMS
+                    </span>
+                  )}
+                  {passenger.channels.whatsapp && (
+                    <span className="corp-badge corp-badge-success text-xs flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> WhatsApp
+                    </span>
+                  )}
+                  {!passenger.channels.email && !passenger.channels.sms && !passenger.channels.whatsapp && (
+                    <span className="text-sm opacity-50">No channels enabled</span>
                   )}
                 </div>
               </div>
