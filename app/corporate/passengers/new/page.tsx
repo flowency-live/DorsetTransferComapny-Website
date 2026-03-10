@@ -39,6 +39,7 @@ export default function NewPassengerPage() {
     email: '',
     phone: '',
     contactName: '',
+    representativeRole: '',
     driverInstructions: '',
     bookerNotes: '',
   });
@@ -134,6 +135,7 @@ export default function NewPassengerPage() {
       if (formData.phone.trim()) passengerData.phone = formData.phone.trim();
       if (formData.contactName.trim()) passengerData.contactName = formData.contactName.trim();
       if (isRepresentative) passengerData.isRepresentative = true;
+      if (formData.representativeRole.trim()) passengerData.representativeRole = formData.representativeRole.trim();
       if (formData.driverInstructions.trim()) passengerData.driverInstructions = formData.driverInstructions.trim();
       if (formData.bookerNotes.trim()) passengerData.bookerNotes = formData.bookerNotes.trim();
 
@@ -318,7 +320,7 @@ export default function NewPassengerPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Contact Name */}
-              <div className="sm:col-span-2">
+              <div>
                 <label htmlFor="contactName" className="block text-sm font-medium mb-1">
                   Contact Name {isRepresentative && <span className="text-red-500">*</span>}
                 </label>
@@ -337,6 +339,23 @@ export default function NewPassengerPage() {
                   <p className="mt-1 text-xs opacity-50">Auto-filled from passenger name</p>
                 )}
               </div>
+
+              {/* Representative Role */}
+              {isRepresentative && (
+                <div>
+                  <label htmlFor="representativeRole" className="block text-sm font-medium mb-1">
+                    Role
+                  </label>
+                  <input
+                    type="text"
+                    id="representativeRole"
+                    value={formData.representativeRole}
+                    onChange={(e) => handleChange('representativeRole', e.target.value)}
+                    className="corp-input w-full px-3 py-2 rounded-lg"
+                    placeholder="e.g., Executive Assistant, Security"
+                  />
+                </div>
+              )}
 
               {/* Email */}
               <div>

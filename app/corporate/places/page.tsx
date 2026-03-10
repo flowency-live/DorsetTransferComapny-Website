@@ -237,6 +237,14 @@ export default function PlacesPage() {
           </div>
         )}
 
+        {/* Helper text - shows when places exist */}
+        {!isLoading && places.length > 0 && (
+          <p className="corp-page-subtitle text-sm mb-4">
+            Save your frequently used addresses for quick selection during booking.
+            Office locations are shared with your team. Personal locations are only visible to you.
+          </p>
+        )}
+
         {/* Places grid */}
         {!isLoading && filteredPlaces.length > 0 && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -54,6 +54,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
     alias: '',
     referToAs: '',
     contactName: '',
+    representativeRole: '',
     email: '',
     phone: '',
     driverInstructions: '',
@@ -158,6 +159,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
             alias: p.alias || '',
             referToAs: p.referToAs || '',
             contactName: p.contactName || `${p.firstName} ${p.lastName}`.trim(),
+            representativeRole: p.representativeRole || '',
             email: p.email || '',
             phone: p.phone || '',
             driverInstructions: p.driverInstructions || '',
@@ -240,6 +242,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
         referToAs: formData.referToAs.trim() || null,
         contactName: formData.contactName.trim() || null,
         isRepresentative: isRepresentative || null,
+        representativeRole: formData.representativeRole.trim() || null,
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
         driverInstructions: formData.driverInstructions.trim() || null,
@@ -284,6 +287,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
         alias: passenger.alias || '',
         referToAs: passenger.referToAs || '',
         contactName: passenger.contactName || `${passenger.firstName} ${passenger.lastName}`.trim(),
+        representativeRole: passenger.representativeRole || '',
         email: passenger.email || '',
         phone: passenger.phone || '',
         driverInstructions: passenger.driverInstructions || '',
@@ -558,7 +562,7 @@ export default function PassengerDetailPage({ params }: PageProps) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Contact Name */}
-                <div className="sm:col-span-2">
+                <div>
                   <label htmlFor="contactName" className="block text-sm font-medium mb-1">
                     Contact Name
                   </label>
@@ -577,6 +581,23 @@ export default function PassengerDetailPage({ params }: PageProps) {
                     </p>
                   )}
                 </div>
+
+                {/* Representative Role */}
+                {isRepresentative && (
+                  <div>
+                    <label htmlFor="representativeRole" className="block text-sm font-medium mb-1">
+                      Role
+                    </label>
+                    <input
+                      type="text"
+                      id="representativeRole"
+                      value={formData.representativeRole}
+                      onChange={(e) => handleChange('representativeRole', e.target.value)}
+                      className="corp-input w-full px-3 py-2 rounded-lg"
+                      placeholder="e.g., Executive Assistant, Security"
+                    />
+                  </div>
+                )}
 
                 {/* Email */}
                 <div>
@@ -809,7 +830,9 @@ export default function PassengerDetailPage({ params }: PageProps) {
               <div className="corp-card rounded-lg p-6 mb-6">
                 <h2 className="corp-section-title text-lg font-semibold mb-4">Contact Information</h2>
                 {passenger.isRepresentative && (
-                  <p className="text-xs corp-badge corp-badge-info inline-block mb-4">Representative contact</p>
+                  <p className="text-xs corp-badge corp-badge-info inline-block mb-4">
+                    Representative contact{passenger.representativeRole && ` - ${passenger.representativeRole}`}
+                  </p>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {passenger.contactName && (

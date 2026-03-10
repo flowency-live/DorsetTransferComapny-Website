@@ -624,6 +624,7 @@ export interface Passenger {
   referToAs: string | null;
   contactName: string | null;
   isRepresentative: boolean | null;
+  representativeRole: string | null;
   email: string | null;
   phone: string | null;
   channels: CommunicationChannels | null; // Feature 4: Communication channels
@@ -648,6 +649,7 @@ export interface PassengerListItem {
   alias: string | null;
   contactName: string | null;
   isRepresentative: boolean | null;
+  representativeRole: string | null;
   email: string | null;
   phone: string | null;
   usageCount: number;
@@ -668,6 +670,7 @@ export interface CreatePassengerData {
   referToAs?: string;
   contactName?: string;
   isRepresentative?: boolean;
+  representativeRole?: string;
   email?: string;
   phone?: string;
   channels?: CommunicationChannels; // Feature 4: Communication channels
@@ -684,6 +687,7 @@ export interface UpdatePassengerData {
   referToAs?: string | null;
   contactName?: string | null;
   isRepresentative?: boolean | null;
+  representativeRole?: string | null;
   email?: string | null;
   phone?: string | null;
   channels?: CommunicationChannels; // Feature 4: Communication channels

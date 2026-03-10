@@ -197,13 +197,14 @@ export default function TripsManagementPage() {
               <Heart className="h-8 w-8" />
             </div>
             <h3 className="corp-section-title text-lg font-semibold mb-4">No saved trips yet</h3>
-            <Link
-              href="/corporate/quote"
+            <button
+              type="button"
+              onClick={() => setIsCreateModalOpen(true)}
               className="corp-btn corp-btn-primary inline-flex items-center gap-2 px-6 py-3 font-medium rounded-lg"
             >
               <Plus className="h-4 w-4" />
-              Get Your First Quote
-            </Link>
+              Create a Trip
+            </button>
           </div>
         )}
 
