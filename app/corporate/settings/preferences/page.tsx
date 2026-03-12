@@ -143,9 +143,10 @@ export default function PreferencesPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+    // CRIT-02 FIX: SVG removed - XSS risk via embedded JavaScript
+    const allowedTypes = ['image/png', 'image/jpeg'];
     if (!allowedTypes.includes(file.type)) {
-      showToast('Please upload a PNG, JPEG, or SVG file', 'error');
+      showToast('Please upload a PNG or JPEG file', 'error');
       return;
     }
 
@@ -162,7 +163,8 @@ export default function PreferencesPage() {
         fileSize: file.size,
       });
 
-      await uploadLogoToS3(uploadData.uploadUrl, file);
+      // Pass contentType from API response to ensure signature match
+      await uploadLogoToS3(uploadData.uploadUrl, file, uploadData.contentType);
       const result = await confirmLogoUpload(uploadData.logoKey);
 
       setPreferences((prev) =>
@@ -232,7 +234,7 @@ export default function PreferencesPage() {
             <div className="corp-card rounded-lg p-6 mb-6">
               <h2 className="corp-section-title text-lg font-semibold mb-4">Company Logo</h2>
               <p className="corp-page-subtitle text-sm mb-4">
-                Upload your company logo to display on driver name boards. Supported formats: PNG, JPEG, SVG (max 2MB).
+                Upload your company logo to display on driver name boards. Supported formats: PNG, JPEG (max 2MB).
               </p>
 
               <div className="flex items-start gap-6">
@@ -257,7 +259,7 @@ export default function PreferencesPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/svg+xml"
+                    accept="image/png,image/jpeg"
                     onChange={handleFileSelect}
                     className="hidden"
                   />

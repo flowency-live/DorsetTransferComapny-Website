@@ -566,13 +566,21 @@ export async function getLogoUploadUrl(data: {
 /**
  * Upload logo to S3 using presigned URL
  * This is a direct upload to S3, not through our API
+ *
+ * IMPORTANT: Use the contentType from the presigned URL response, not file.type.
+ * The presigned URL signature includes the Content-Type header, so they must match
+ * exactly or S3 will return 403 Forbidden.
+ *
+ * @param uploadUrl - The presigned URL from getLogoUploadUrl
+ * @param file - The file to upload
+ * @param contentType - The content type from the presigned URL response (must match exactly)
  */
-export async function uploadLogoToS3(uploadUrl: string, file: File): Promise<void> {
+export async function uploadLogoToS3(uploadUrl: string, file: File, contentType: string): Promise<void> {
   const response = await fetch(uploadUrl, {
     method: 'PUT',
     body: file,
     headers: {
-      'Content-Type': file.type,
+      'Content-Type': contentType,
     },
   });
 
