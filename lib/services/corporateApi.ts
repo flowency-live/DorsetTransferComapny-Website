@@ -69,6 +69,7 @@ interface ProfileResponse {
     corpAccountId: string;
     companyName: string;
     discountPercentage: number;
+    cancellationNoticeHours: number | null; // CTO-CONFIG-001
     status: string;
   } | null;
   linkedPassenger?: LinkedPassenger | null;
@@ -78,6 +79,7 @@ interface DashboardResponse {
   company: {
     companyName: string;
     discountPercentage: number;
+    cancellationNoticeHours: number | null; // CTO-CONFIG-001
     status: string;
   } | null;
   stats: {

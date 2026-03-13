@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, RefreshCcw, ClipboardCheck } from 'lucide-react';
+import { CalendarPlus, Star, Users, Settings, History, ChevronDown, ChevronUp, Eye, Edit2, XCircle, RefreshCcw, ClipboardCheck, Building2, Percent, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -12,6 +12,7 @@ interface DashboardData {
   company: {
     companyName: string;
     discountPercentage: number;
+    cancellationNoticeHours: number | null; // CTO-CONFIG-001
     status: string;
   } | null;
   stats: {
@@ -44,6 +45,35 @@ function formatBookingDate(dateString: string): string {
   } catch {
     return dateString;
   }
+}
+
+// CTO-CONFIG-001: Format cancellation notice hours for display
+function formatCancellationNotice(hours: number | null): string {
+  if (hours === null) {
+    return 'Standard policy applies';
+  }
+  if (hours === 0) {
+    return 'Free cancellation anytime';
+  }
+  if (hours === 1) {
+    return '1 hour notice required';
+  }
+  if (hours < 24) {
+    return `${hours} hours notice required`;
+  }
+  if (hours === 24) {
+    return '24 hours (1 day) notice required';
+  }
+  if (hours === 48) {
+    return '48 hours (2 days) notice required';
+  }
+  if (hours === 72) {
+    return '72 hours (3 days) notice required';
+  }
+  if (hours === 168) {
+    return '7 days notice required';
+  }
+  return `${hours} hours notice required`;
 }
 
 export default function CorporateDashboardPage() {
@@ -125,6 +155,59 @@ export default function CorporateDashboardPage() {
             </Link>
           </div>
         </div>
+
+        {/* Corporate Account Benefits - CTO-CONFIG-001 */}
+        {dashboard?.company && (
+          <div className="mb-8">
+            <h2 className="corp-section-title text-lg font-semibold mb-4">Your Corporate Benefits</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Company Name */}
+              <div className="corp-card p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-sage/10">
+                    <Building2 className="w-5 h-5 text-sage" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--corp-text-muted)] uppercase tracking-wider">Account</p>
+                    <p className="font-semibold">{dashboard.company.companyName}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Corporate Discount */}
+              {dashboard.company.discountPercentage > 0 && (
+                <div className="corp-card p-4 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+                      <Percent className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-[var(--corp-text-muted)] uppercase tracking-wider">Your Discount</p>
+                      <p className="font-semibold text-green-600 dark:text-green-400">
+                        {dashboard.company.discountPercentage}% off all bookings
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Cancellation Policy - CTO-CONFIG-001 */}
+              <div className="corp-card p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--corp-text-muted)] uppercase tracking-wider">Cancellation Policy</p>
+                    <p className="font-semibold">
+                      {formatCancellationNotice(dashboard.company.cancellationNoticeHours)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Recent Bookings - Collapsible */}
         <div className="corp-card">
